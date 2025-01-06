@@ -713,6 +713,11 @@
     path-to-regexp "3.3.0"
     tslib "2.8.1"
 
+"@nestjs/mapped-types@*":
+  version "2.0.6"
+  resolved "https://registry.yarnpkg.com/@nestjs/mapped-types/-/mapped-types-2.0.6.tgz#d2d8523709fd5d872a9b9e0c38162746e2a7f44e"
+  integrity sha512-84ze+CPfp1OWdpRi1/lOu59hOhTz38eVzJvRKrg9ykRFwDz+XleKfMsG0gUqNZYFa6v53XYzeD+xItt8uDW7NQ==
+
 "@nestjs/mongoose@^10.1.0":
   version "10.1.0"
   resolved "https://registry.yarnpkg.com/@nestjs/mongoose/-/mongoose-10.1.0.tgz#4785219cae6792341da4a1a26727ca39208ef08d"

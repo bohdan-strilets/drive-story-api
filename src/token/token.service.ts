@@ -9,7 +9,7 @@ import { Payload } from './types/payload.type';
 import { Tokens } from './types/tokens.type';
 
 @Injectable()
-export class TokensService {
+export class TokenService {
   constructor(
     @InjectModel(Token.name) private TokenModel: Model<TokenDocument>,
     private jwtService: JwtService,

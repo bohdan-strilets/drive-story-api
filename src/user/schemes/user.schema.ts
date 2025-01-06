@@ -45,6 +45,12 @@ export class User {
 
   @Prop({ type: Location, default: null })
   location?: LocationDocument | null;
+
+  @Prop()
+  createdAt: Date;
+
+  @Prop()
+  updatedAt: Date;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

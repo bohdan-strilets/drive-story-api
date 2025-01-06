@@ -14,6 +14,12 @@ export class Token {
 
   @Prop({ required: true })
   refreshToken: string;
+
+  @Prop()
+  createdAt: Date;
+
+  @Prop()
+  updatedAt: Date;
 }
 
 export const TokenSchema = SchemaFactory.createForClass(Token);

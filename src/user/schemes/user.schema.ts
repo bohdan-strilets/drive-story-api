@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
+import { defaultImages } from 'src/helpers/default-images';
 import { Gender } from '../enums/gender.enum';
 import { Location, LocationDocument } from './location.schema';
 
@@ -37,10 +38,10 @@ export class User {
   @Prop({ default: Gender.NOT_SELECTED, enum: Gender })
   gender?: Gender;
 
-  @Prop({ default: [], type: [String] })
+  @Prop({ default: [defaultImages.USER_AVATAR], type: [String] })
   avatars?: string[];
 
-  @Prop({ default: [], type: [String] })
+  @Prop({ default: [defaultImages.POSTER_AVATAR], type: [String] })
   posters?: string[];
 
   @Prop({ type: Location, default: null })

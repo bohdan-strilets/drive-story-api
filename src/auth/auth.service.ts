@@ -9,7 +9,7 @@ import { SendgridService } from 'src/sendgrid/sendgrid.service';
 import { TokenService } from 'src/token/token.service';
 import { User } from 'src/user/schemes/user.schema';
 import { v4 } from 'uuid';
-import { RegistrationDto } from './dto/registration.dto';
+import { AuthDto } from './dto/auth.dto';
 import { AuthResponse } from './types/auth-response.type';
 
 @Injectable()
@@ -22,7 +22,7 @@ export class AuthService {
   ) {}
 
   async registration(
-    dto: RegistrationDto,
+    dto: AuthDto,
   ): Promise<ApiResponse<AuthResponse> | ApiResponse> {
     const { email, password } = dto;
     const userFromDb = await this.userModel.findOne({ email });
@@ -56,6 +56,50 @@ export class AuthService {
     return {
       success: true,
       statusCode: HttpStatus.CREATED,
+      data: { user: userInfo, tokens },
+    };
+  }
+
+  async login(dto: AuthDto): Promise<ApiResponse<AuthResponse> | ApiResponse> {
+    const { email, password } = dto;
+    const user = await this.userModel.findOne({ email });
+
+    if (!user) {
+      return {
+        success: false,
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: errorMessages.INVALID_EMAIL_ERROR,
+      };
+    }
+
+    const checkPassword = await this.passwordService.checkPassword(
+      password,
+      user.password,
+    );
+
+    if (!checkPassword) {
+      return {
+        success: false,
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: errorMessages.INVALID_PASSWORD_ERROR,
+      };
+    }
+
+    if (!user.isActivated) {
+      return {
+        success: false,
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: errorMessages.INACTIVE_EMAIL_ERROR,
+      };
+    }
+
+    const payload = this.tokenService.createPayload(user);
+    const tokens = await this.tokenService.createTokenPair(payload);
+    const userInfo = sanitizeUserData(user);
+
+    return {
+      success: true,
+      statusCode: HttpStatus.OK,
       data: { user: userInfo, tokens },
     };
   }

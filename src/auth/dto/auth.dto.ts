@@ -4,7 +4,7 @@ import {
   MIN_PASSWORD_LENGTH,
 } from 'src/helpers/validation-rules';
 
-export class RegistrationDto {
+export class AuthDto {
   @IsString()
   @IsEmail()
   email: string;

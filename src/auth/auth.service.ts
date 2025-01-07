@@ -43,7 +43,7 @@ export class AuthService {
     });
 
     const payload = this.tokenService.createPayload(createdUser);
-    const tokens = await this.tokenService.createTokens(payload);
+    const tokens = await this.tokenService.createTokenPair(payload);
     const userInfo = sanitizeUserData(createdUser);
 
     return {

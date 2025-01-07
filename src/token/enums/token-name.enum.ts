@@ -1,6 +1,6 @@
-enum TokenType {
+enum TokenName {
   ACCESS = 'access',
   REFRESH = 'refresh',
 }
 
-export default TokenType;
+export default TokenName;

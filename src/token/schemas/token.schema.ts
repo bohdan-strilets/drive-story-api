@@ -10,9 +10,6 @@ export class Token {
   owner: User;
 
   @Prop({ required: true })
-  accessToken: string;
-
-  @Prop({ required: true })
   refreshToken: string;
 
   @Prop()

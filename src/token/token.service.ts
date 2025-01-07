@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { UserDocument } from 'src/user/schemes/user.schema.js';
-import TokenType from './enums/token-type.enum.js';
+import TokenName from './enums/token-name.enum.js';
 import { Token, TokenDocument } from './schemas/token.schema';
 import { Payload } from './types/payload.type';
 import { Tokens } from './types/tokens.type';
@@ -23,38 +23,47 @@ export class TokenService {
     };
   }
 
-  async createTokens(payload: Payload): Promise<Tokens> {
-    const accessToken = this.jwtService.sign(payload, {
+  async createAccessToken(payload: Payload): Promise<string> {
+    return this.jwtService.sign(payload, {
       secret: process.env.ACCESS_TOKEN_KEY,
       expiresIn: process.env.ACCESS_TOKEN_TIME,
     });
-    const refreshToken = this.jwtService.sign(payload, {
+  }
+
+  async createRefreshToken(payload: Payload): Promise<string> {
+    return this.jwtService.sign(payload, {
       secret: process.env.REFRESH_TOKEN_KEY,
       expiresIn: process.env.REFRESH_TOKEN_TIME,
     });
+  }
+
+  async createTokenPair(payload: Payload): Promise<Tokens> {
+    const accessToken = await this.createAccessToken(payload);
+    const refreshToken = await this.createRefreshToken(payload);
 
     const owner = payload._id;
-    const tokens = { accessToken, refreshToken };
     const tokensFromDb = await this.TokenModel.findOne({ owner });
 
     if (!tokensFromDb) {
-      await this.TokenModel.create({ ...tokens, owner });
+      await this.TokenModel.create({ refreshToken, owner });
     }
     if (tokensFromDb) {
-      await this.TokenModel.findByIdAndUpdate(tokensFromDb._id, { ...tokens });
+      await this.TokenModel.findByIdAndUpdate(tokensFromDb._id, {
+        refreshToken,
+      });
     }
 
-    return tokens;
+    return { accessToken, refreshToken };
   }
 
-  checkToken(token: string, type: TokenType): Payload | null {
+  checkToken(token: string, type: TokenName): Payload | null {
     let payload: Payload;
 
-    if (type === TokenType.ACCESS) {
+    if (type === TokenName.ACCESS) {
       payload = this.jwtService.verify(token, {
         secret: process.env.ACCESS_TOKEN_KEY,
       });
-    } else if (type === TokenType.REFRESH) {
+    } else if (type === TokenName.REFRESH) {
       payload = this.jwtService.verify(token, {
         secret: process.env.REFRESH_TOKEN_KEY,
       });

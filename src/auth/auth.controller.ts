@@ -76,4 +76,22 @@ export class AuthController {
 
     return data;
   }
+
+  @Get('refresh-token')
+  async refreshToken(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<ApiResponse<AuthResponse> | ApiResponse> {
+    const refreshToken = req.cookies[cookieKeys.REFRESH_TOKEN];
+    const data = await this.authService.refreshToken(refreshToken);
+
+    if (data.success) {
+      const refreshToken = data.data?.tokens.refreshToken;
+      res.cookie(cookieKeys.REFRESH_TOKEN, refreshToken, cookieOptions);
+    } else {
+      res.status(data.statusCode);
+    }
+
+    return data;
+  }
 }

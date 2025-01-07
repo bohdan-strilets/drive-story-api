@@ -4,4 +4,5 @@ export const errorMessages = {
   INVALID_PASSWORD_ERROR: 'The password is incorrect.',
   INACTIVE_EMAIL_ERROR: 'The email is not activated.',
   USER_NOT_AUTHORIZED: 'The user is not authorized.',
+  USER_NOT_FOUND: 'The user is not found or not registered.',
 };

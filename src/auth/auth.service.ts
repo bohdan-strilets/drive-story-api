@@ -135,4 +135,50 @@ export class AuthService {
       statusCode: HttpStatus.OK,
     };
   }
+
+  async refreshToken(
+    refreshToken: string,
+  ): Promise<ApiResponse<AuthResponse> | ApiResponse> {
+    if (!refreshToken) {
+      return {
+        success: false,
+        statusCode: HttpStatus.UNAUTHORIZED,
+        message: errorMessages.USER_NOT_AUTHORIZED,
+      };
+    }
+
+    const payload = this.tokenService.checkToken(
+      refreshToken,
+      TokenName.REFRESH,
+    );
+    const tokenFromDb = await this.tokenService.findTokenFromDb(payload._id);
+
+    if (!payload || !tokenFromDb) {
+      return {
+        success: false,
+        statusCode: HttpStatus.UNAUTHORIZED,
+        message: errorMessages.USER_NOT_AUTHORIZED,
+      };
+    }
+
+    const userFromDb = await this.userModel.findById(payload._id);
+
+    if (!userFromDb) {
+      return {
+        success: false,
+        statusCode: HttpStatus.NOT_FOUND,
+        message: errorMessages.USER_NOT_FOUND,
+      };
+    }
+
+    const newPayload = this.tokenService.createPayload(userFromDb);
+    const tokens = await this.tokenService.createTokenPair(newPayload);
+    const userInfo = sanitizeUserData(userFromDb);
+
+    return {
+      success: true,
+      statusCode: HttpStatus.OK,
+      data: { user: userInfo, tokens },
+    };
+  }
 }

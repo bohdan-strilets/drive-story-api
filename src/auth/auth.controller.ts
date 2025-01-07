@@ -1,17 +1,20 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
+  Req,
   Res,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { ApiResponse } from 'src/helpers/api-response.type';
 import { cookieKeys, cookieOptions } from 'src/helpers/cookie-options';
 import { AuthService } from './auth.service';
+import { Auth } from './decorators/auth.decorator';
 import { AuthDto } from './dto/auth.dto';
 import { AuthResponse } from './types/auth-response.type';
 
@@ -49,6 +52,24 @@ export class AuthController {
     if (data.success) {
       const refreshToken = data.data?.tokens.refreshToken;
       res.cookie(cookieKeys.REFRESH_TOKEN, refreshToken, cookieOptions);
+    } else {
+      res.status(data.statusCode);
+    }
+
+    return data;
+  }
+
+  @Auth()
+  @Get('logout')
+  async logout(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<ApiResponse> {
+    const refreshToken = req.cookies[cookieKeys.REFRESH_TOKEN];
+    const data = await this.authService.logout(refreshToken);
+
+    if (data.success) {
+      res.clearCookie(cookieKeys.REFRESH_TOKEN, cookieOptions);
     } else {
       res.status(data.statusCode);
     }

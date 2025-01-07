@@ -6,6 +6,7 @@ import { errorMessages } from 'src/helpers/error-messages';
 import { sanitizeUserData } from 'src/helpers/sanitize-user-data';
 import { PasswordService } from 'src/password/password.service';
 import { SendgridService } from 'src/sendgrid/sendgrid.service';
+import TokenName from 'src/token/enums/token-name.enum';
 import { TokenService } from 'src/token/token.service';
 import { User } from 'src/user/schemes/user.schema';
 import { v4 } from 'uuid';
@@ -101,6 +102,37 @@ export class AuthService {
       success: true,
       statusCode: HttpStatus.OK,
       data: { user: userInfo, tokens },
+    };
+  }
+
+  async logout(refreshToken: string): Promise<ApiResponse> {
+    if (!refreshToken) {
+      return {
+        success: false,
+        statusCode: HttpStatus.UNAUTHORIZED,
+        message: errorMessages.USER_NOT_AUTHORIZED,
+      };
+    }
+
+    const payload = this.tokenService.checkToken(
+      refreshToken,
+      TokenName.REFRESH,
+    );
+    const tokenFromDb = await this.tokenService.findTokenFromDb(payload._id);
+
+    if (!payload || !tokenFromDb) {
+      return {
+        success: false,
+        statusCode: HttpStatus.UNAUTHORIZED,
+        message: errorMessages.USER_NOT_AUTHORIZED,
+      };
+    }
+
+    await this.tokenService.deleteTokensByDb(payload._id);
+
+    return {
+      success: true,
+      statusCode: HttpStatus.OK,
     };
   }
 }

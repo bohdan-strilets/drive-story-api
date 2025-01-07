@@ -5,6 +5,7 @@ import { AuthModule } from './auth/auth.module';
 import { PasswordModule } from './password/password.module';
 import { TokenModule } from './token/token.module';
 import { UserModule } from './user/user.module';
+import { SendgridModule } from './sendgrid/sendgrid.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { UserModule } from './user/user.module';
     AuthModule,
     PasswordModule,
     TokenModule,
+    SendgridModule,
   ],
 })
 export class AppModule {}

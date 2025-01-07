@@ -5,6 +5,7 @@ import { ApiResponse } from 'src/helpers/api-response.type';
 import { errorMessages } from 'src/helpers/error-messages';
 import { sanitizeUserData } from 'src/helpers/sanitize-user-data';
 import { PasswordService } from 'src/password/password.service';
+import { SendgridService } from 'src/sendgrid/sendgrid.service';
 import { TokenService } from 'src/token/token.service';
 import { User } from 'src/user/schemes/user.schema';
 import { v4 } from 'uuid';
@@ -17,6 +18,7 @@ export class AuthService {
     @InjectModel(User.name) private userModel: Model<User>,
     private readonly passwordService: PasswordService,
     private readonly tokenService: TokenService,
+    private readonly sendgridService: SendgridService,
   ) {}
 
   async registration(
@@ -41,6 +43,11 @@ export class AuthService {
       activationToken,
       password: hashPassword,
     });
+
+    await this.sendgridService.sendConfirmEmailLetter(
+      createdUser.email,
+      createdUser.activationToken,
+    );
 
     const payload = this.tokenService.createPayload(createdUser);
     const tokens = await this.tokenService.createTokenPair(payload);

@@ -138,4 +138,27 @@ export class UserService {
       data: userInfo,
     };
   }
+
+  async requestResetPassword(dto: EmailDto): Promise<ApiResponse> {
+    const { email } = dto;
+    const user = await this.userModel.findOne({ email });
+
+    if (!user) {
+      return {
+        success: false,
+        statusCode: HttpStatus.NOT_FOUND,
+        message: errorMessages.USER_NOT_FOUND,
+      };
+    }
+
+    const resetToken = v4();
+
+    await this.userModel.findByIdAndUpdate(user._id, { resetToken });
+    await this.sendgridService.sendPasswordResetEmail(user.email, resetToken);
+
+    return {
+      success: true,
+      statusCode: HttpStatus.OK,
+    };
+  }
 }

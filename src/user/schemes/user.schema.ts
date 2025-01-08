@@ -17,6 +17,9 @@ export class User {
   @Prop({ required: true })
   activationToken: string;
 
+  @Prop({ default: null })
+  resetToken?: string | null;
+
   @Prop({ default: false })
   isActivated: boolean;
 

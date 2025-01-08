@@ -74,4 +74,15 @@ export class UserController {
     if (!data.success) res.status(data.statusCode);
     return data;
   }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('request-reset-password')
+  async requestResetPassword(
+    @Body() dto: EmailDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<ApiResponse> {
+    const data = await this.userService.requestResetPassword(dto);
+    if (!data.success) res.status(data.statusCode);
+    return data;
+  }
 }

@@ -5,4 +5,5 @@ export const errorMessages = {
   INACTIVE_EMAIL_ERROR: 'The email is not activated.',
   USER_NOT_AUTHORIZED: 'The user is not authorized.',
   USER_NOT_FOUND: 'The user is not found or not registered.',
+  ACTIVATION_TOKEN_ERROR: 'The activation token is invalid.',
 };

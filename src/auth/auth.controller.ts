@@ -94,4 +94,21 @@ export class AuthController {
 
     return data;
   }
+
+  @Post('google-auth')
+  async googleAuth(
+    @Body('token') token: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<ApiResponse<AuthResponse> | ApiResponse> {
+    const data = await this.authService.googleAuth(token);
+
+    if (data.success) {
+      const refreshToken = data.data?.tokens.refreshToken;
+      res.cookie(cookieKeys.REFRESH_TOKEN, refreshToken, cookieOptions);
+    } else {
+      res.status(data.statusCode);
+    }
+
+    return data;
+  }
 }

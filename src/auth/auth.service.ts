@@ -1,5 +1,6 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { OAuth2Client } from 'google-auth-library';
 import { Model } from 'mongoose';
 import { ApiResponse } from 'src/helpers/api-response.type';
 import { errorMessages } from 'src/helpers/error-messages';
@@ -180,5 +181,51 @@ export class AuthService {
       statusCode: HttpStatus.OK,
       data: { user: userInfo, tokens },
     };
+  }
+
+  async googleAuth(
+    token: string,
+  ): Promise<ApiResponse<AuthResponse> | ApiResponse> {
+    const client = new OAuth2Client(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+    );
+
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const googlePayload = ticket.getPayload();
+
+    const email = googlePayload.email;
+    const userFromDB = await this.userModel.findOne({ email });
+
+    if (userFromDB) {
+      const payload = this.tokenService.createPayload(userFromDB);
+      const tokens = await this.tokenService.createTokenPair(payload);
+      const userInfo = sanitizeUserData(userFromDB);
+
+      return {
+        success: true,
+        statusCode: HttpStatus.OK,
+        data: { user: userInfo, tokens },
+      };
+    } else {
+      const userDto = {
+        email,
+        isActivated: googlePayload.email_verified,
+      };
+      const newUser = await this.userModel.create({ ...userDto });
+      const payload = this.tokenService.createPayload(newUser);
+      const tokens = await this.tokenService.createTokenPair(payload);
+      const userInfo = sanitizeUserData(newUser);
+
+      return {
+        success: true,
+        statusCode: HttpStatus.CREATED,
+        data: { user: userInfo, tokens },
+      };
+    }
   }
 }

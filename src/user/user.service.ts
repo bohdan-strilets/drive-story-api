@@ -7,6 +7,7 @@ import { sanitizeUserData } from 'src/helpers/sanitize-user-data';
 import { PasswordService } from 'src/password/password.service';
 import { SendgridService } from 'src/sendgrid/sendgrid.service';
 import { v4 } from 'uuid';
+import { EditPasswordDto } from './dto/edit-password.dto';
 import { EmailDto } from './dto/email.dto';
 import { PasswordDto } from './dto/password.dto';
 import { ProfileDto } from './dto/profile.dto';
@@ -204,6 +205,37 @@ export class UserService {
       resetToken: null,
     });
 
+    await this.sendgridService.sendPasswordChangedSuccess(user.email);
+
+    return {
+      success: true,
+      statusCode: HttpStatus.OK,
+    };
+  }
+
+  async editPassword(
+    dto: EditPasswordDto,
+    userId: string,
+  ): Promise<ApiResponse> {
+    const user = await this.userModel.findById(userId);
+    const isValidPassword = await this.passwordService.checkPassword(
+      dto.password,
+      user.password,
+    );
+
+    if (!user || !isValidPassword) {
+      return {
+        success: false,
+        statusCode: HttpStatus.UNAUTHORIZED,
+        message: errorMessages.USER_NOT_AUTHORIZED,
+      };
+    }
+
+    const hashPassword = await this.passwordService.createPassword(
+      dto.newPassword,
+    );
+
+    await this.userModel.findByIdAndUpdate(userId, { password: hashPassword });
     await this.sendgridService.sendPasswordChangedSuccess(user.email);
 
     return {

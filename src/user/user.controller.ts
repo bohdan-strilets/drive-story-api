@@ -14,6 +14,7 @@ import { Response } from 'express';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { ApiResponse } from 'src/helpers/api-response.type';
 import { User } from './decorators/user.decorator';
+import { EditPasswordDto } from './dto/edit-password.dto';
 import { EmailDto } from './dto/email.dto';
 import { PasswordDto } from './dto/password.dto';
 import { ProfileDto } from './dto/profile.dto';
@@ -116,6 +117,18 @@ export class UserController {
     if (!data.success) res.status(data.statusCode);
     return data;
 
+    return data;
+  }
+
+  @Auth()
+  @Patch('edit-password')
+  async editPassword(
+    @Body() dto: EditPasswordDto,
+    @User('_id') userId: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<ApiResponse> {
+    const data = await this.userService.editPassword(dto, userId);
+    if (!data.success) res.status(data.statusCode);
     return data;
   }
 }

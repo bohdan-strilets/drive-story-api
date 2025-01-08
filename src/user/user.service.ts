@@ -3,10 +3,13 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { ApiResponse } from 'src/helpers/api-response.type';
 import { errorMessages } from 'src/helpers/error-messages';
+import { sanitizeUserData } from 'src/helpers/sanitize-user-data';
 import { SendgridService } from 'src/sendgrid/sendgrid.service';
 import { v4 } from 'uuid';
 import { EmailDto } from './dto/email.dto';
+import { ProfileDto } from './dto/profile.dto';
 import { User } from './schemes/user.schema';
+import { UserInfo } from './types/user-info';
 
 @Injectable()
 export class UserService {
@@ -65,6 +68,39 @@ export class UserService {
     return {
       success: true,
       statusCode: HttpStatus.OK,
+    };
+  }
+
+  async editProfile(
+    userId: string,
+    dto: ProfileDto,
+  ): Promise<ApiResponse<UserInfo>> {
+    if (!userId) {
+      return {
+        success: false,
+        statusCode: HttpStatus.UNAUTHORIZED,
+        message: errorMessages.USER_NOT_AUTHORIZED,
+      };
+    }
+
+    const updatedUser = await this.userModel.findByIdAndUpdate(userId, dto, {
+      new: true,
+    });
+
+    if (!updatedUser) {
+      return {
+        success: false,
+        statusCode: HttpStatus.NOT_FOUND,
+        message: errorMessages.USER_NOT_FOUND,
+      };
+    }
+
+    const userInfo = sanitizeUserData(updatedUser);
+
+    return {
+      success: true,
+      statusCode: HttpStatus.OK,
+      data: userInfo,
     };
   }
 }

@@ -5,6 +5,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
   Res,
 } from '@nestjs/common';
@@ -12,7 +13,10 @@ import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { ApiResponse } from 'src/helpers/api-response.type';
+import { User } from './decorators/user.decorator';
 import { EmailDto } from './dto/email.dto';
+import { ProfileDto } from './dto/profile.dto';
+import { UserInfo } from './types/user-info';
 import { UserService } from './user.service';
 
 @Controller('v1/user')
@@ -43,6 +47,18 @@ export class UserController {
     @Res({ passthrough: true }) res: Response,
   ): Promise<ApiResponse> {
     const data = await this.userService.requestActivationEmailResend(dto);
+    if (!data.success) res.status(data.statusCode);
+    return data;
+  }
+
+  @Auth()
+  @Patch('edit-profile')
+  async editProfile(
+    @Body() dto: ProfileDto,
+    @User('_id') userId: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<ApiResponse<UserInfo>> {
+    const data = await this.userService.editProfile(userId, dto);
     if (!data.success) res.status(data.statusCode);
     return data;
   }

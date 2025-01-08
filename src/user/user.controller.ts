@@ -1,7 +1,18 @@
-import { Controller, Get, Param, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Res,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
+import { Auth } from 'src/auth/decorators/auth.decorator';
 import { ApiResponse } from 'src/helpers/api-response.type';
+import { EmailDto } from './dto/email.dto';
 import { UserService } from './user.service';
 
 @Controller('v1/user')
@@ -20,6 +31,18 @@ export class UserController {
     res.redirect(`${clientUrl}activation-success`);
 
     const data = await this.userService.activationEmail(activationToken);
+    if (!data.success) res.status(data.statusCode);
+    return data;
+  }
+
+  @Auth()
+  @HttpCode(HttpStatus.OK)
+  @Post('request-activation-email-resend')
+  async requestActivationEmailResend(
+    @Body() dto: EmailDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<ApiResponse> {
+    const data = await this.userService.requestActivationEmailResend(dto);
     if (!data.success) res.status(data.statusCode);
     return data;
   }

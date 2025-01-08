@@ -103,4 +103,39 @@ export class UserService {
       data: userInfo,
     };
   }
+
+  async editEmail(
+    userId: string,
+    dto: EmailDto,
+  ): Promise<ApiResponse<UserInfo>> {
+    const { email } = dto;
+
+    if (!userId) {
+      return {
+        success: false,
+        statusCode: HttpStatus.UNAUTHORIZED,
+        message: errorMessages.USER_NOT_AUTHORIZED,
+      };
+    }
+
+    const activationToken = v4();
+    await this.sendgridService.sendConfirmEmailLetter(email, activationToken);
+
+    const emailDto = { email, activationToken, isActivated: false };
+    const updatedUser = await this.userModel.findByIdAndUpdate(
+      userId,
+      emailDto,
+      {
+        new: true,
+      },
+    );
+
+    const userInfo = sanitizeUserData(updatedUser);
+
+    return {
+      success: true,
+      statusCode: HttpStatus.OK,
+      data: userInfo,
+    };
+  }
 }

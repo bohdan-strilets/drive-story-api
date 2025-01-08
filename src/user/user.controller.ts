@@ -62,4 +62,16 @@ export class UserController {
     if (!data.success) res.status(data.statusCode);
     return data;
   }
+
+  @Auth()
+  @Patch('edit-email')
+  async editEmail(
+    @Body() dto: EmailDto,
+    @User('_id') userId: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<ApiResponse<UserInfo>> {
+    const data = await this.userService.editEmail(userId, dto);
+    if (!data.success) res.status(data.statusCode);
+    return data;
+  }
 }

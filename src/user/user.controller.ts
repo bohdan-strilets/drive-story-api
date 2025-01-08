@@ -15,6 +15,7 @@ import { Auth } from 'src/auth/decorators/auth.decorator';
 import { ApiResponse } from 'src/helpers/api-response.type';
 import { User } from './decorators/user.decorator';
 import { EmailDto } from './dto/email.dto';
+import { PasswordDto } from './dto/password.dto';
 import { ProfileDto } from './dto/profile.dto';
 import { UserInfo } from './types/user-info';
 import { UserService } from './user.service';
@@ -83,6 +84,38 @@ export class UserController {
   ): Promise<ApiResponse> {
     const data = await this.userService.requestResetPassword(dto);
     if (!data.success) res.status(data.statusCode);
+    return data;
+  }
+
+  @Get('verify-reset-token/:resetToken')
+  async verifyResetToken(
+    @Param('resetToken') resetToken: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<ApiResponse> {
+    const data = await this.userService.verifyResetToken(resetToken);
+    const clientUrl = this.configService.get('CLIENT_URL');
+
+    if (data.success) {
+      res.redirect(`${clientUrl}reset-password?valid=true`);
+    } else {
+      res.redirect(`${clientUrl}reset-password?valid=false`);
+      res.status(data.statusCode);
+    }
+
+    return data;
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('reset-password/:resetToken')
+  async resetPassword(
+    @Body() dto: PasswordDto,
+    @Param('resetToken') resetToken: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<ApiResponse> {
+    const data = await this.userService.resetPassword(dto, resetToken);
+    if (!data.success) res.status(data.statusCode);
+    return data;
+
     return data;
   }
 }

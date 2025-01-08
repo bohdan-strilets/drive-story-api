@@ -4,9 +4,11 @@ import { Model } from 'mongoose';
 import { ApiResponse } from 'src/helpers/api-response.type';
 import { errorMessages } from 'src/helpers/error-messages';
 import { sanitizeUserData } from 'src/helpers/sanitize-user-data';
+import { PasswordService } from 'src/password/password.service';
 import { SendgridService } from 'src/sendgrid/sendgrid.service';
 import { v4 } from 'uuid';
 import { EmailDto } from './dto/email.dto';
+import { PasswordDto } from './dto/password.dto';
 import { ProfileDto } from './dto/profile.dto';
 import { User } from './schemes/user.schema';
 import { UserInfo } from './types/user-info';
@@ -16,6 +18,7 @@ export class UserService {
   constructor(
     @InjectModel(User.name) private userModel: Model<User>,
     private readonly sendgridService: SendgridService,
+    private readonly passwordService: PasswordService,
   ) {}
 
   async activationEmail(activationToken: string): Promise<ApiResponse> {
@@ -155,6 +158,53 @@ export class UserService {
 
     await this.userModel.findByIdAndUpdate(user._id, { resetToken });
     await this.sendgridService.sendPasswordResetEmail(user.email, resetToken);
+
+    return {
+      success: true,
+      statusCode: HttpStatus.OK,
+    };
+  }
+
+  async verifyResetToken(resetToken: string): Promise<ApiResponse> {
+    const user = await this.userModel.findOne({ resetToken });
+
+    if (!user) {
+      return {
+        success: false,
+        statusCode: HttpStatus.NOT_FOUND,
+        message: errorMessages.USER_NOT_FOUND,
+      };
+    }
+
+    return {
+      success: true,
+      statusCode: HttpStatus.OK,
+    };
+  }
+
+  async resetPassword(
+    dto: PasswordDto,
+    resetToken: string,
+  ): Promise<ApiResponse> {
+    const user = await this.userModel.findOne({ resetToken });
+
+    if (!user) {
+      return {
+        success: false,
+        statusCode: HttpStatus.NOT_FOUND,
+        message: errorMessages.USER_NOT_FOUND,
+      };
+    }
+
+    const { password } = dto;
+    const hashPassword = await this.passwordService.createPassword(password);
+
+    await this.userModel.findByIdAndUpdate(user._id, {
+      password: hashPassword,
+      resetToken: null,
+    });
+
+    await this.sendgridService.sendPasswordChangedSuccess(user.email);
 
     return {
       success: true,

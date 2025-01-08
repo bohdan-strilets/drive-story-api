@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { PasswordModule } from 'src/password/password.module';
 import { SendgridModule } from 'src/sendgrid/sendgrid.module';
 import { User, UserSchema } from './schemes/user.schema';
 import { UserController } from './user.controller';
@@ -9,6 +10,7 @@ import { UserService } from './user.service';
   imports: [
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
     SendgridModule,
+    PasswordModule,
   ],
   controllers: [UserController],
   providers: [UserService],

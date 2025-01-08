@@ -79,4 +79,25 @@ export class SendgridService {
 
     await this.sendEmail(mail);
   }
+
+  async sendPasswordChangedSuccess(email: string): Promise<void> {
+    const templatePath = join(
+      this.rootPath,
+      'password-changed-success.template.hbs',
+    );
+
+    const variables = {
+      supportEmail: process.env.SENDGRID_OWNER,
+      year: new Date().getFullYear().toString(),
+    };
+    const htmlContent = this.renderTemplate(templatePath, variables);
+
+    const mail = {
+      to: email,
+      subject: 'Password Changed Successfully',
+      html: htmlContent,
+    };
+
+    await this.sendEmail(mail);
+  }
 }

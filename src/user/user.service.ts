@@ -9,8 +9,8 @@ import { SendgridService } from 'src/sendgrid/sendgrid.service';
 import { v4 } from 'uuid';
 import { EditPasswordDto } from './dto/edit-password.dto';
 import { EmailDto } from './dto/email.dto';
-import { PasswordDto } from './dto/password.dto';
 import { ProfileDto } from './dto/profile.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { User } from './schemes/user.schema';
 import { UserInfo } from './types/user-info';
 
@@ -184,7 +184,7 @@ export class UserService {
   }
 
   async resetPassword(
-    dto: PasswordDto,
+    dto: ResetPasswordDto,
     resetToken: string,
   ): Promise<ApiResponse> {
     const user = await this.userModel.findOne({ resetToken });

@@ -16,8 +16,8 @@ import { ApiResponse } from 'src/helpers/api-response.type';
 import { User } from './decorators/user.decorator';
 import { EditPasswordDto } from './dto/edit-password.dto';
 import { EmailDto } from './dto/email.dto';
-import { PasswordDto } from './dto/password.dto';
 import { ProfileDto } from './dto/profile.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { UserInfo } from './types/user-info';
 import { UserService } from './user.service';
 
@@ -109,7 +109,7 @@ export class UserController {
   @HttpCode(HttpStatus.OK)
   @Post('reset-password/:resetToken')
   async resetPassword(
-    @Body() dto: PasswordDto,
+    @Body() dto: ResetPasswordDto,
     @Param('resetToken') resetToken: string,
     @Res({ passthrough: true }) res: Response,
   ): Promise<ApiResponse> {

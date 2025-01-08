@@ -4,7 +4,7 @@ import {
   MIN_PASSWORD_LENGTH,
 } from 'src/helpers/validation-rules';
 
-export class PasswordDto {
+export class ResetPasswordDto {
   @IsString()
   @MinLength(MIN_PASSWORD_LENGTH)
   @MaxLength(MAX_PASSWORD_LENGTH)

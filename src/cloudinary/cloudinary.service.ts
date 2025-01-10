@@ -3,7 +3,10 @@ import { UploadApiResponse, v2 } from 'cloudinary';
 import * as fs from 'fs';
 import { ApiResponse } from 'src/helpers/api-response.type';
 import { errorMessages } from 'src/helpers/error-messages';
+import { sanitizeUserData } from 'src/helpers/sanitize-user-data';
+import { UserInfo } from 'src/user/types/user-info';
 import { FileType } from './enums/file-type.enum';
+import { DeleteOptions } from './types/delete-options.type';
 import { UploadOptions } from './types/upload-options.type';
 
 @Injectable()
@@ -41,6 +44,7 @@ export class CloudinaryService {
 
   async deleteFile(publicId: string, fileType: FileType): Promise<void> {
     const deleteOptions = { resource_type: fileType, invalidate: true };
+
     try {
       await this.cloudinary.uploader.destroy(publicId, deleteOptions);
     } catch (error) {
@@ -86,7 +90,7 @@ export class CloudinaryService {
   async uploadFileAndUpdateModel(
     file: Express.Multer.File,
     options: UploadOptions,
-  ): Promise<ApiResponse<any>> {
+  ): Promise<ApiResponse<UserInfo>> {
     const { model, modelId, folderPath, fieldToUpdate } = options;
     const entity = await model.findById(modelId);
 
@@ -107,16 +111,53 @@ export class CloudinaryService {
       ? [resultPath]
       : [...entity[fieldToUpdate], resultPath];
 
-    const updatedEntity: string[] = await model.findByIdAndUpdate(
+    const updatedEntity = await model.findByIdAndUpdate(
       modelId,
       { [fieldToUpdate]: updatedField },
       { new: true },
     );
 
+    const correctedEntity = sanitizeUserData(updatedEntity);
+
     return {
       success: true,
       statusCode: HttpStatus.OK,
-      data: updatedEntity,
+      data: correctedEntity,
+    };
+  }
+
+  async deleteFileAndUpdateModel(
+    options: DeleteOptions,
+  ): Promise<ApiResponse<UserInfo>> {
+    const { model, userId, folderPath, fieldToUpdate } = options;
+    const entity = await model.findById(userId);
+
+    if (!entity) {
+      return {
+        success: false,
+        statusCode: HttpStatus.NOT_FOUND,
+        message: errorMessages.ENTITY_NOT_FOUND,
+      };
+    }
+
+    await this.deleteFilesAndFolder(folderPath);
+
+    const updatedAvatarArr = entity.avatars.filter(
+      (item: string) => !item.includes(folderPath),
+    );
+
+    const updatedEntity = await model.findByIdAndUpdate(
+      userId,
+      { [fieldToUpdate]: updatedAvatarArr },
+      { new: true },
+    );
+
+    const correctedEntity = sanitizeUserData(updatedEntity);
+
+    return {
+      success: true,
+      statusCode: HttpStatus.OK,
+      data: correctedEntity,
     };
   }
 }

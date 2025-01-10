@@ -258,4 +258,16 @@ export class UserService {
       fieldToUpdate: 'avatars',
     });
   }
+
+  async deleteAvatar(
+    avatarPublicId: string,
+    userId: string,
+  ): Promise<ApiResponse<UserInfo>> {
+    return await this.cloudinaryService.deleteFileAndUpdateModel({
+      model: this.userModel,
+      folderPath: avatarPublicId,
+      userId,
+      fieldToUpdate: 'avatars',
+    });
+  }
 }

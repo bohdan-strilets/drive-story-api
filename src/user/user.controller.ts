@@ -1,12 +1,14 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
   Param,
   Patch,
   Post,
+  Query,
   Res,
   UploadedFile,
   UseInterceptors,
@@ -150,6 +152,18 @@ export class UserController {
     @Res({ passthrough: true }) res: Response,
   ): Promise<ApiResponse<UserInfo>> {
     const data = await this.userService.uploadAvatar(file, userId);
+    if (!data.success) res.status(data.statusCode);
+    return data;
+  }
+
+  @Auth()
+  @Delete('delete-avatar')
+  async deleteAvatar(
+    @User('_id') userId: string,
+    @Res({ passthrough: true }) res: Response,
+    @Query('avatarPublicId') avatarPublicId: string,
+  ): Promise<ApiResponse<UserInfo>> {
+    const data = await this.userService.deleteAvatar(avatarPublicId, userId);
     if (!data.success) res.status(data.statusCode);
     return data;
   }

@@ -8,16 +8,21 @@ import {
   Patch,
   Post,
   Res,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { ApiResponse } from 'src/helpers/api-response.type';
+import { DEFAULT_FOLDER_FOR_FILES } from 'src/helpers/default-file-folder';
 import { User } from './decorators/user.decorator';
 import { EditPasswordDto } from './dto/edit-password.dto';
 import { EmailDto } from './dto/email.dto';
 import { ProfileDto } from './dto/profile.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { imageValidator } from './pipes/image-validator.pipe';
 import { UserInfo } from './types/user-info';
 import { UserService } from './user.service';
 
@@ -128,6 +133,23 @@ export class UserController {
     @Res({ passthrough: true }) res: Response,
   ): Promise<ApiResponse> {
     const data = await this.userService.editPassword(dto, userId);
+    if (!data.success) res.status(data.statusCode);
+    return data;
+  }
+
+  @Auth()
+  @HttpCode(HttpStatus.OK)
+  @Post('upload-avatar')
+  @UseInterceptors(
+    FileInterceptor('avatar', { dest: DEFAULT_FOLDER_FOR_FILES }),
+  )
+  async uploadAvatar(
+    @UploadedFile(imageValidator)
+    file: Express.Multer.File,
+    @User('_id') userId: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<ApiResponse<UserInfo>> {
+    const data = await this.userService.uploadAvatar(file, userId);
     if (!data.success) res.status(data.statusCode);
     return data;
   }

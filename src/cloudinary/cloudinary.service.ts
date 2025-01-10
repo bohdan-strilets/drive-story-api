@@ -1,6 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { UploadApiResponse, v2 } from 'cloudinary';
+import * as fs from 'fs';
+import { ApiResponse } from 'src/helpers/api-response.type';
+import { errorMessages } from 'src/helpers/error-messages';
 import { FileType } from './enums/file-type.enum';
+import { UploadOptions } from './types/upload-options.type';
 
 @Injectable()
 export class CloudinaryService {
@@ -75,8 +79,44 @@ export class CloudinaryService {
     }
   }
 
-  isGoogleAvatarUrl(url: string): boolean {
-    const googleAvatarPathRegex = /\/a\/[A-Za-z0-9_-]+=s\d{2,}-c/;
-    return googleAvatarPathRegex.test(url);
+  isDefaultImage(urls: string[]): boolean {
+    return urls.length === 1 && urls[0].includes('default');
+  }
+
+  async uploadFileAndUpdateModel(
+    file: Express.Multer.File,
+    options: UploadOptions,
+  ): Promise<ApiResponse<any>> {
+    const { model, modelId, folderPath, fieldToUpdate } = options;
+    const entity = await model.findById(modelId);
+
+    if (!entity) {
+      return {
+        success: false,
+        statusCode: HttpStatus.NOT_FOUND,
+        message: errorMessages.ENTITY_NOT_FOUND,
+      };
+    }
+
+    const filePath = `${folderPath}${modelId}`;
+    const resultPath = await this.uploadFile(file, FileType.IMAGE, filePath);
+
+    fs.unlinkSync(file.path);
+
+    const updatedField = this.isDefaultImage(entity[fieldToUpdate])
+      ? [resultPath]
+      : [...entity[fieldToUpdate], resultPath];
+
+    const updatedEntity: string[] = await model.findByIdAndUpdate(
+      modelId,
+      { [fieldToUpdate]: updatedField },
+      { new: true },
+    );
+
+    return {
+      success: true,
+      statusCode: HttpStatus.OK,
+      data: updatedEntity,
+    };
   }
 }

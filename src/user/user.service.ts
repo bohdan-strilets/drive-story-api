@@ -1,7 +1,9 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { ApiResponse } from 'src/helpers/api-response.type';
+import { CloudinaryFolders } from 'src/helpers/cloudinary-folders';
 import { errorMessages } from 'src/helpers/error-messages';
 import { sanitizeUserData } from 'src/helpers/sanitize-user-data';
 import { PasswordService } from 'src/password/password.service';
@@ -20,6 +22,7 @@ export class UserService {
     @InjectModel(User.name) private userModel: Model<User>,
     private readonly sendgridService: SendgridService,
     private readonly passwordService: PasswordService,
+    private readonly cloudinaryService: CloudinaryService,
   ) {}
 
   async activationEmail(activationToken: string): Promise<ApiResponse> {
@@ -242,5 +245,17 @@ export class UserService {
       success: true,
       statusCode: HttpStatus.OK,
     };
+  }
+
+  async uploadAvatar(
+    file: Express.Multer.File,
+    userId: string,
+  ): Promise<ApiResponse<UserInfo>> {
+    return await this.cloudinaryService.uploadFileAndUpdateModel(file, {
+      model: this.userModel,
+      modelId: userId,
+      folderPath: CloudinaryFolders.USER_AVATAR,
+      fieldToUpdate: 'avatars',
+    });
   }
 }

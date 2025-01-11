@@ -83,8 +83,8 @@ export class CloudinaryService {
     }
   }
 
-  isDefaultImage(urls: string[]): boolean {
-    return urls.length === 1 && urls[0].includes('default');
+  getNestedAccess(obj: any, path: string[]): string[] {
+    return path.reduce((acc, key) => acc[key], obj);
   }
 
   async uploadFileAndUpdateModel(
@@ -103,17 +103,17 @@ export class CloudinaryService {
     }
 
     const filePath = `${folderPath}${modelId}`;
-    const resultPath = await this.uploadFile(file, FileType.IMAGE, filePath);
+    const uploadedImage = await this.uploadFile(file, FileType.IMAGE, filePath);
+    const images = this.getNestedAccess(entity, fieldToUpdate);
 
     fs.unlinkSync(file.path);
 
-    const updatedField = this.isDefaultImage(entity[fieldToUpdate])
-      ? [resultPath]
-      : [...entity[fieldToUpdate], resultPath];
+    const updatedField =
+      images.length === 1 ? [uploadedImage] : [...images, uploadedImage];
 
     const updatedEntity = await model.findByIdAndUpdate(
       modelId,
-      { [fieldToUpdate]: updatedField },
+      { [fieldToUpdate.join('.')]: updatedField },
       { new: true },
     );
 
@@ -141,14 +141,14 @@ export class CloudinaryService {
     }
 
     await this.deleteFilesAndFolder(folderPath);
-
-    const updatedAvatarArr = entity.avatars.filter(
+    const images = this.getNestedAccess(entity, fieldToUpdate);
+    const filteredImages = images.filter(
       (item: string) => !item.includes(folderPath),
     );
 
     const updatedEntity = await model.findByIdAndUpdate(
       userId,
-      { [fieldToUpdate]: updatedAvatarArr },
+      { [fieldToUpdate.join('.')]: filteredImages },
       { new: true },
     );
 

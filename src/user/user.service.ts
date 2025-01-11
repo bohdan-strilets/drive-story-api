@@ -255,7 +255,7 @@ export class UserService {
       model: this.userModel,
       modelId: userId,
       folderPath: CloudinaryFolders.USER_AVATAR,
-      fieldToUpdate: 'avatars',
+      fieldToUpdate: ['avatars', 'resources'],
     });
   }
 
@@ -267,7 +267,7 @@ export class UserService {
       model: this.userModel,
       folderPath: avatarPublicId,
       userId,
-      fieldToUpdate: 'avatars',
+      fieldToUpdate: ['avatars', 'resources'],
     });
   }
 }

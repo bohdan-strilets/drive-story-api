@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import { ApiResponse } from 'src/helpers/api-response.type';
 import { errorMessages } from 'src/helpers/error-messages';
 import { sanitizeUserData } from 'src/helpers/sanitize-user-data';
+import { UserDocument } from 'src/user/schemes/user.schema';
 import { UserInfo } from 'src/user/types/user-info';
 import { FileType } from './enums/file-type.enum';
 import { DeleteOptions } from './types/delete-options.type';
@@ -23,23 +24,40 @@ export class CloudinaryService {
 
   async uploadFile(
     file: Express.Multer.File,
-    type: FileType,
-    path: string,
+    fileType: FileType,
+    folderPath: string,
   ): Promise<string | null> {
-    const uploadOptions = { folder: path, resource_type: type };
-    const result = await this.cloudinary.uploader.upload(
-      file.path,
-      uploadOptions,
-    );
+    const uploadOptions = { folder: folderPath, resource_type: fileType };
 
-    if (result) return result.secure_url;
-    return null;
+    try {
+      const uploadResult = await this.cloudinary.uploader.upload(
+        file.path,
+        uploadOptions,
+      );
+
+      return uploadResult.secure_url;
+    } catch (error) {
+      console.error('Error uploading file to Cloudinary:', error);
+      return null;
+    }
   }
 
   getFolderPath(url: string): string {
-    const path = url.split('/');
-    const folders = path.slice(7, path.length - 1).join('/');
-    return [folders].join('/');
+    if (!url || typeof url !== 'string') {
+      throw new Error('Invalid URL provided');
+    }
+
+    const segments = url.split('/');
+
+    if (segments.length < 8) {
+      throw new Error(
+        'URL does not contain enough segments to extract folder path',
+      );
+    }
+
+    const folderSegments = segments.slice(7, segments.length - 1);
+
+    return folderSegments.join('/');
   }
 
   async deleteFile(publicId: string, fileType: FileType): Promise<void> {
@@ -47,20 +65,32 @@ export class CloudinaryService {
 
     try {
       await this.cloudinary.uploader.destroy(publicId, deleteOptions);
+      console.log(
+        `File with publicId "${publicId}" has been successfully deleted.`,
+      );
     } catch (error) {
-      throw new Error(`Deleting file error: ${error}`);
+      throw new Error(
+        `Failed to delete file. PublicId: "${publicId}". Error: ${error.message || error}`,
+      );
     }
   }
 
-  async deleteFolder(folderPath: string) {
+  async deleteFolder(folderPath: string): Promise<void> {
     try {
       await this.cloudinary.api.delete_folder(folderPath);
+      console.log(`Folder "${folderPath}" has been successfully deleted.`);
     } catch (error) {
-      throw new Error(`Deleting folder error: ${error}`);
+      throw new Error(
+        `Failed to delete folder. Folder path: "${folderPath}". Error: ${error.message || error}`,
+      );
     }
   }
 
   async deleteFilesAndFolder(folderPath: string): Promise<void> {
+    if (!folderPath) {
+      throw new Error('Folder path is required.');
+    }
+
     try {
       const folderResult = await this.cloudinary.api.resources({
         type: 'upload',
@@ -71,15 +101,32 @@ export class CloudinaryService {
         (file: UploadApiResponse) => file.public_id,
       );
 
-      await Promise.all(
-        publicIds.map((publicId: string) =>
-          this.deleteFile(publicId, FileType.IMAGE),
-        ),
-      );
+      if (publicIds.length === 0) {
+        console.log(`No files found in folder "${folderPath}".`);
+      } else {
+        await Promise.all(
+          publicIds.map(async (publicId: string) => {
+            try {
+              await this.deleteFile(publicId, FileType.IMAGE);
+              console.log(
+                `File with publicId "${publicId}" has been successfully deleted.`,
+              );
+            } catch (error) {
+              console.error(
+                `Failed to delete file with publicId "${publicId}":`,
+                error,
+              );
+            }
+          }),
+        );
+      }
 
       await this.deleteFolder(folderPath);
+      console.log(`Folder "${folderPath}" has been successfully deleted.`);
     } catch (error) {
-      throw new Error(`Error deleting files and folder: ${error}`);
+      throw new Error(
+        `Error deleting files and folder at path "${folderPath}". Error: ${error.message || error}`,
+      );
     }
   }
 
@@ -103,19 +150,47 @@ export class CloudinaryService {
     }
 
     const filePath = `${folderPath}${modelId}`;
-    const uploadedImage = await this.uploadFile(file, FileType.IMAGE, filePath);
-    const images = this.getNestedAccess(entity, fieldToUpdate);
+    let uploadedImage: string | null = null;
 
-    fs.unlinkSync(file.path);
+    try {
+      uploadedImage = await this.uploadFile(file, FileType.IMAGE, filePath);
+    } catch (uploadError) {
+      console.error('Error uploading file:', uploadError);
+      return {
+        success: false,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: errorMessages.FILE_UPLOAD_FAILED,
+      };
+    }
 
-    const updatedField =
-      images.length === 1 ? [uploadedImage] : [...images, uploadedImage];
+    const images: string[] = this.getNestedAccess(entity, fieldToUpdate);
 
-    const updatedEntity = await model.findByIdAndUpdate(
-      modelId,
-      { [fieldToUpdate.join('.')]: updatedField },
-      { new: true },
-    );
+    try {
+      fs.unlinkSync(file.path);
+    } catch (unlinkError) {
+      console.error('Error removing file:', unlinkError);
+    }
+
+    if (uploadedImage) {
+      images.push(uploadedImage);
+    }
+
+    let updatedEntity: UserDocument | null = null;
+
+    try {
+      updatedEntity = await model.findByIdAndUpdate(
+        modelId,
+        { [fieldToUpdate.join('.')]: images },
+        { new: true },
+      );
+    } catch (updateError) {
+      console.error('Error updating entity:', updateError);
+      return {
+        success: false,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: errorMessages.ENTITY_UPDATE_FAILED,
+      };
+    }
 
     const correctedEntity = sanitizeUserData(updatedEntity);
 
@@ -129,7 +204,7 @@ export class CloudinaryService {
   async deleteFileAndUpdateModel(
     options: DeleteOptions,
   ): Promise<ApiResponse<UserInfo>> {
-    const { model, userId, folderPath, fieldToUpdate } = options;
+    const { model, userId, publicId, fieldToUpdate } = options;
     const entity = await model.findById(userId);
 
     if (!entity) {
@@ -140,17 +215,38 @@ export class CloudinaryService {
       };
     }
 
-    await this.deleteFilesAndFolder(folderPath);
-    const images = this.getNestedAccess(entity, fieldToUpdate);
+    try {
+      await this.deleteFile(publicId, FileType.IMAGE);
+    } catch (error) {
+      console.error('Error deleting file from storage:', error);
+      return {
+        success: false,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: errorMessages.FILE_DELETE_FAILED,
+      };
+    }
+
+    const images: string[] = this.getNestedAccess(entity, fieldToUpdate);
+
     const filteredImages = images.filter(
-      (item: string) => !item.includes(folderPath),
+      (item: string) => !item.includes(publicId),
     );
 
-    const updatedEntity = await model.findByIdAndUpdate(
-      userId,
-      { [fieldToUpdate.join('.')]: filteredImages },
-      { new: true },
-    );
+    let updatedEntity: UserDocument | null = null;
+    try {
+      updatedEntity = await model.findByIdAndUpdate(
+        userId,
+        { [fieldToUpdate.join('.')]: filteredImages },
+        { new: true },
+      );
+    } catch (error) {
+      console.error('Error updating the entity in the database:', error);
+      return {
+        success: false,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: errorMessages.ENTITY_UPDATE_FAILED,
+      };
+    }
 
     const correctedEntity = sanitizeUserData(updatedEntity);
 

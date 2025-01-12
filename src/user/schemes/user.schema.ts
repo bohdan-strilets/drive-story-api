@@ -42,13 +42,13 @@ export class User {
   gender?: Gender;
 
   @Prop({ type: Images })
-  avatars?: ImagesDocument;
+  avatars: ImagesDocument;
 
   @Prop({ type: Images })
-  posters?: ImagesDocument;
+  posters: ImagesDocument;
 
   @Prop({ type: Location, default: null })
-  location?: LocationDocument | null;
+  location: LocationDocument | null;
 
   @Prop()
   createdAt: Date;

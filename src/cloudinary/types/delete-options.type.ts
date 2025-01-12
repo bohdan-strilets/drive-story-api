@@ -1,6 +1,6 @@
 export type DeleteOptions = {
   model: any;
-  folderPath: string;
+  publicId: string;
   userId: string;
   fieldToUpdate: string[];
 };

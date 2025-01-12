@@ -265,7 +265,7 @@ export class UserService {
   ): Promise<ApiResponse<UserInfo>> {
     return await this.cloudinaryService.deleteFileAndUpdateModel({
       model: this.userModel,
-      folderPath: avatarPublicId,
+      publicId: avatarPublicId,
       userId,
       fieldToUpdate: ['avatars', 'resources'],
     });

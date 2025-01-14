@@ -6,7 +6,7 @@ import { UserDocument } from 'src/user/schemes/user.schema.js';
 import TokenName from './enums/token-name.enum.js';
 import { Token, TokenDocument } from './schemas/token.schema';
 import { Payload } from './types/payload.type';
-import { Tokens } from './types/tokens.type';
+import { TokenPair } from './types/token-pair.type';
 
 @Injectable()
 export class TokenService {
@@ -37,7 +37,7 @@ export class TokenService {
     });
   }
 
-  async createTokenPair(payload: Payload): Promise<Tokens> {
+  async createTokenPair(payload: Payload): Promise<TokenPair> {
     const accessToken = await this.createAccessToken(payload);
     const refreshToken = await this.createRefreshToken(payload);
 

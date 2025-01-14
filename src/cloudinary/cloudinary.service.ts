@@ -1,9 +1,9 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { UploadApiResponse, v2 } from 'cloudinary';
 import * as fs from 'fs';
-import { ApiResponse } from 'src/helpers/api-response.type';
 import { errorMessages } from 'src/helpers/error-messages';
 import { sanitizeUserData } from 'src/helpers/sanitize-user-data';
+import { ApiResponse } from 'src/response/types/api-response.type';
 import { UserDocument } from 'src/user/schemes/user.schema';
 import { UserInfo } from 'src/user/types/user-info';
 import { FileType } from './enums/file-type.enum';

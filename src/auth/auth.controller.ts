@@ -11,8 +11,8 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { ApiResponse } from 'src/helpers/api-response.type';
 import { cookieKeys, cookieOptions } from 'src/helpers/cookie-options';
+import { ApiResponse } from 'src/response/types/api-response.type';
 import { AuthService } from './auth.service';
 import { Auth } from './decorators/auth.decorator';
 import { AuthDto } from './dto/auth.dto';

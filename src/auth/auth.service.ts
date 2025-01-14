@@ -2,11 +2,12 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { OAuth2Client, TokenPayload } from 'google-auth-library';
 import { Model } from 'mongoose';
-import { ApiResponse } from 'src/helpers/api-response.type';
 import { defaultImages } from 'src/helpers/default-images';
 import { errorMessages } from 'src/helpers/error-messages';
 import { sanitizeUserData } from 'src/helpers/sanitize-user-data';
 import { PasswordService } from 'src/password/password.service';
+import { ResponseService } from 'src/response/response.service';
+import { ApiResponse } from 'src/response/types/api-response.type';
 import { SendgridService } from 'src/sendgrid/sendgrid.service';
 import TokenName from 'src/token/enums/token-name.enum';
 import { TokenService } from 'src/token/token.service';
@@ -23,6 +24,7 @@ export class AuthService {
     private readonly passwordService: PasswordService,
     private readonly tokenService: TokenService,
     private readonly sendgridService: SendgridService,
+    private readonly responseService: ResponseService,
   ) {}
 
   private async findUserByEmail(email: string): Promise<UserDocument> {
@@ -66,33 +68,6 @@ export class AuthService {
     return { user: sanitizedUser, tokens };
   }
 
-  private createErrorResponse(
-    statusCode: number,
-    message: string,
-  ): ApiResponse {
-    return {
-      success: false,
-      statusCode,
-      message,
-    };
-  }
-
-  private createSuccessResponse<T = any>(
-    statusCode: number,
-    data?: T,
-  ): ApiResponse<T> {
-    const response: ApiResponse<T> = {
-      success: true,
-      statusCode,
-    };
-
-    if (data !== undefined) {
-      response.data = data;
-    }
-
-    return response;
-  }
-
   async registration(
     dto: AuthDto,
   ): Promise<ApiResponse<AuthResponse> | ApiResponse> {
@@ -101,7 +76,7 @@ export class AuthService {
 
       const userExists = await this.findUserByEmail(email);
       if (!!userExists) {
-        return this.createErrorResponse(
+        return this.responseService.createErrorResponse(
           HttpStatus.CONFLICT,
           errorMessages.EMAIL_IN_USE_ERROR,
         );
@@ -111,13 +86,13 @@ export class AuthService {
       await this.sendActivationEmail(createdUser);
 
       const response = await this.createAuthResponse(createdUser);
-      return this.createSuccessResponse<AuthResponse>(
+      return this.responseService.createSuccessResponse<AuthResponse>(
         HttpStatus.CREATED,
         response,
       );
     } catch (error) {
       console.error('Registration error:', error);
-      return this.createErrorResponse(
+      return this.responseService.createErrorResponse(
         HttpStatus.INTERNAL_SERVER_ERROR,
         errorMessages.ERROR_OCCURRED,
       );
@@ -134,14 +109,14 @@ export class AuthService {
     );
 
     if (!isPasswordValid) {
-      return this.createErrorResponse(
+      return this.responseService.createErrorResponse(
         HttpStatus.BAD_REQUEST,
         errorMessages.INVALID_PASSWORD_ERROR,
       );
     }
 
     if (!user.isActivated) {
-      return this.createErrorResponse(
+      return this.responseService.createErrorResponse(
         HttpStatus.BAD_REQUEST,
         errorMessages.INACTIVE_EMAIL_ERROR,
       );
@@ -154,7 +129,7 @@ export class AuthService {
 
       const user = await this.findUserByEmail(email);
       if (!user) {
-        return this.createErrorResponse(
+        return this.responseService.createErrorResponse(
           HttpStatus.BAD_REQUEST,
           errorMessages.INVALID_EMAIL_ERROR,
         );
@@ -163,10 +138,13 @@ export class AuthService {
       await this.userValidation(user, password);
 
       const response = await this.createAuthResponse(user);
-      return this.createSuccessResponse<AuthResponse>(HttpStatus.OK, response);
+      return this.responseService.createSuccessResponse<AuthResponse>(
+        HttpStatus.OK,
+        response,
+      );
     } catch (error) {
       console.error('Login error:', error);
-      return this.createErrorResponse(
+      return this.responseService.createErrorResponse(
         HttpStatus.INTERNAL_SERVER_ERROR,
         errorMessages.ERROR_OCCURRED,
       );
@@ -184,7 +162,7 @@ export class AuthService {
     const tokenFromDb = await this.tokenService.findTokenFromDb(payload._id);
 
     if (!payload || !tokenFromDb) {
-      return this.createErrorResponse(
+      return this.responseService.createErrorResponse(
         HttpStatus.UNAUTHORIZED,
         errorMessages.USER_NOT_AUTHORIZED,
       );
@@ -196,7 +174,7 @@ export class AuthService {
   async logout(refreshToken: string): Promise<ApiResponse> {
     try {
       if (!refreshToken) {
-        return this.createErrorResponse(
+        return this.responseService.createErrorResponse(
           HttpStatus.UNAUTHORIZED,
           errorMessages.USER_NOT_AUTHORIZED,
         );
@@ -205,10 +183,10 @@ export class AuthService {
       const payload = (await this.tokenValidation(refreshToken)) as Payload;
       await this.tokenService.deleteTokensByDb(payload._id);
 
-      return this.createSuccessResponse(HttpStatus.OK);
+      return this.responseService.createSuccessResponse(HttpStatus.OK);
     } catch (error) {
       console.error('Logout error:', error);
-      return this.createErrorResponse(
+      return this.responseService.createErrorResponse(
         HttpStatus.INTERNAL_SERVER_ERROR,
         errorMessages.ERROR_OCCURRED,
       );
@@ -220,7 +198,7 @@ export class AuthService {
   ): Promise<ApiResponse<AuthResponse> | ApiResponse> {
     try {
       if (!refreshToken) {
-        return this.createErrorResponse(
+        return this.responseService.createErrorResponse(
           HttpStatus.UNAUTHORIZED,
           errorMessages.USER_NOT_AUTHORIZED,
         );
@@ -230,20 +208,20 @@ export class AuthService {
       const userExists = await this.userModel.findById(payload._id);
 
       if (!userExists) {
-        return this.createErrorResponse(
+        return this.responseService.createErrorResponse(
           HttpStatus.NOT_FOUND,
           errorMessages.USER_NOT_FOUND,
         );
       }
 
       const response = await this.createAuthResponse(userExists);
-      return this.createSuccessResponse<AuthResponse>(
+      return this.responseService.createSuccessResponse<AuthResponse>(
         HttpStatus.CREATED,
         response,
       );
     } catch (error) {
       console.error('Refresh token error:', error);
-      return this.createErrorResponse(
+      return this.responseService.createErrorResponse(
         HttpStatus.INTERNAL_SERVER_ERROR,
         errorMessages.ERROR_OCCURRED,
       );
@@ -294,7 +272,7 @@ export class AuthService {
     try {
       const googlePayload = await this.verifyGoogleToken(token);
       if (!googlePayload || !googlePayload.email) {
-        return this.createErrorResponse(
+        return this.responseService.createErrorResponse(
           HttpStatus.BAD_REQUEST,
           errorMessages.INVALID_GOOGLE_TOKEN,
         );
@@ -311,13 +289,13 @@ export class AuthService {
       const tokens = await this.tokenService.createTokenPair(payload);
       const response = { user: sanitizeUserData(user), tokens };
 
-      return this.createSuccessResponse(
+      return this.responseService.createSuccessResponse(
         user.isNew ? HttpStatus.CREATED : HttpStatus.OK,
         response,
       );
     } catch (error) {
       console.error('Google authentication error:', error);
-      return this.createErrorResponse(
+      return this.responseService.createErrorResponse(
         HttpStatus.INTERNAL_SERVER_ERROR,
         errorMessages.ERROR_OCCURRED,
       );

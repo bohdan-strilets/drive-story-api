@@ -30,7 +30,7 @@ export class UserService {
   private async updateActivationStatus(
     userId: Types.ObjectId,
     activationToken: string | null = null,
-    isActivated: boolean = false,
+    isActivated: boolean = true,
   ): Promise<UserDocument> {
     const options = { activationToken, isActivated };
     return await this.userModel.findByIdAndUpdate(userId, options, {

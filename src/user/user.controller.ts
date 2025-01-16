@@ -167,4 +167,16 @@ export class UserController {
     if (!data.success) res.status(data.statusCode);
     return data;
   }
+
+  @Auth()
+  @Patch('select-avatar')
+  async selectAvatar(
+    @User('_id') userId: string,
+    @Res({ passthrough: true }) res: Response,
+    @Query('avatarPublicId') avatarPublicId: string,
+  ): Promise<ApiResponse<UserInfo>> {
+    const data = await this.userService.selectAvatar(avatarPublicId, userId);
+    if (!data.success) res.status(data.statusCode);
+    return data;
+  }
 }

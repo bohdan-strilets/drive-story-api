@@ -293,4 +293,48 @@ export class UserService {
       fieldToUpdate: ['avatars', 'resources'],
     });
   }
+
+  private findFileByResources(arr: string[], publicId: string): string {
+    return arr.find((item) => item.includes(publicId));
+  }
+
+  private isValidSelectedFile(selectedAvatar: string) {
+    if (!!selectedAvatar) {
+      return this.responseService.createErrorResponse(
+        HttpStatus.BAD_REQUEST,
+        errorMessages.FILE_NON_EXISTENT,
+      );
+    }
+  }
+
+  async selectAvatar(
+    avatarPublicId: string,
+    userId: string,
+  ): Promise<ApiResponse<UserInfo>> {
+    try {
+      this.isValidUserId(userId);
+      const user = await this.userModel.findById(userId);
+      this.isValidUser(user);
+
+      const avatars = user.avatars.resources;
+      const selectedAvatar = this.findFileByResources(avatars, avatarPublicId);
+      this.isValidSelectedFile(selectedAvatar);
+
+      const dto = { $set: { 'avatars.selected': selectedAvatar } };
+      const updatedUser = await this.updateUserById(userId, dto);
+
+      const userInfo = sanitizeUserData(updatedUser);
+
+      return this.responseService.createSuccessResponse(
+        HttpStatus.OK,
+        userInfo,
+      );
+    } catch (error) {
+      console.error('Error while choosing avatar:', error);
+      return this.responseService.createErrorResponse(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        errorMessages.ERROR_OCCURRED,
+      );
+    }
+  }
 }

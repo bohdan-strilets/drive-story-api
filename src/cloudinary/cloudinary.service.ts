@@ -1,8 +1,10 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { UploadApiResponse, v2 } from 'cloudinary';
 import * as fs from 'fs';
+import { Document } from 'mongoose';
 import { errorMessages } from 'src/helpers/error-messages';
 import { sanitizeUserData } from 'src/helpers/sanitize-user-data';
+import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { UserDocument } from 'src/user/schemes/user.schema';
 import { UserInfo } from 'src/user/types/user-info';
@@ -14,7 +16,7 @@ import { UploadOptions } from './types/upload-options.type';
 export class CloudinaryService {
   private cloudinary = v2;
 
-  constructor() {
+  constructor(private readonly responseService: ResponseService) {
     this.cloudinary.config({
       cloud_name: process.env.CLOUD_NAME,
       api_key: process.env.CLOUD_API_KEY,
@@ -130,24 +132,59 @@ export class CloudinaryService {
     }
   }
 
-  getNestedAccess(obj: any, path: string[]): string[] {
-    return path.reduce((acc, key) => acc[key], obj);
+  getNestedProperty(obj: any, path: string): string[] {
+    return path.split('.').reduce((current, key) => current?.[key], obj);
   }
 
-  async uploadFileAndUpdateModel(
+  private isValidEntity(entity: any): ApiResponse {
+    if (!entity) {
+      return this.responseService.createErrorResponse(
+        HttpStatus.NOT_FOUND,
+        errorMessages.ENTITY_NOT_FOUND,
+      );
+    }
+  }
+
+  private cleanupFile(filePath: string) {
+    try {
+      fs.unlinkSync(filePath);
+    } catch (unlinkError) {
+      console.error('Error removing file:', unlinkError);
+    }
+  }
+
+  private async updateEntity(
+    model: any,
+    modelId: string,
+    fieldToUpdate: string,
+    dto: string[],
+  ) {
+    try {
+      return await model.findByIdAndUpdate(
+        modelId,
+        { $set: { [fieldToUpdate]: dto } },
+        { new: true },
+      );
+    } catch (updateError) {
+      console.error('Error updating entity:', updateError);
+      return this.responseService.createErrorResponse(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        errorMessages.ENTITY_UPDATE_FAILED,
+      );
+    }
+  }
+
+  private removeByPublicId(arr: string[], publicId: string): string[] {
+    return arr.filter((item: string) => !item.includes(publicId));
+  }
+
+  async uploadFileAndUpdateModel<T extends Document>(
     file: Express.Multer.File,
-    options: UploadOptions,
+    options: UploadOptions<T>,
   ): Promise<ApiResponse<UserInfo>> {
     const { model, modelId, folderPath, fieldToUpdate } = options;
     const entity = await model.findById(modelId);
-
-    if (!entity) {
-      return {
-        success: false,
-        statusCode: HttpStatus.NOT_FOUND,
-        message: errorMessages.ENTITY_NOT_FOUND,
-      };
-    }
+    this.isValidEntity(entity);
 
     const filePath = `${folderPath}${modelId}`;
     let uploadedImage: string | null = null;
@@ -156,104 +193,62 @@ export class CloudinaryService {
       uploadedImage = await this.uploadFile(file, FileType.IMAGE, filePath);
     } catch (uploadError) {
       console.error('Error uploading file:', uploadError);
-      return {
-        success: false,
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        message: errorMessages.FILE_UPLOAD_FAILED,
-      };
-    }
-
-    const images: string[] = this.getNestedAccess(entity, fieldToUpdate);
-
-    try {
-      fs.unlinkSync(file.path);
-    } catch (unlinkError) {
-      console.error('Error removing file:', unlinkError);
-    }
-
-    if (uploadedImage) {
-      images.push(uploadedImage);
-    }
-
-    let updatedEntity: UserDocument | null = null;
-
-    try {
-      updatedEntity = await model.findByIdAndUpdate(
-        modelId,
-        { [fieldToUpdate.join('.')]: images },
-        { new: true },
+      return this.responseService.createErrorResponse(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        errorMessages.FILE_UPLOAD_FAILED,
       );
-    } catch (updateError) {
-      console.error('Error updating entity:', updateError);
-      return {
-        success: false,
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        message: errorMessages.ENTITY_UPDATE_FAILED,
-      };
     }
+
+    const images: string[] = this.getNestedProperty(entity, fieldToUpdate);
+
+    this.cleanupFile(file.path);
+    if (uploadedImage) images.push(uploadedImage);
+
+    const updatedEntity: UserDocument = await this.updateEntity(
+      model,
+      modelId,
+      fieldToUpdate,
+      images,
+    );
 
     const correctedEntity = sanitizeUserData(updatedEntity);
-
-    return {
-      success: true,
-      statusCode: HttpStatus.OK,
-      data: correctedEntity,
-    };
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      correctedEntity,
+    );
   }
 
-  async deleteFileAndUpdateModel(
-    options: DeleteOptions,
+  async deleteFileAndUpdateModel<T extends Document>(
+    options: DeleteOptions<T>,
   ): Promise<ApiResponse<UserInfo>> {
     const { model, userId, publicId, fieldToUpdate } = options;
     const entity = await model.findById(userId);
-
-    if (!entity) {
-      return {
-        success: false,
-        statusCode: HttpStatus.NOT_FOUND,
-        message: errorMessages.ENTITY_NOT_FOUND,
-      };
-    }
+    this.isValidEntity(entity);
 
     try {
       await this.deleteFile(publicId, FileType.IMAGE);
     } catch (error) {
       console.error('Error deleting file from storage:', error);
-      return {
-        success: false,
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        message: errorMessages.FILE_DELETE_FAILED,
-      };
+      return this.responseService.createErrorResponse(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        errorMessages.FILE_DELETE_FAILED,
+      );
     }
 
-    const images: string[] = this.getNestedAccess(entity, fieldToUpdate);
+    const images: string[] = this.getNestedProperty(entity, fieldToUpdate);
+    const filteredImages = this.removeByPublicId(images, publicId);
 
-    const filteredImages = images.filter(
-      (item: string) => !item.includes(publicId),
+    const updatedEntity: UserDocument = await this.updateEntity(
+      model,
+      userId,
+      fieldToUpdate,
+      filteredImages,
     );
 
-    let updatedEntity: UserDocument | null = null;
-    try {
-      updatedEntity = await model.findByIdAndUpdate(
-        userId,
-        { [fieldToUpdate.join('.')]: filteredImages },
-        { new: true },
-      );
-    } catch (error) {
-      console.error('Error updating the entity in the database:', error);
-      return {
-        success: false,
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        message: errorMessages.ENTITY_UPDATE_FAILED,
-      };
-    }
-
     const correctedEntity = sanitizeUserData(updatedEntity);
-
-    return {
-      success: true,
-      statusCode: HttpStatus.OK,
-      data: correctedEntity,
-    };
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      correctedEntity,
+    );
   }
 }

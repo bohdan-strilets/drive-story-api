@@ -20,7 +20,7 @@ import { UserInfo } from './types/user-info';
 @Injectable()
 export class UserService {
   constructor(
-    @InjectModel(User.name) private userModel: Model<User>,
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
     private readonly sendgridService: SendgridService,
     private readonly passwordService: PasswordService,
     private readonly cloudinaryService: CloudinaryService,
@@ -274,23 +274,26 @@ export class UserService {
     file: Express.Multer.File,
     userId: string,
   ): Promise<ApiResponse<UserInfo>> {
-    return await this.cloudinaryService.uploadFileAndUpdateModel(file, {
-      model: this.userModel,
-      modelId: userId,
-      folderPath: CloudinaryFolders.USER_AVATAR,
-      fieldToUpdate: ['avatars', 'resources'],
-    });
+    return await this.cloudinaryService.uploadFileAndUpdateModel<UserDocument>(
+      file,
+      {
+        model: this.userModel,
+        modelId: userId,
+        folderPath: CloudinaryFolders.USER_AVATAR,
+        fieldToUpdate: 'avatars.resources',
+      },
+    );
   }
 
   async deleteAvatar(
     avatarPublicId: string,
     userId: string,
   ): Promise<ApiResponse<UserInfo>> {
-    return await this.cloudinaryService.deleteFileAndUpdateModel({
+    return await this.cloudinaryService.deleteFileAndUpdateModel<UserDocument>({
       model: this.userModel,
       publicId: avatarPublicId,
       userId,
-      fieldToUpdate: ['avatars', 'resources'],
+      fieldToUpdate: 'avatars.resources',
     });
   }
 

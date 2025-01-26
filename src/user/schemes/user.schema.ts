@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
 import { Gender } from '../enums/gender.enum';
 import { Images, ImagesDocument } from './images.schema';
 import { Location, LocationDocument } from './location.schema';
@@ -8,6 +8,9 @@ export type UserDocument = HydratedDocument<User>;
 
 @Schema({ versionKey: false, timestamps: true })
 export class User {
+  @Prop({ default: () => new Types.ObjectId() })
+  _id: Types.ObjectId;
+
   @Prop({ required: true, unique: true })
   email: string;
 

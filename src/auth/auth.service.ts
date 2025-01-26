@@ -20,7 +20,7 @@ import { AuthResponse } from './types/auth-response.type';
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectModel(User.name) private userModel: Model<User>,
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
     private readonly passwordService: PasswordService,
     private readonly tokenService: TokenService,
     private readonly sendgridService: SendgridService,

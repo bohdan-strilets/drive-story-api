@@ -342,22 +342,25 @@ export class UserService {
     }
   }
 
+  private async removedFilesAndFolder(filesArr: string[]) {
+    if (filesArr.length > 0) {
+      const folderPath = this.cloudinaryService.getFolderPath(filesArr[0]);
+      await this.cloudinaryService.deleteFilesAndFolder(folderPath);
+    } else {
+      return this.responseService.createErrorResponse(
+        HttpStatus.BAD_REQUEST,
+        errorMessages.NOT_FILES_TO_DELETE,
+      );
+    }
+  }
+
   async deleteAllAvatars(userId: string): Promise<ApiResponse<UserInfo>> {
     try {
       const user = await this.userModel.findById(userId);
       this.isValidUser(user);
 
       const allAvatars = user.avatars.resources;
-
-      if (allAvatars.length > 0) {
-        const folderPath = this.cloudinaryService.getFolderPath(allAvatars[0]);
-        await this.cloudinaryService.deleteFilesAndFolder(folderPath);
-      } else {
-        return this.responseService.createErrorResponse(
-          HttpStatus.BAD_REQUEST,
-          errorMessages.NOT_FILES_TO_DELETE,
-        );
-      }
+      await this.removedFilesAndFolder(allAvatars);
 
       const dto = {
         $set: {

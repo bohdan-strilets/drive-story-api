@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import mongoose, { HydratedDocument, Types } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
 import { User } from 'src/user/schemes/user.schema';
 
 export type TokenDocument = HydratedDocument<Token>;
@@ -9,7 +9,7 @@ export class Token {
   @Prop({ default: () => new Types.ObjectId() })
   _id: Types.ObjectId;
 
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User' })
+  @Prop({ type: Types.ObjectId, ref: 'User' })
   owner: User;
 
   @Prop({ required: true })

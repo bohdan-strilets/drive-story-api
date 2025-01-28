@@ -10,6 +10,7 @@ import { PasswordService } from 'src/password/password.service';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { SendgridService } from 'src/sendgrid/sendgrid.service';
+import { TokenService } from 'src/token/token.service';
 import { v4 } from 'uuid';
 import { EditPasswordDto } from './dto/edit-password.dto';
 import { EmailDto } from './dto/email.dto';
@@ -26,6 +27,7 @@ export class UserService {
     private readonly passwordService: PasswordService,
     private readonly cloudinaryService: CloudinaryService,
     private readonly responseService: ResponseService,
+    private readonly tokenService: TokenService,
   ) {}
 
   private async updateActivationStatus(
@@ -479,6 +481,28 @@ export class UserService {
       );
     } catch (error) {
       console.error('Error getting current user data:', error);
+      return this.responseService.createErrorResponse(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        errorMessages.ERROR_OCCURRED,
+      );
+    }
+  }
+
+  async deleteProfile(userId: string): Promise<ApiResponse> {
+    try {
+      this.isValidUserId(userId);
+      const user = await this.userModel.findById(userId);
+      this.isValidUser(user);
+
+      await this.removedFilesAndFolder(user.avatars.resources);
+      await this.removedFilesAndFolder(user.posters.resources);
+
+      await this.userModel.findByIdAndDelete(userId);
+      await this.tokenService.deleteTokensByDb(new Types.ObjectId(userId));
+
+      return this.responseService.createSuccessResponse(HttpStatus.OK);
+    } catch (error) {
+      console.error('Error deleting user:', error);
       return this.responseService.createErrorResponse(
         HttpStatus.INTERNAL_SERVER_ERROR,
         errorMessages.ERROR_OCCURRED,

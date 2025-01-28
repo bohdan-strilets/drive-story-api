@@ -253,4 +253,15 @@ export class UserController {
     if (!data.success) res.status(data.statusCode);
     return data;
   }
+
+  @Auth()
+  @Delete('delete-profile')
+  async deleteProfile(
+    @User('_id') userId: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<ApiResponse> {
+    const data = await this.userService.deleteProfile(userId);
+    if (!data.success) res.status(data.statusCode);
+    return data;
+  }
 }

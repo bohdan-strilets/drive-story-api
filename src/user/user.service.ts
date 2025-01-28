@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { CloudinaryFolders } from 'src/helpers/cloudinary-folders';
+import { defaultImages } from 'src/helpers/default-images';
 import { errorMessages } from 'src/helpers/error-messages';
 import { sanitizeUserData } from 'src/helpers/sanitize-user-data';
 import { PasswordService } from 'src/password/password.service';
@@ -334,6 +335,46 @@ export class UserService {
       );
     } catch (error) {
       console.error('Error while choosing avatar:', error);
+      return this.responseService.createErrorResponse(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        errorMessages.ERROR_OCCURRED,
+      );
+    }
+  }
+
+  async deleteAllAvatars(userId: string): Promise<ApiResponse<UserInfo>> {
+    try {
+      const user = await this.userModel.findById(userId);
+      this.isValidUser(user);
+
+      const allAvatars = user.avatars.resources;
+
+      if (allAvatars.length > 0) {
+        const folderPath = this.cloudinaryService.getFolderPath(allAvatars[0]);
+        await this.cloudinaryService.deleteFilesAndFolder(folderPath);
+      } else {
+        return this.responseService.createErrorResponse(
+          HttpStatus.BAD_REQUEST,
+          errorMessages.NOT_FILES_TO_DELETE,
+        );
+      }
+
+      const dto = {
+        $set: {
+          'avatars.resources': [],
+          'avatars.selected': defaultImages.USER_AVATAR,
+        },
+      };
+
+      const updatedUser = await this.updateUserById(userId, dto);
+      const userInfo = sanitizeUserData(updatedUser);
+
+      return this.responseService.createSuccessResponse(
+        HttpStatus.OK,
+        userInfo,
+      );
+    } catch (error) {
+      console.error('Error deleting all user avatars:', error);
       return this.responseService.createErrorResponse(
         HttpStatus.INTERNAL_SERVER_ERROR,
         errorMessages.ERROR_OCCURRED,

@@ -179,4 +179,15 @@ export class UserController {
     if (!data.success) res.status(data.statusCode);
     return data;
   }
+
+  @Auth()
+  @Delete('delete-all-avatars')
+  async deleteAllAvatars(
+    @User('_id') userId: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<ApiResponse<UserInfo>> {
+    const data = await this.userService.deleteAllAvatars(userId);
+    if (!data.success) res.status(data.statusCode);
+    return data;
+  }
 }

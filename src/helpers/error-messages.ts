@@ -16,4 +16,5 @@ export const errorMessages = {
   INVALID_GOOGLE_TOKEN:
     'The Google token is invalid. Please check the token or try again.',
   FILE_NON_EXISTENT: 'A non-existent file was selected.',
+  NOT_FILES_TO_DELETE: 'There are no files to delete.',
 };

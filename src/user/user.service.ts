@@ -384,4 +384,19 @@ export class UserService {
       );
     }
   }
+
+  async uploadPoster(
+    file: Express.Multer.File,
+    userId: string,
+  ): Promise<ApiResponse<UserInfo>> {
+    return await this.cloudinaryService.uploadFileAndUpdateModel<UserDocument>(
+      file,
+      {
+        model: this.userModel,
+        modelId: userId,
+        folderPath: CloudinaryFolders.USER_POSTER,
+        fieldToUpdate: 'posters.resources',
+      },
+    );
+  }
 }

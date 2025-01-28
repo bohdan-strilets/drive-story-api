@@ -190,4 +190,21 @@ export class UserController {
     if (!data.success) res.status(data.statusCode);
     return data;
   }
+
+  @Auth()
+  @HttpCode(HttpStatus.OK)
+  @Post('upload-poster')
+  @UseInterceptors(
+    FileInterceptor('poster', { dest: DEFAULT_FOLDER_FOR_FILES }),
+  )
+  async uploadPoster(
+    @UploadedFile(imageValidator)
+    file: Express.Multer.File,
+    @User('_id') userId: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<ApiResponse<UserInfo>> {
+    const data = await this.userService.uploadPoster(file, userId);
+    if (!data.success) res.status(data.statusCode);
+    return data;
+  }
 }

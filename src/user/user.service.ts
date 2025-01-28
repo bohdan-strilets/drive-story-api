@@ -105,13 +105,11 @@ export class UserService {
     }
   }
 
-  private async updateUserById(
-    userId: string,
-    dto: any,
-  ): Promise<UserDocument> {
-    return await this.userModel.findByIdAndUpdate(userId, dto, {
+  private async updateUserById(userId: string, dto: any): Promise<UserInfo> {
+    const updatedUser = await this.userModel.findByIdAndUpdate(userId, dto, {
       new: true,
     });
+    return sanitizeUserData(updatedUser);
   }
 
   async editProfile(
@@ -122,11 +120,10 @@ export class UserService {
       this.isValidUserId(userId);
 
       const updatedUser = await this.updateUserById(userId, dto);
-      const userInfo = sanitizeUserData(updatedUser);
 
       return this.responseService.createSuccessResponse(
         HttpStatus.OK,
-        userInfo,
+        updatedUser,
       );
     } catch (error) {
       console.error('Edit profile error:', error);
@@ -150,11 +147,10 @@ export class UserService {
 
       const emailDto = { email, activationToken, isActivated: false };
       const updatedUser = await this.updateUserById(userId, emailDto);
-      const userInfo = sanitizeUserData(updatedUser);
 
       return this.responseService.createSuccessResponse(
         HttpStatus.OK,
-        userInfo,
+        updatedUser,
       );
     } catch (error) {
       console.error('Edit email error:', error);
@@ -327,11 +323,9 @@ export class UserService {
       const dto = { $set: { 'avatars.selected': selectedAvatar } };
       const updatedUser = await this.updateUserById(userId, dto);
 
-      const userInfo = sanitizeUserData(updatedUser);
-
       return this.responseService.createSuccessResponse(
         HttpStatus.OK,
-        userInfo,
+        updatedUser,
       );
     } catch (error) {
       console.error('Error while choosing avatar:', error);
@@ -370,11 +364,10 @@ export class UserService {
       };
 
       const updatedUser = await this.updateUserById(userId, dto);
-      const userInfo = sanitizeUserData(updatedUser);
 
       return this.responseService.createSuccessResponse(
         HttpStatus.OK,
-        userInfo,
+        updatedUser,
       );
     } catch (error) {
       console.error('Error deleting all user avatars:', error);
@@ -427,11 +420,10 @@ export class UserService {
 
       const dto = { $set: { 'posters.selected': selectedPoster } };
       const updatedUser = await this.updateUserById(userId, dto);
-      const userInfo = sanitizeUserData(updatedUser);
 
       return this.responseService.createSuccessResponse(
         HttpStatus.OK,
-        userInfo,
+        updatedUser,
       );
     } catch (error) {
       console.error('Error while choosing poster:', error);

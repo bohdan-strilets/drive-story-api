@@ -399,4 +399,16 @@ export class UserService {
       },
     );
   }
+
+  async deletePoster(
+    posterPublicId: string,
+    userId: string,
+  ): Promise<ApiResponse<UserInfo>> {
+    return await this.cloudinaryService.deleteFileAndUpdateModel<UserDocument>({
+      model: this.userModel,
+      publicId: posterPublicId,
+      userId,
+      fieldToUpdate: 'posters.resources',
+    });
+  }
 }

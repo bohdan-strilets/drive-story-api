@@ -207,4 +207,16 @@ export class UserController {
     if (!data.success) res.status(data.statusCode);
     return data;
   }
+
+  @Auth()
+  @Delete('delete-poster')
+  async deletePoster(
+    @User('_id') userId: string,
+    @Res({ passthrough: true }) res: Response,
+    @Query('posterPublicId') posterPublicId: string,
+  ): Promise<ApiResponse<UserInfo>> {
+    const data = await this.userService.deletePoster(posterPublicId, userId);
+    if (!data.success) res.status(data.statusCode);
+    return data;
+  }
 }

@@ -242,4 +242,15 @@ export class UserController {
     if (!data.success) res.status(data.statusCode);
     return data;
   }
+
+  @Auth()
+  @Get('current-user')
+  async getCurrentUser(
+    @User('_id') userId: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<ApiResponse<UserInfo>> {
+    const data = await this.userService.getCurrentUser(userId);
+    if (!data.success) res.status(data.statusCode);
+    return data;
+  }
 }

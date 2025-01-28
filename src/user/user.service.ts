@@ -465,4 +465,24 @@ export class UserService {
       );
     }
   }
+
+  async getCurrentUser(userId: string): Promise<ApiResponse<UserInfo>> {
+    try {
+      this.isValidUserId(userId);
+      const user = await this.userModel.findById(userId);
+      this.isValidUser(user);
+      const sanitizedUser = sanitizeUserData(user);
+
+      return this.responseService.createSuccessResponse(
+        HttpStatus.OK,
+        sanitizedUser,
+      );
+    } catch (error) {
+      console.error('Error getting current user data:', error);
+      return this.responseService.createErrorResponse(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        errorMessages.ERROR_OCCURRED,
+      );
+    }
+  }
 }

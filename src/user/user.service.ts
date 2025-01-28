@@ -411,4 +411,34 @@ export class UserService {
       fieldToUpdate: 'posters.resources',
     });
   }
+
+  async selectPoster(
+    posterPublicId: string,
+    userId: string,
+  ): Promise<ApiResponse<UserInfo>> {
+    try {
+      this.isValidUserId(userId);
+      const user = await this.userModel.findById(userId);
+      this.isValidUser(user);
+
+      const posters = user.posters.resources;
+      const selectedPoster = this.findFileByResources(posters, posterPublicId);
+      this.isValidSelectedFile(selectedPoster);
+
+      const dto = { $set: { 'posters.selected': selectedPoster } };
+      const updatedUser = await this.updateUserById(userId, dto);
+      const userInfo = sanitizeUserData(updatedUser);
+
+      return this.responseService.createSuccessResponse(
+        HttpStatus.OK,
+        userInfo,
+      );
+    } catch (error) {
+      console.error('Error while choosing poster:', error);
+      return this.responseService.createErrorResponse(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        errorMessages.ERROR_OCCURRED,
+      );
+    }
+  }
 }

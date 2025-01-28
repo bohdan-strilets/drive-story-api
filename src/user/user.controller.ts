@@ -231,4 +231,15 @@ export class UserController {
     if (!data.success) res.status(data.statusCode);
     return data;
   }
+
+  @Auth()
+  @Delete('delete-all-posters')
+  async deleteAllPosters(
+    @User('_id') userId: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<ApiResponse<UserInfo>> {
+    const data = await this.userService.deleteAllPosters(userId);
+    if (!data.success) res.status(data.statusCode);
+    return data;
+  }
 }

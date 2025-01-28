@@ -350,6 +350,7 @@ export class UserService {
 
   async deleteAllAvatars(userId: string): Promise<ApiResponse<UserInfo>> {
     try {
+      this.isValidUserId(userId);
       const user = await this.userModel.findById(userId);
       this.isValidUser(user);
 
@@ -427,6 +428,37 @@ export class UserService {
       );
     } catch (error) {
       console.error('Error while choosing poster:', error);
+      return this.responseService.createErrorResponse(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        errorMessages.ERROR_OCCURRED,
+      );
+    }
+  }
+
+  async deleteAllPosters(userId: string): Promise<ApiResponse<UserInfo>> {
+    try {
+      this.isValidUserId(userId);
+      const user = await this.userModel.findById(userId);
+      this.isValidUser(user);
+
+      const allPosters = user.posters.resources;
+      await this.removedFilesAndFolder(allPosters);
+
+      const dto = {
+        $set: {
+          'posters.resources': [],
+          'posters.selected': defaultImages.USER_POSTER,
+        },
+      };
+
+      const updatedUser = await this.updateUserById(userId, dto);
+
+      return this.responseService.createSuccessResponse(
+        HttpStatus.OK,
+        updatedUser,
+      );
+    } catch (error) {
+      console.error('Error deleting all user posters:', error);
       return this.responseService.createErrorResponse(
         HttpStatus.INTERNAL_SERVER_ERROR,
         errorMessages.ERROR_OCCURRED,

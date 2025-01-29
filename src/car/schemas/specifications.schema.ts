@@ -10,7 +10,7 @@ export type SpecificationsDocument = HydratedDocument<Specifications>;
 
 @Schema({ versionKey: false, timestamps: false, _id: false })
 export class Specifications {
-  @Prop()
+  @Prop({ default: 0 })
   mileage: number;
 
   @Prop({ default: FuelType.NOT_SELECTED, enum: FuelType })
@@ -28,12 +28,12 @@ export class Specifications {
   @Prop({ type: Engine })
   engine: Engine;
 
-  @Prop()
-  color: string;
+  @Prop({ default: null })
+  color?: string | null;
 
-  @Prop()
-  doors: number;
+  @Prop({ default: 0 })
+  doors?: number;
 
-  @Prop()
-  seats: number;
+  @Prop({ default: 0 })
+  seats?: number;
 }

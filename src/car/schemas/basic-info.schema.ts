@@ -15,8 +15,8 @@ export class BasicInfo {
   year: number;
 
   @Prop({ default: null })
-  shortName: string | null;
+  shortName?: string | null;
 
   @Prop({ default: null })
-  generation: string | null;
+  generation?: string | null;
 }

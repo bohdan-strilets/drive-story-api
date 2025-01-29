@@ -14,19 +14,19 @@ export class Car {
   @Prop({ default: () => new Types.ObjectId() })
   _id: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'User' })
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   owner: User;
 
-  @Prop({ type: BasicInfo })
+  @Prop({ type: BasicInfo, default: {} })
   basicInfo: BasicInfo;
 
-  @Prop({ type: Specifications })
+  @Prop({ type: Specifications, default: {} })
   specifications: Specifications;
 
-  @Prop({ type: Registration })
+  @Prop({ type: Registration, default: {} })
   registration: Registration;
 
-  @Prop({ type: Ownership })
+  @Prop({ type: Ownership, default: {} })
   ownership: Ownership;
 
   @Prop({ default: null })

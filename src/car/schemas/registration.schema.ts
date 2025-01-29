@@ -6,11 +6,11 @@ export type RegistrationDocument = HydratedDocument<Registration>;
 @Schema({ versionKey: false, timestamps: false, _id: false })
 export class Registration {
   @Prop({ default: null })
-  vin: string | null;
+  vin?: string | null;
 
   @Prop({ default: null })
-  regNumber: string | null;
+  regNumber?: string | null;
 
   @Prop({ default: null })
-  firstRegDate: Date | null;
+  firstRegDate?: Date | null;
 }

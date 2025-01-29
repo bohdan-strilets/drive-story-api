@@ -98,15 +98,6 @@ export class UserService {
     }
   }
 
-  private isValidUserId(userId: string): ApiResponse | void {
-    if (!userId) {
-      return this.responseService.createErrorResponse(
-        HttpStatus.UNAUTHORIZED,
-        errorMessages.USER_NOT_AUTHORIZED,
-      );
-    }
-  }
-
   private async updateUserById(userId: string, dto: any): Promise<UserInfo> {
     const updatedUser = await this.userModel.findByIdAndUpdate(userId, dto, {
       new: true,
@@ -119,8 +110,6 @@ export class UserService {
     dto: ProfileDto,
   ): Promise<ApiResponse<UserInfo>> {
     try {
-      this.isValidUserId(userId);
-
       const updatedUser = await this.updateUserById(userId, dto);
 
       return this.responseService.createSuccessResponse(
@@ -142,7 +131,6 @@ export class UserService {
   ): Promise<ApiResponse<UserInfo>> {
     try {
       const { email } = dto;
-      this.isValidUserId(userId);
 
       const activationToken = v4();
       await this.sendgridService.sendConfirmEmailLetter(email, activationToken);
@@ -314,7 +302,6 @@ export class UserService {
     userId: string,
   ): Promise<ApiResponse<UserInfo>> {
     try {
-      this.isValidUserId(userId);
       const user = await this.userModel.findById(userId);
       this.isValidUser(user);
 
@@ -352,7 +339,6 @@ export class UserService {
 
   async deleteAllAvatars(userId: string): Promise<ApiResponse<UserInfo>> {
     try {
-      this.isValidUserId(userId);
       const user = await this.userModel.findById(userId);
       this.isValidUser(user);
 
@@ -413,7 +399,6 @@ export class UserService {
     userId: string,
   ): Promise<ApiResponse<UserInfo>> {
     try {
-      this.isValidUserId(userId);
       const user = await this.userModel.findById(userId);
       this.isValidUser(user);
 
@@ -439,7 +424,6 @@ export class UserService {
 
   async deleteAllPosters(userId: string): Promise<ApiResponse<UserInfo>> {
     try {
-      this.isValidUserId(userId);
       const user = await this.userModel.findById(userId);
       this.isValidUser(user);
 
@@ -470,7 +454,6 @@ export class UserService {
 
   async getCurrentUser(userId: string): Promise<ApiResponse<UserInfo>> {
     try {
-      this.isValidUserId(userId);
       const user = await this.userModel.findById(userId);
       this.isValidUser(user);
       const sanitizedUser = sanitizeUserData(user);
@@ -490,7 +473,6 @@ export class UserService {
 
   async deleteProfile(userId: string): Promise<ApiResponse> {
     try {
-      this.isValidUserId(userId);
       const user = await this.userModel.findById(userId);
       this.isValidUser(user);
 

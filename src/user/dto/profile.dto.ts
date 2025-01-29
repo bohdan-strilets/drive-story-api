@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
 import {
+  IsDate,
   IsIn,
   IsOptional,
   IsPhoneNumber,
@@ -31,8 +32,9 @@ export class ProfileDto {
   @MaxLength(MAX_NAME_LENGTH)
   nickname?: string;
 
-  @IsString()
   @IsOptional()
+  @Type(() => Date)
+  @IsDate()
   birthDate?: Date;
 
   @IsString()

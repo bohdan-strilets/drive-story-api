@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Param, Patch, Post } from '@nestjs/common';
 import { Types } from 'mongoose';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { ApiResponse } from 'src/response/types/api-response.type';
@@ -14,7 +14,7 @@ export class CarController {
   constructor(private readonly carService: CarService) {}
 
   @Post('add')
-  async addedCar(
+  async addCar(
     @Body() dto: CarDto,
     @User('_id') userId: Types.ObjectId,
   ): Promise<ApiResponse<CarDocument>> {
@@ -27,5 +27,12 @@ export class CarController {
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
   ): Promise<ApiResponse<CarDocument>> {
     return this.carService.updateCar(carId, dto);
+  }
+
+  @Delete('delete/:carId')
+  async deleteCar(
+    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
+  ): Promise<ApiResponse<CarDocument>> {
+    return this.carService.deleteCar(carId);
   }
 }

@@ -89,4 +89,25 @@ export class CarService {
       );
     }
   }
+
+  async deleteCar(carId: Types.ObjectId): Promise<ApiResponse<CarDocument>> {
+    try {
+      const deletedCar = await this.carModel.findByIdAndDelete(carId);
+
+      if (!deletedCar) {
+        return this.responseService.createErrorResponse(
+          HttpStatus.NOT_FOUND,
+          errorMessages.CAR_NOT_FOUND,
+        );
+      }
+
+      return this.responseService.createSuccessResponse(HttpStatus.OK);
+    } catch (error) {
+      console.error('Error deleting the car by id:', error);
+      return this.responseService.createErrorResponse(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        errorMessages.ERROR_OCCURRED,
+      );
+    }
+  }
 }

@@ -16,6 +16,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
+import { Types } from 'mongoose';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { DEFAULT_FOLDER_FOR_FILES } from 'src/helpers/default-file-folder';
 import { ApiResponse } from 'src/response/types/api-response.type';
@@ -42,7 +43,7 @@ export class UserController {
   ): Promise<ApiResponse> {
     const clientUrl = this.configService.get('CLIENT_URL');
     res.redirect(`${clientUrl}activation-success`);
-    return await this.userService.activationEmail(activationToken);
+    return this.userService.activationEmail(activationToken);
   }
 
   @Auth()
@@ -51,31 +52,31 @@ export class UserController {
   async requestActivationEmailResend(
     @Body() dto: EmailDto,
   ): Promise<ApiResponse> {
-    return await this.userService.requestActivationEmailResend(dto);
+    return this.userService.requestActivationEmailResend(dto);
   }
 
   @Auth()
   @Patch('edit-profile')
   async editProfile(
     @Body() dto: ProfileDto,
-    @User('_id') userId: string,
+    @User('_id') userId: Types.ObjectId,
   ): Promise<ApiResponse<UserInfo>> {
-    return await this.userService.editProfile(userId, dto);
+    return this.userService.editProfile(userId, dto);
   }
 
   @Auth()
   @Patch('edit-email')
   async editEmail(
     @Body() dto: EmailDto,
-    @User('_id') userId: string,
+    @User('_id') userId: Types.ObjectId,
   ): Promise<ApiResponse<UserInfo>> {
-    return await this.userService.editEmail(userId, dto);
+    return this.userService.editEmail(userId, dto);
   }
 
   @HttpCode(HttpStatus.OK)
   @Post('request-reset-password')
   async requestResetPassword(@Body() dto: EmailDto): Promise<ApiResponse> {
-    return await this.userService.requestResetPassword(dto);
+    return this.userService.requestResetPassword(dto);
   }
 
   @Get('verify-reset-token/:resetToken')
@@ -101,16 +102,16 @@ export class UserController {
     @Body() dto: ResetPasswordDto,
     @Param('resetToken') resetToken: string,
   ): Promise<ApiResponse> {
-    return await this.userService.resetPassword(dto, resetToken);
+    return this.userService.resetPassword(dto, resetToken);
   }
 
   @Auth()
   @Patch('edit-password')
   async editPassword(
     @Body() dto: EditPasswordDto,
-    @User('_id') userId: string,
+    @User('_id') userId: Types.ObjectId,
   ): Promise<ApiResponse> {
-    return await this.userService.editPassword(dto, userId);
+    return this.userService.editPassword(dto, userId);
   }
 
   @Auth()
@@ -122,35 +123,35 @@ export class UserController {
   async uploadAvatar(
     @UploadedFile(imageValidator)
     file: Express.Multer.File,
-    @User('_id') userId: string,
+    @User('_id') userId: Types.ObjectId,
   ): Promise<ApiResponse<UserInfo>> {
-    return await this.userService.uploadAvatar(file, userId);
+    return this.userService.uploadAvatar(file, userId);
   }
 
   @Auth()
   @Delete('delete-avatar')
   async deleteAvatar(
-    @User('_id') userId: string,
+    @User('_id') userId: Types.ObjectId,
     @Query('avatarPublicId') avatarPublicId: string,
   ): Promise<ApiResponse<UserInfo>> {
-    return await this.userService.deleteAvatar(avatarPublicId, userId);
+    return this.userService.deleteAvatar(avatarPublicId, userId);
   }
 
   @Auth()
   @Patch('select-avatar')
   async selectAvatar(
-    @User('_id') userId: string,
+    @User('_id') userId: Types.ObjectId,
     @Query('avatarPublicId') avatarPublicId: string,
   ): Promise<ApiResponse<UserInfo>> {
-    return await this.userService.selectAvatar(avatarPublicId, userId);
+    return this.userService.selectAvatar(avatarPublicId, userId);
   }
 
   @Auth()
   @Delete('delete-all-avatars')
   async deleteAllAvatars(
-    @User('_id') userId: string,
+    @User('_id') userId: Types.ObjectId,
   ): Promise<ApiResponse<UserInfo>> {
-    return await this.userService.deleteAllAvatars(userId);
+    return this.userService.deleteAllAvatars(userId);
   }
 
   @Auth()
@@ -162,48 +163,50 @@ export class UserController {
   async uploadPoster(
     @UploadedFile(imageValidator)
     file: Express.Multer.File,
-    @User('_id') userId: string,
+    @User('_id') userId: Types.ObjectId,
   ): Promise<ApiResponse<UserInfo>> {
-    return await this.userService.uploadPoster(file, userId);
+    return this.userService.uploadPoster(file, userId);
   }
 
   @Auth()
   @Delete('delete-poster')
   async deletePoster(
-    @User('_id') userId: string,
+    @User('_id') userId: Types.ObjectId,
     @Query('posterPublicId') posterPublicId: string,
   ): Promise<ApiResponse<UserInfo>> {
-    return await this.userService.deletePoster(posterPublicId, userId);
+    return this.userService.deletePoster(posterPublicId, userId);
   }
 
   @Auth()
   @Patch('select-poster')
   async selectPoster(
-    @User('_id') userId: string,
+    @User('_id') userId: Types.ObjectId,
     @Query('posterPublicId') posterPublicId: string,
   ): Promise<ApiResponse<UserInfo>> {
-    return await this.userService.selectPoster(posterPublicId, userId);
+    return this.userService.selectPoster(posterPublicId, userId);
   }
 
   @Auth()
   @Delete('delete-all-posters')
   async deleteAllPosters(
-    @User('_id') userId: string,
+    @User('_id') userId: Types.ObjectId,
   ): Promise<ApiResponse<UserInfo>> {
-    return await this.userService.deleteAllPosters(userId);
+    return this.userService.deleteAllPosters(userId);
   }
 
   @Auth()
   @Get('current-user')
   async getCurrentUser(
-    @User('_id') userId: string,
+    @User('_id') userId: Types.ObjectId,
   ): Promise<ApiResponse<UserInfo>> {
-    return await this.userService.getCurrentUser(userId);
+    return this.userService.getCurrentUser(userId);
   }
 
   @Auth()
   @Delete('delete-profile')
-  async deleteProfile(@User('_id') userId: string): Promise<ApiResponse> {
-    return await this.userService.deleteProfile(userId);
+  async deleteProfile(
+    @User('_id') userId: Types.ObjectId,
+  ): Promise<ApiResponse> {
+    return this.userService.deleteProfile(userId);
   }
 }

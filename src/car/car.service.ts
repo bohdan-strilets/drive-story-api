@@ -25,7 +25,7 @@ export class CarService {
   }
 
   async addedCar(
-    userId: string,
+    userId: Types.ObjectId,
     dto: CarDto,
   ): Promise<ApiResponse<CarDocument>> {
     try {

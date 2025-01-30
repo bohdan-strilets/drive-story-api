@@ -1,8 +1,8 @@
-import { Document, Model } from 'mongoose';
+import { Document, Model, Types } from 'mongoose';
 
 export type DeleteOptions<T extends Document> = {
   model: Model<T>;
   publicId: string;
-  userId: string;
+  userId: Types.ObjectId;
   fieldToUpdate: string;
 };

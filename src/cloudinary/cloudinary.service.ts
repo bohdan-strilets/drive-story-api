@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { UploadApiResponse, v2 } from 'cloudinary';
 import * as fs from 'fs';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 import { errorMessages } from 'src/helpers/error-messages';
 import { sanitizeUserData } from 'src/helpers/sanitize-user-data';
 import { ResponseService } from 'src/response/response.service';
@@ -155,7 +155,7 @@ export class CloudinaryService {
 
   private async updateEntity(
     model: any,
-    modelId: string,
+    modelId: Types.ObjectId,
     fieldToUpdate: string,
     dto: string[],
   ) {

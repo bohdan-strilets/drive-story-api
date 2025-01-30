@@ -98,7 +98,10 @@ export class UserService {
     }
   }
 
-  private async updateUserById(userId: string, dto: any): Promise<UserInfo> {
+  private async updateUserById(
+    userId: Types.ObjectId,
+    dto: any,
+  ): Promise<UserInfo> {
     const updatedUser = await this.userModel.findByIdAndUpdate(userId, dto, {
       new: true,
     });
@@ -106,7 +109,7 @@ export class UserService {
   }
 
   async editProfile(
-    userId: string,
+    userId: Types.ObjectId,
     dto: ProfileDto,
   ): Promise<ApiResponse<UserInfo>> {
     try {
@@ -126,7 +129,7 @@ export class UserService {
   }
 
   async editEmail(
-    userId: string,
+    userId: Types.ObjectId,
     dto: EmailDto,
   ): Promise<ApiResponse<UserInfo>> {
     try {
@@ -167,7 +170,7 @@ export class UserService {
       this.isValidUser(user);
 
       const resetToken = v4();
-      await this.updateUserById(user._id.toString(), { resetToken });
+      await this.updateUserById(user._id, { resetToken });
       await this.sendgridService.sendPasswordResetEmail(user.email, resetToken);
 
       return this.responseService.createSuccessResponse(HttpStatus.OK);
@@ -207,7 +210,7 @@ export class UserService {
       const hashPassword = await this.passwordService.createPassword(password);
 
       const passwordDto = { password: hashPassword, resetToken: null };
-      await this.updateUserById(user._id.toString(), passwordDto);
+      await this.updateUserById(user._id, passwordDto);
 
       await this.sendgridService.sendPasswordChangedSuccess(user.email);
 
@@ -223,7 +226,7 @@ export class UserService {
 
   async editPassword(
     dto: EditPasswordDto,
-    userId: string,
+    userId: Types.ObjectId,
   ): Promise<ApiResponse> {
     try {
       const user = await this.userModel.findById(userId);
@@ -259,7 +262,7 @@ export class UserService {
 
   async uploadAvatar(
     file: Express.Multer.File,
-    userId: string,
+    userId: Types.ObjectId,
   ): Promise<ApiResponse<UserInfo>> {
     return await this.cloudinaryService.uploadFileAndUpdateModel<UserDocument>(
       file,
@@ -274,7 +277,7 @@ export class UserService {
 
   async deleteAvatar(
     avatarPublicId: string,
-    userId: string,
+    userId: Types.ObjectId,
   ): Promise<ApiResponse<UserInfo>> {
     return await this.cloudinaryService.deleteFileAndUpdateModel<UserDocument>({
       model: this.userModel,
@@ -299,7 +302,7 @@ export class UserService {
 
   async selectAvatar(
     avatarPublicId: string,
-    userId: string,
+    userId: Types.ObjectId,
   ): Promise<ApiResponse<UserInfo>> {
     try {
       const user = await this.userModel.findById(userId);
@@ -337,7 +340,9 @@ export class UserService {
     }
   }
 
-  async deleteAllAvatars(userId: string): Promise<ApiResponse<UserInfo>> {
+  async deleteAllAvatars(
+    userId: Types.ObjectId,
+  ): Promise<ApiResponse<UserInfo>> {
     try {
       const user = await this.userModel.findById(userId);
       this.isValidUser(user);
@@ -369,7 +374,7 @@ export class UserService {
 
   async uploadPoster(
     file: Express.Multer.File,
-    userId: string,
+    userId: Types.ObjectId,
   ): Promise<ApiResponse<UserInfo>> {
     return await this.cloudinaryService.uploadFileAndUpdateModel<UserDocument>(
       file,
@@ -384,7 +389,7 @@ export class UserService {
 
   async deletePoster(
     posterPublicId: string,
-    userId: string,
+    userId: Types.ObjectId,
   ): Promise<ApiResponse<UserInfo>> {
     return await this.cloudinaryService.deleteFileAndUpdateModel<UserDocument>({
       model: this.userModel,
@@ -396,7 +401,7 @@ export class UserService {
 
   async selectPoster(
     posterPublicId: string,
-    userId: string,
+    userId: Types.ObjectId,
   ): Promise<ApiResponse<UserInfo>> {
     try {
       const user = await this.userModel.findById(userId);
@@ -422,7 +427,9 @@ export class UserService {
     }
   }
 
-  async deleteAllPosters(userId: string): Promise<ApiResponse<UserInfo>> {
+  async deleteAllPosters(
+    userId: Types.ObjectId,
+  ): Promise<ApiResponse<UserInfo>> {
     try {
       const user = await this.userModel.findById(userId);
       this.isValidUser(user);
@@ -452,7 +459,7 @@ export class UserService {
     }
   }
 
-  async getCurrentUser(userId: string): Promise<ApiResponse<UserInfo>> {
+  async getCurrentUser(userId: Types.ObjectId): Promise<ApiResponse<UserInfo>> {
     try {
       const user = await this.userModel.findById(userId);
       this.isValidUser(user);
@@ -471,7 +478,7 @@ export class UserService {
     }
   }
 
-  async deleteProfile(userId: string): Promise<ApiResponse> {
+  async deleteProfile(userId: Types.ObjectId): Promise<ApiResponse> {
     try {
       const user = await this.userModel.findById(userId);
       this.isValidUser(user);

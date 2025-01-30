@@ -16,9 +16,9 @@ export class CarController {
   @Post('added')
   async addedCar(
     @Body() dto: CarDto,
-    @User('_id') userId: string,
+    @User('_id') userId: Types.ObjectId,
   ): Promise<ApiResponse<CarDocument>> {
-    return await this.carService.addedCar(userId, dto);
+    return this.carService.addedCar(userId, dto);
   }
 
   @Patch('update/:carId')
@@ -26,6 +26,6 @@ export class CarController {
     @Body() dto: CarDto,
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
   ): Promise<ApiResponse<CarDocument>> {
-    return await this.carService.updateCar(carId, dto);
+    return this.carService.updateCar(carId, dto);
   }
 }

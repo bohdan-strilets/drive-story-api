@@ -1,12 +1,4 @@
-import {
-  Body,
-  Controller,
-  Param,
-  Patch,
-  Post,
-  Res,
-  ValidationPipe,
-} from '@nestjs/common';
+import { Body, Controller, Param, Patch, Post, Res } from '@nestjs/common';
 import { Response } from 'express';
 import { Types } from 'mongoose';
 import { Auth } from 'src/auth/decorators/auth.decorator';
@@ -35,8 +27,7 @@ export class CarController {
 
   @Patch('update/:carId')
   async updateCar(
-    @Body(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
-    dto: CarDto,
+    @Body() dto: CarDto,
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
   ): Promise<ApiResponse<CarDocument>> {
     return await this.carService.updateCar(carId, dto);

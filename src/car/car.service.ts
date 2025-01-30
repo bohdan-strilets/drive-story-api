@@ -1,6 +1,6 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { defaultImages } from 'src/helpers/default-images';
 import { errorMessages } from 'src/helpers/error-messages';
 import { ResponseService } from 'src/response/response.service';
@@ -47,6 +47,42 @@ export class CarService {
       );
     } catch (error) {
       console.error('Error creating new car:', error);
+      return this.responseService.createErrorResponse(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        errorMessages.ERROR_OCCURRED,
+      );
+    }
+  }
+
+  private async updateCarModel(
+    carId: Types.ObjectId,
+    dto: any,
+  ): Promise<CarDocument> {
+    const updatedCar = await this.carModel.findByIdAndUpdate(carId, dto, {
+      new: true,
+    });
+
+    if (!updatedCar) {
+      throw new Error(`Car with ID ${carId} was not updated`);
+    }
+
+    return updatedCar;
+  }
+
+  async updateCar(
+    carId: Types.ObjectId,
+    dto: CreateCarDto,
+  ): Promise<ApiResponse<CarDocument>> {
+    try {
+      this.isValidDto(dto);
+
+      const updatedCar = await this.updateCarModel(carId, dto);
+      return this.responseService.createSuccessResponse(
+        HttpStatus.OK,
+        updatedCar,
+      );
+    } catch (error) {
+      console.error('Error updating the car by id:', error);
       return this.responseService.createErrorResponse(
         HttpStatus.INTERNAL_SERVER_ERROR,
         errorMessages.ERROR_OCCURRED,

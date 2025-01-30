@@ -33,8 +33,6 @@ export class AuthController {
     if (data.success) {
       const refreshToken = data.data?.tokens.refreshToken;
       res.cookie(cookieKeys.REFRESH_TOKEN, refreshToken, cookieOptions);
-    } else {
-      res.status(data.statusCode);
     }
 
     return data;
@@ -52,8 +50,6 @@ export class AuthController {
     if (data.success) {
       const refreshToken = data.data?.tokens.refreshToken;
       res.cookie(cookieKeys.REFRESH_TOKEN, refreshToken, cookieOptions);
-    } else {
-      res.status(data.statusCode);
     }
 
     return data;
@@ -70,8 +66,6 @@ export class AuthController {
 
     if (data.success) {
       res.clearCookie(cookieKeys.REFRESH_TOKEN, cookieOptions);
-    } else {
-      res.status(data.statusCode);
     }
 
     return data;
@@ -89,8 +83,6 @@ export class AuthController {
     if (data.success) {
       const refreshToken = data.data?.tokens.refreshToken;
       res.cookie(cookieKeys.REFRESH_TOKEN, refreshToken, cookieOptions);
-    } else {
-      res.status(data.statusCode);
     }
 
     return data;
@@ -106,8 +98,6 @@ export class AuthController {
     if (data.success) {
       const refreshToken = data.data?.tokens.refreshToken;
       res.cookie(cookieKeys.REFRESH_TOKEN, refreshToken, cookieOptions);
-    } else {
-      res.status(data.statusCode);
     }
 
     return data;

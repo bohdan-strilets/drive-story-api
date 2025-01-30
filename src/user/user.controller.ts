@@ -42,10 +42,7 @@ export class UserController {
   ): Promise<ApiResponse> {
     const clientUrl = this.configService.get('CLIENT_URL');
     res.redirect(`${clientUrl}activation-success`);
-
-    const data = await this.userService.activationEmail(activationToken);
-    if (!data.success) res.status(data.statusCode);
-    return data;
+    return await this.userService.activationEmail(activationToken);
   }
 
   @Auth()
@@ -53,11 +50,8 @@ export class UserController {
   @Post('request-activation-email-resend')
   async requestActivationEmailResend(
     @Body() dto: EmailDto,
-    @Res({ passthrough: true }) res: Response,
   ): Promise<ApiResponse> {
-    const data = await this.userService.requestActivationEmailResend(dto);
-    if (!data.success) res.status(data.statusCode);
-    return data;
+    return await this.userService.requestActivationEmailResend(dto);
   }
 
   @Auth()
@@ -65,11 +59,8 @@ export class UserController {
   async editProfile(
     @Body() dto: ProfileDto,
     @User('_id') userId: string,
-    @Res({ passthrough: true }) res: Response,
   ): Promise<ApiResponse<UserInfo>> {
-    const data = await this.userService.editProfile(userId, dto);
-    if (!data.success) res.status(data.statusCode);
-    return data;
+    return await this.userService.editProfile(userId, dto);
   }
 
   @Auth()
@@ -77,22 +68,14 @@ export class UserController {
   async editEmail(
     @Body() dto: EmailDto,
     @User('_id') userId: string,
-    @Res({ passthrough: true }) res: Response,
   ): Promise<ApiResponse<UserInfo>> {
-    const data = await this.userService.editEmail(userId, dto);
-    if (!data.success) res.status(data.statusCode);
-    return data;
+    return await this.userService.editEmail(userId, dto);
   }
 
   @HttpCode(HttpStatus.OK)
   @Post('request-reset-password')
-  async requestResetPassword(
-    @Body() dto: EmailDto,
-    @Res({ passthrough: true }) res: Response,
-  ): Promise<ApiResponse> {
-    const data = await this.userService.requestResetPassword(dto);
-    if (!data.success) res.status(data.statusCode);
-    return data;
+  async requestResetPassword(@Body() dto: EmailDto): Promise<ApiResponse> {
+    return await this.userService.requestResetPassword(dto);
   }
 
   @Get('verify-reset-token/:resetToken')
@@ -107,7 +90,6 @@ export class UserController {
       res.redirect(`${clientUrl}reset-password?valid=true`);
     } else {
       res.redirect(`${clientUrl}reset-password?valid=false`);
-      res.status(data.statusCode);
     }
 
     return data;
@@ -118,13 +100,8 @@ export class UserController {
   async resetPassword(
     @Body() dto: ResetPasswordDto,
     @Param('resetToken') resetToken: string,
-    @Res({ passthrough: true }) res: Response,
   ): Promise<ApiResponse> {
-    const data = await this.userService.resetPassword(dto, resetToken);
-    if (!data.success) res.status(data.statusCode);
-    return data;
-
-    return data;
+    return await this.userService.resetPassword(dto, resetToken);
   }
 
   @Auth()
@@ -132,11 +109,8 @@ export class UserController {
   async editPassword(
     @Body() dto: EditPasswordDto,
     @User('_id') userId: string,
-    @Res({ passthrough: true }) res: Response,
   ): Promise<ApiResponse> {
-    const data = await this.userService.editPassword(dto, userId);
-    if (!data.success) res.status(data.statusCode);
-    return data;
+    return await this.userService.editPassword(dto, userId);
   }
 
   @Auth()
@@ -149,46 +123,34 @@ export class UserController {
     @UploadedFile(imageValidator)
     file: Express.Multer.File,
     @User('_id') userId: string,
-    @Res({ passthrough: true }) res: Response,
   ): Promise<ApiResponse<UserInfo>> {
-    const data = await this.userService.uploadAvatar(file, userId);
-    if (!data.success) res.status(data.statusCode);
-    return data;
+    return await this.userService.uploadAvatar(file, userId);
   }
 
   @Auth()
   @Delete('delete-avatar')
   async deleteAvatar(
     @User('_id') userId: string,
-    @Res({ passthrough: true }) res: Response,
     @Query('avatarPublicId') avatarPublicId: string,
   ): Promise<ApiResponse<UserInfo>> {
-    const data = await this.userService.deleteAvatar(avatarPublicId, userId);
-    if (!data.success) res.status(data.statusCode);
-    return data;
+    return await this.userService.deleteAvatar(avatarPublicId, userId);
   }
 
   @Auth()
   @Patch('select-avatar')
   async selectAvatar(
     @User('_id') userId: string,
-    @Res({ passthrough: true }) res: Response,
     @Query('avatarPublicId') avatarPublicId: string,
   ): Promise<ApiResponse<UserInfo>> {
-    const data = await this.userService.selectAvatar(avatarPublicId, userId);
-    if (!data.success) res.status(data.statusCode);
-    return data;
+    return await this.userService.selectAvatar(avatarPublicId, userId);
   }
 
   @Auth()
   @Delete('delete-all-avatars')
   async deleteAllAvatars(
     @User('_id') userId: string,
-    @Res({ passthrough: true }) res: Response,
   ): Promise<ApiResponse<UserInfo>> {
-    const data = await this.userService.deleteAllAvatars(userId);
-    if (!data.success) res.status(data.statusCode);
-    return data;
+    return await this.userService.deleteAllAvatars(userId);
   }
 
   @Auth()
@@ -201,67 +163,47 @@ export class UserController {
     @UploadedFile(imageValidator)
     file: Express.Multer.File,
     @User('_id') userId: string,
-    @Res({ passthrough: true }) res: Response,
   ): Promise<ApiResponse<UserInfo>> {
-    const data = await this.userService.uploadPoster(file, userId);
-    if (!data.success) res.status(data.statusCode);
-    return data;
+    return await this.userService.uploadPoster(file, userId);
   }
 
   @Auth()
   @Delete('delete-poster')
   async deletePoster(
     @User('_id') userId: string,
-    @Res({ passthrough: true }) res: Response,
     @Query('posterPublicId') posterPublicId: string,
   ): Promise<ApiResponse<UserInfo>> {
-    const data = await this.userService.deletePoster(posterPublicId, userId);
-    if (!data.success) res.status(data.statusCode);
-    return data;
+    return await this.userService.deletePoster(posterPublicId, userId);
   }
 
   @Auth()
   @Patch('select-poster')
   async selectPoster(
     @User('_id') userId: string,
-    @Res({ passthrough: true }) res: Response,
     @Query('posterPublicId') posterPublicId: string,
   ): Promise<ApiResponse<UserInfo>> {
-    const data = await this.userService.selectPoster(posterPublicId, userId);
-    if (!data.success) res.status(data.statusCode);
-    return data;
+    return await this.userService.selectPoster(posterPublicId, userId);
   }
 
   @Auth()
   @Delete('delete-all-posters')
   async deleteAllPosters(
     @User('_id') userId: string,
-    @Res({ passthrough: true }) res: Response,
   ): Promise<ApiResponse<UserInfo>> {
-    const data = await this.userService.deleteAllPosters(userId);
-    if (!data.success) res.status(data.statusCode);
-    return data;
+    return await this.userService.deleteAllPosters(userId);
   }
 
   @Auth()
   @Get('current-user')
   async getCurrentUser(
     @User('_id') userId: string,
-    @Res({ passthrough: true }) res: Response,
   ): Promise<ApiResponse<UserInfo>> {
-    const data = await this.userService.getCurrentUser(userId);
-    if (!data.success) res.status(data.statusCode);
-    return data;
+    return await this.userService.getCurrentUser(userId);
   }
 
   @Auth()
   @Delete('delete-profile')
-  async deleteProfile(
-    @User('_id') userId: string,
-    @Res({ passthrough: true }) res: Response,
-  ): Promise<ApiResponse> {
-    const data = await this.userService.deleteProfile(userId);
-    if (!data.success) res.status(data.statusCode);
-    return data;
+  async deleteProfile(@User('_id') userId: string): Promise<ApiResponse> {
+    return await this.userService.deleteProfile(userId);
   }
 }

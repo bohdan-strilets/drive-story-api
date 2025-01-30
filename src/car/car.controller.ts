@@ -1,5 +1,4 @@
-import { Body, Controller, Param, Patch, Post, Res } from '@nestjs/common';
-import { Response } from 'express';
+import { Body, Controller, Param, Patch, Post } from '@nestjs/common';
 import { Types } from 'mongoose';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { ApiResponse } from 'src/response/types/api-response.type';
@@ -17,12 +16,9 @@ export class CarController {
   @Post('added')
   async addedCar(
     @Body() dto: CarDto,
-    @Res({ passthrough: true }) res: Response,
     @User('_id') userId: string,
   ): Promise<ApiResponse<CarDocument>> {
-    const data = await this.carService.addedCar(userId, dto);
-    if (!data.success) res.status(data.statusCode);
-    return data;
+    return await this.carService.addedCar(userId, dto);
   }
 
   @Patch('update/:carId')

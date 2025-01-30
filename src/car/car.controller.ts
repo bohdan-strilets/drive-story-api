@@ -13,12 +13,12 @@ import { CarDocument } from './schemas/car.schema';
 export class CarController {
   constructor(private readonly carService: CarService) {}
 
-  @Post('added')
+  @Post('add')
   async addedCar(
     @Body() dto: CarDto,
     @User('_id') userId: Types.ObjectId,
   ): Promise<ApiResponse<CarDocument>> {
-    return this.carService.addedCar(userId, dto);
+    return this.carService.addCar(userId, dto);
   }
 
   @Patch('update/:carId')

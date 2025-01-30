@@ -5,7 +5,7 @@ import { defaultImages } from 'src/helpers/default-images';
 import { errorMessages } from 'src/helpers/error-messages';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
-import { CreateCarDto } from './dto/create-car.dto';
+import { CarDto } from './dto/car.dto';
 import { Car, CarDocument } from './schemas/car.schema';
 
 @Injectable()
@@ -26,7 +26,7 @@ export class CarService {
 
   async addedCar(
     userId: string,
-    dto: CreateCarDto,
+    dto: CarDto,
   ): Promise<ApiResponse<CarDocument>> {
     try {
       this.isValidDto(dto);
@@ -71,7 +71,7 @@ export class CarService {
 
   async updateCar(
     carId: Types.ObjectId,
-    dto: CreateCarDto,
+    dto: CarDto,
   ): Promise<ApiResponse<CarDocument>> {
     try {
       this.isValidDto(dto);

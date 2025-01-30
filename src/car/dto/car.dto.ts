@@ -5,7 +5,7 @@ import { OwnerShipDto } from './ownership.dto';
 import { RegistrationDto } from './registration.dto';
 import { SpecificationsDto } from './specifications.dto';
 
-export class CreateCarDto {
+export class CarDto {
   @ValidateNested()
   @Type(() => BasicInfoDto)
   basicInfo: BasicInfoDto;

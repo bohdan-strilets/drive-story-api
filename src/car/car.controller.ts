@@ -13,7 +13,7 @@ import { Auth } from 'src/auth/decorators/auth.decorator';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { User } from 'src/user/decorators/user.decorator';
 import { CarService } from './car.service';
-import { CreateCarDto } from './dto/create-car.dto';
+import { CarDto } from './dto/car.dto';
 import { ParseObjectIdPipe } from './pipes/parse-objectid.pipe';
 import { CarDocument } from './schemas/car.schema';
 
@@ -24,7 +24,7 @@ export class CarController {
 
   @Post('added')
   async addedCar(
-    @Body() dto: CreateCarDto,
+    @Body() dto: CarDto,
     @Res({ passthrough: true }) res: Response,
     @User('_id') userId: string,
   ): Promise<ApiResponse<CarDocument>> {
@@ -36,7 +36,7 @@ export class CarController {
   @Patch('update/:carId')
   async updateCar(
     @Body(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
-    dto: CreateCarDto,
+    dto: CarDto,
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
   ): Promise<ApiResponse<CarDocument>> {
     return await this.carService.updateCar(carId, dto);

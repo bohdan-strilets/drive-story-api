@@ -99,13 +99,7 @@ export class CarService {
   async deleteCar(carId: Types.ObjectId): Promise<ApiResponse<CarDocument>> {
     try {
       const deletedCar = await this.carModel.findByIdAndDelete(carId);
-
-      if (!deletedCar) {
-        return this.responseService.createErrorResponse(
-          HttpStatus.NOT_FOUND,
-          errorMessages.CAR_NOT_FOUND,
-        );
-      }
+      this.isValidCar(deletedCar);
 
       return this.responseService.createSuccessResponse(HttpStatus.OK);
     } catch (error) {

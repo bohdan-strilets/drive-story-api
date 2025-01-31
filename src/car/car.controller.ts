@@ -1,4 +1,12 @@
-import { Body, Controller, Delete, Param, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import { Types } from 'mongoose';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { ApiResponse } from 'src/response/types/api-response.type';
@@ -34,5 +42,12 @@ export class CarController {
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
   ): Promise<ApiResponse<CarDocument>> {
     return this.carService.deleteCar(carId);
+  }
+
+  @Get('get/:carId')
+  async getById(
+    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
+  ): Promise<ApiResponse<CarDocument>> {
+    return this.carService.getById(carId);
   }
 }

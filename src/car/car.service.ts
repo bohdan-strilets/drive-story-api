@@ -16,11 +16,11 @@ export class CarService {
     private readonly responseService: ResponseService,
   ) {}
 
-  private isValidDto(dto: any): ApiResponse | void {
+  private isValidDto(dto: any): void {
     if (!dto) {
-      return this.responseService.createErrorResponse(
+      throw new AppError(
         HttpStatus.BAD_REQUEST,
-        errorMessages.INVALID_DATA_FORMAT,
+        errorMessages.CHECK_ENTERED_DATA,
       );
     }
   }
@@ -29,30 +29,22 @@ export class CarService {
     userId: Types.ObjectId,
     dto: CarDto,
   ): Promise<ApiResponse<CarDocument>> {
-    try {
-      this.isValidDto(dto);
+    this.isValidDto(dto);
 
-      const data = {
-        owner: userId,
-        images: {
-          default: defaultImages.CAR_POSTER,
-          selected: defaultImages.CAR_POSTER,
-        },
-        ...dto,
-      };
+    const data = {
+      owner: userId,
+      images: {
+        default: defaultImages.CAR_POSTER,
+        selected: defaultImages.CAR_POSTER,
+      },
+      ...dto,
+    };
 
-      const newCar = await this.carModel.create(data);
-      return this.responseService.createSuccessResponse(
-        HttpStatus.CREATED,
-        newCar,
-      );
-    } catch (error) {
-      console.error('Error creating new car:', error);
-      return this.responseService.createErrorResponse(
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessages.ERROR_OCCURRED,
-      );
-    }
+    const newCar = await this.carModel.create(data);
+    return this.responseService.createSuccessResponse(
+      HttpStatus.CREATED,
+      newCar,
+    );
   }
 
   private async updateCarModel(
@@ -64,7 +56,7 @@ export class CarService {
     });
 
     if (!updatedCar) {
-      throw new Error(`Car with ID ${carId} was not updated`);
+      throw new AppError(HttpStatus.NOT_FOUND, errorMessages.CAR_NOT_FOUND);
     }
 
     return updatedCar;
@@ -74,26 +66,18 @@ export class CarService {
     carId: Types.ObjectId,
     dto: CarDto,
   ): Promise<ApiResponse<CarDocument>> {
-    try {
-      this.isValidDto(dto);
+    this.isValidDto(dto);
+    const updatedCar = await this.updateCarModel(carId, dto);
 
-      const updatedCar = await this.updateCarModel(carId, dto);
-      return this.responseService.createSuccessResponse(
-        HttpStatus.OK,
-        updatedCar,
-      );
-    } catch (error) {
-      console.error('Error updating the car by id:', error);
-      return this.responseService.createErrorResponse(
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessages.ERROR_OCCURRED,
-      );
-    }
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      updatedCar,
+    );
   }
 
   private isValidCar(car: CarDocument): void {
     if (!car) {
-      throw new AppError(404, 'Car with the current ID was not found.');
+      throw new AppError(HttpStatus.NOT_FOUND, errorMessages.CAR_NOT_FOUND);
     }
   }
 

@@ -12,11 +12,12 @@ export const errorMessages = {
   ENTITY_UPDATE_FAILED:
     'A concise message indicating that updating the entity failed',
   FILE_DELETE_FAILED: 'Failed to delete the file. Please try again.',
-  ERROR_OCCURRED: 'Something went wrong. Please try again later.',
+  INTERNAL_SERVER_ERROR: 'Internal Server Error.',
   INVALID_GOOGLE_TOKEN:
     'The Google token is invalid. Please check the token or try again.',
   FILE_NON_EXISTENT: 'A non-existent file was selected.',
   NOT_FILES_TO_DELETE: 'There are no files to delete.',
   INVALID_DATA_FORMAT: 'Invalid data format.',
   CAR_NOT_FOUND: 'The car with the current ID was nod found.',
+  CHECK_ENTERED_DATA: 'Check the entered data.',
 };

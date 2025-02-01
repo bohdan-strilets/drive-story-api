@@ -6,6 +6,7 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { Response } from 'express';
+import { errorMessages } from 'src/helpers/error-messages';
 import { ResponseService } from 'src/response/response.service';
 import { AppError } from './app-error';
 
@@ -19,7 +20,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
 
     let status = 500;
-    let message = 'Internal Server Error';
+    let message = errorMessages.INTERNAL_SERVER_ERROR;
 
     if (exception instanceof HttpException) {
       status = exception.getStatus();

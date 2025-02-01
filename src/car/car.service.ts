@@ -1,6 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import { AppError } from 'src/error/app-error';
 import { defaultImages } from 'src/helpers/default-images';
 import { errorMessages } from 'src/helpers/error-messages';
 import { ResponseService } from 'src/response/response.service';
@@ -92,37 +93,19 @@ export class CarService {
 
   private isValidCar(car: CarDocument): void {
     if (!car) {
-      throw new Error('Car with the current ID was not found.');
+      throw new AppError(404, 'Car with the current ID was not found.');
     }
   }
 
   async deleteCar(carId: Types.ObjectId): Promise<ApiResponse<CarDocument>> {
-    try {
-      const deletedCar = await this.carModel.findByIdAndDelete(carId);
-      this.isValidCar(deletedCar);
-
-      return this.responseService.createSuccessResponse(HttpStatus.OK);
-    } catch (error) {
-      console.error('Error deleting the car by id:', error);
-      return this.responseService.createErrorResponse(
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessages.ERROR_OCCURRED,
-      );
-    }
+    const deletedCar = await this.carModel.findByIdAndDelete(carId);
+    this.isValidCar(deletedCar);
+    return this.responseService.createSuccessResponse(HttpStatus.OK);
   }
 
   async getById(carId: Types.ObjectId): Promise<ApiResponse<CarDocument>> {
-    try {
-      const car = await this.carModel.findById(carId);
-      this.isValidCar(car);
-
-      return this.responseService.createSuccessResponse(HttpStatus.OK, car);
-    } catch (error) {
-      console.error('Error while finding a car by id:', error);
-      return this.responseService.createErrorResponse(
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessages.ERROR_OCCURRED,
-      );
-    }
+    const car = await this.carModel.findById(carId);
+    this.isValidCar(car);
+    return this.responseService.createSuccessResponse(HttpStatus.OK, car);
   }
 }

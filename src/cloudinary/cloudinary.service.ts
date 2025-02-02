@@ -2,6 +2,7 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { UploadApiResponse, v2 } from 'cloudinary';
 import * as fs from 'fs';
 import { Document, Types } from 'mongoose';
+import { AppError } from 'src/error/app-error';
 import { errorMessages } from 'src/helpers/error-messages';
 import { sanitizeUserData } from 'src/helpers/sanitize-user-data';
 import { ResponseService } from 'src/response/response.service';
@@ -46,19 +47,19 @@ export class CloudinaryService {
 
   getFolderPath(url: string): string {
     if (!url || typeof url !== 'string') {
-      throw new Error('Invalid URL provided');
+      throw new AppError(HttpStatus.BAD_REQUEST, 'Invalid URL provided');
     }
 
     const segments = url.split('/');
 
     if (segments.length < 8) {
-      throw new Error(
+      throw new AppError(
+        HttpStatus.BAD_REQUEST,
         'URL does not contain enough segments to extract folder path',
       );
     }
 
     const folderSegments = segments.slice(7, segments.length - 1);
-
     return folderSegments.join('/');
   }
 
@@ -71,8 +72,9 @@ export class CloudinaryService {
         `File with publicId "${publicId}" has been successfully deleted.`,
       );
     } catch (error) {
-      throw new Error(
-        `Failed to delete file. PublicId: "${publicId}". Error: ${error.message || error}`,
+      throw new AppError(
+        HttpStatus.NOT_FOUND,
+        `Failed to delete file. PublicId: "${publicId}". Error: ${error}`,
       );
     }
   }
@@ -82,15 +84,16 @@ export class CloudinaryService {
       await this.cloudinary.api.delete_folder(folderPath);
       console.log(`Folder "${folderPath}" has been successfully deleted.`);
     } catch (error) {
-      throw new Error(
-        `Failed to delete folder. Folder path: "${folderPath}". Error: ${error.message || error}`,
+      throw new AppError(
+        HttpStatus.NOT_FOUND,
+        `Failed to delete folder. Folder path: "${folderPath}". Error: ${error}`,
       );
     }
   }
 
   async deleteFilesAndFolder(folderPath: string): Promise<void> {
     if (!folderPath) {
-      throw new Error('Folder path is required.');
+      throw new AppError(HttpStatus.BAD_REQUEST, 'Folder path is required.');
     }
 
     try {
@@ -126,8 +129,9 @@ export class CloudinaryService {
       await this.deleteFolder(folderPath);
       console.log(`Folder "${folderPath}" has been successfully deleted.`);
     } catch (error) {
-      throw new Error(
-        `Error deleting files and folder at path "${folderPath}". Error: ${error.message || error}`,
+      throw new AppError(
+        HttpStatus.BAD_REQUEST,
+        `Error deleting files and folder at path "${folderPath}". Error: ${error}`,
       );
     }
   }
@@ -136,12 +140,9 @@ export class CloudinaryService {
     return path.split('.').reduce((current, key) => current?.[key], obj);
   }
 
-  private isValidEntity(entity: any): ApiResponse {
+  private isValidEntity(entity: any): void {
     if (!entity) {
-      return this.responseService.createErrorResponse(
-        HttpStatus.NOT_FOUND,
-        errorMessages.ENTITY_NOT_FOUND,
-      );
+      throw new AppError(HttpStatus.NOT_FOUND, errorMessages.ENTITY_NOT_FOUND);
     }
   }
 
@@ -167,7 +168,7 @@ export class CloudinaryService {
       );
     } catch (updateError) {
       console.error('Error updating entity:', updateError);
-      return this.responseService.createErrorResponse(
+      throw new AppError(
         HttpStatus.INTERNAL_SERVER_ERROR,
         errorMessages.ENTITY_UPDATE_FAILED,
       );
@@ -193,7 +194,7 @@ export class CloudinaryService {
       uploadedImage = await this.uploadFile(file, FileType.IMAGE, filePath);
     } catch (uploadError) {
       console.error('Error uploading file:', uploadError);
-      return this.responseService.createErrorResponse(
+      throw new AppError(
         HttpStatus.INTERNAL_SERVER_ERROR,
         errorMessages.FILE_UPLOAD_FAILED,
       );
@@ -229,7 +230,7 @@ export class CloudinaryService {
       await this.deleteFile(publicId, FileType.IMAGE);
     } catch (error) {
       console.error('Error deleting file from storage:', error);
-      return this.responseService.createErrorResponse(
+      throw new AppError(
         HttpStatus.INTERNAL_SERVER_ERROR,
         errorMessages.FILE_DELETE_FAILED,
       );

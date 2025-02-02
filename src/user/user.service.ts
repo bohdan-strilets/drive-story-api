@@ -2,6 +2,7 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
+import { AppError } from 'src/error/app-error';
 import { CloudinaryFolders } from 'src/helpers/cloudinary-folders';
 import { defaultImages } from 'src/helpers/default-images';
 import { errorMessages } from 'src/helpers/error-messages';
@@ -42,60 +43,41 @@ export class UserService {
   }
 
   async activationEmail(activationToken: string): Promise<ApiResponse> {
-    try {
-      const user = await this.userModel.findOne({ activationToken });
+    const user = await this.userModel.findOne({ activationToken });
 
-      if (!user) {
-        return this.responseService.createErrorResponse(
-          HttpStatus.NOT_FOUND,
-          errorMessages.ACTIVATION_TOKEN_ERROR,
-        );
-      }
-
-      await this.updateActivationStatus(user._id);
-      return this.responseService.createSuccessResponse(HttpStatus.OK);
-    } catch (error) {
-      console.error('Activation email error:', error);
-      return this.responseService.createErrorResponse(
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessages.ERROR_OCCURRED,
+    if (!user) {
+      throw new AppError(
+        HttpStatus.NOT_FOUND,
+        errorMessages.ACTIVATION_TOKEN_ERROR,
       );
     }
+
+    await this.updateActivationStatus(user._id);
+    return this.responseService.createSuccessResponse(HttpStatus.OK);
   }
 
   async requestActivationEmailResend(dto: EmailDto): Promise<ApiResponse> {
-    try {
-      const { email } = dto;
+    const { email } = dto;
 
-      const user = await this.userModel.findOne({ email });
-      const activationToken = v4();
+    const user = await this.userModel.findOne({ email });
+    const activationToken = v4();
 
-      if (!user) {
-        return this.responseService.createErrorResponse(
-          HttpStatus.NOT_FOUND,
-          errorMessages.USER_NOT_FOUND,
-        );
-      }
-
-      const updatedUser = await this.updateActivationStatus(
-        user._id,
-        activationToken,
-        false,
-      );
-
-      await this.sendgridService.sendConfirmEmailLetter(
-        updatedUser.email,
-        updatedUser.activationToken,
-      );
-
-      return this.responseService.createSuccessResponse(HttpStatus.OK);
-    } catch (error) {
-      console.error('Email reactivation error:', error);
-      return this.responseService.createErrorResponse(
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessages.ERROR_OCCURRED,
-      );
+    if (!user) {
+      throw new AppError(HttpStatus.NOT_FOUND, errorMessages.USER_NOT_FOUND);
     }
+
+    const updatedUser = await this.updateActivationStatus(
+      user._id,
+      activationToken,
+      false,
+    );
+
+    await this.sendgridService.sendConfirmEmailLetter(
+      updatedUser.email,
+      updatedUser.activationToken,
+    );
+
+    return this.responseService.createSuccessResponse(HttpStatus.OK);
   }
 
   private async updateUserById(
@@ -112,152 +94,100 @@ export class UserService {
     userId: Types.ObjectId,
     dto: ProfileDto,
   ): Promise<ApiResponse<UserInfo>> {
-    try {
-      const updatedUser = await this.updateUserById(userId, dto);
-
-      return this.responseService.createSuccessResponse(
-        HttpStatus.OK,
-        updatedUser,
-      );
-    } catch (error) {
-      console.error('Edit profile error:', error);
-      return this.responseService.createErrorResponse(
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessages.ERROR_OCCURRED,
-      );
-    }
+    const updatedUser = await this.updateUserById(userId, dto);
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      updatedUser,
+    );
   }
 
   async editEmail(
     userId: Types.ObjectId,
     dto: EmailDto,
   ): Promise<ApiResponse<UserInfo>> {
-    try {
-      const { email } = dto;
+    const { email } = dto;
 
-      const activationToken = v4();
-      await this.sendgridService.sendConfirmEmailLetter(email, activationToken);
+    const activationToken = v4();
+    await this.sendgridService.sendConfirmEmailLetter(email, activationToken);
 
-      const emailDto = { email, activationToken, isActivated: false };
-      const updatedUser = await this.updateUserById(userId, emailDto);
+    const emailDto = { email, activationToken, isActivated: false };
+    const updatedUser = await this.updateUserById(userId, emailDto);
 
-      return this.responseService.createSuccessResponse(
-        HttpStatus.OK,
-        updatedUser,
-      );
-    } catch (error) {
-      console.error('Edit email error:', error);
-      return this.responseService.createErrorResponse(
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessages.ERROR_OCCURRED,
-      );
-    }
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      updatedUser,
+    );
   }
 
-  private isValidUser(user: UserDocument): ApiResponse | void {
+  private isValidUser(user: UserDocument): void {
     if (!user) {
-      return this.responseService.createErrorResponse(
-        HttpStatus.NOT_FOUND,
-        errorMessages.USER_NOT_FOUND,
-      );
+      throw new AppError(HttpStatus.NOT_FOUND, errorMessages.USER_NOT_FOUND);
     }
   }
 
   async requestResetPassword(dto: EmailDto): Promise<ApiResponse> {
-    try {
-      const { email } = dto;
-      const user = await this.userModel.findOne({ email });
-      this.isValidUser(user);
+    const { email } = dto;
+    const user = await this.userModel.findOne({ email });
+    this.isValidUser(user);
 
-      const resetToken = v4();
-      await this.updateUserById(user._id, { resetToken });
-      await this.sendgridService.sendPasswordResetEmail(user.email, resetToken);
+    const resetToken = v4();
+    await this.updateUserById(user._id, { resetToken });
+    await this.sendgridService.sendPasswordResetEmail(user.email, resetToken);
 
-      return this.responseService.createSuccessResponse(HttpStatus.OK);
-    } catch (error) {
-      console.error('Error while requesting password reset:', error);
-      return this.responseService.createErrorResponse(
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessages.ERROR_OCCURRED,
-      );
-    }
+    return this.responseService.createSuccessResponse(HttpStatus.OK);
   }
 
   async verifyResetToken(resetToken: string): Promise<ApiResponse> {
-    try {
-      const user = await this.userModel.findOne({ resetToken });
-      this.isValidUser(user);
+    const user = await this.userModel.findOne({ resetToken });
+    this.isValidUser(user);
 
-      return this.responseService.createSuccessResponse(HttpStatus.OK);
-    } catch (error) {
-      console.error('Password reset token verification error:', error);
-      return this.responseService.createErrorResponse(
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessages.ERROR_OCCURRED,
-      );
-    }
+    return this.responseService.createSuccessResponse(HttpStatus.OK);
   }
 
   async resetPassword(
     dto: ResetPasswordDto,
     resetToken: string,
   ): Promise<ApiResponse> {
-    try {
-      const user = await this.userModel.findOne({ resetToken });
-      this.isValidUser(user);
+    const user = await this.userModel.findOne({ resetToken });
+    this.isValidUser(user);
 
-      const { password } = dto;
-      const hashPassword = await this.passwordService.createPassword(password);
+    const { password } = dto;
+    const hashPassword = await this.passwordService.createPassword(password);
 
-      const passwordDto = { password: hashPassword, resetToken: null };
-      await this.updateUserById(user._id, passwordDto);
+    const passwordDto = { password: hashPassword, resetToken: null };
+    await this.updateUserById(user._id, passwordDto);
 
-      await this.sendgridService.sendPasswordChangedSuccess(user.email);
+    await this.sendgridService.sendPasswordChangedSuccess(user.email);
 
-      return this.responseService.createSuccessResponse(HttpStatus.OK);
-    } catch (error) {
-      console.error('Error resetting password:', error);
-      return this.responseService.createErrorResponse(
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessages.ERROR_OCCURRED,
-      );
-    }
+    return this.responseService.createSuccessResponse(HttpStatus.OK);
   }
 
   async editPassword(
     dto: EditPasswordDto,
     userId: Types.ObjectId,
   ): Promise<ApiResponse> {
-    try {
-      const user = await this.userModel.findById(userId);
-      const isValidPassword = await this.passwordService.checkPassword(
-        dto.password,
-        user.password,
-      );
+    const user = await this.userModel.findById(userId);
+    const isValidPassword = await this.passwordService.checkPassword(
+      dto.password,
+      user.password,
+    );
 
-      if (!user || !isValidPassword) {
-        return this.responseService.createErrorResponse(
-          HttpStatus.UNAUTHORIZED,
-          errorMessages.USER_NOT_AUTHORIZED,
-        );
-      }
-
-      const hashPassword = await this.passwordService.createPassword(
-        dto.newPassword,
-      );
-
-      const passwordDto = { password: hashPassword };
-      await this.updateUserById(userId, passwordDto);
-      await this.sendgridService.sendPasswordChangedSuccess(user.email);
-
-      return this.responseService.createSuccessResponse(HttpStatus.OK);
-    } catch (error) {
-      console.error('Error editing password:', error);
-      return this.responseService.createErrorResponse(
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessages.ERROR_OCCURRED,
+    if (!user || !isValidPassword) {
+      throw new AppError(
+        HttpStatus.UNAUTHORIZED,
+        errorMessages.USER_NOT_AUTHORIZED,
       );
     }
+
+    const hashPassword = await this.passwordService.createPassword(
+      dto.newPassword,
+    );
+
+    const passwordDto = { password: hashPassword };
+    await this.updateUserById(userId, passwordDto);
+    await this.sendgridService.sendPasswordChangedSuccess(user.email);
+
+    return this.responseService.createSuccessResponse(HttpStatus.OK);
   }
 
   async uploadAvatar(
@@ -293,7 +223,7 @@ export class UserService {
 
   private isValidSelectedFile(selectedAvatar: string) {
     if (!!selectedAvatar) {
-      return this.responseService.createErrorResponse(
+      throw new AppError(
         HttpStatus.BAD_REQUEST,
         errorMessages.FILE_NON_EXISTENT,
       );
@@ -304,28 +234,20 @@ export class UserService {
     avatarPublicId: string,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<UserInfo>> {
-    try {
-      const user = await this.userModel.findById(userId);
-      this.isValidUser(user);
+    const user = await this.userModel.findById(userId);
+    this.isValidUser(user);
 
-      const avatars = user.avatars.resources;
-      const selectedAvatar = this.findFileByResources(avatars, avatarPublicId);
-      this.isValidSelectedFile(selectedAvatar);
+    const avatars = user.avatars.resources;
+    const selectedAvatar = this.findFileByResources(avatars, avatarPublicId);
+    this.isValidSelectedFile(selectedAvatar);
 
-      const dto = { $set: { 'avatars.selected': selectedAvatar } };
-      const updatedUser = await this.updateUserById(userId, dto);
+    const dto = { $set: { 'avatars.selected': selectedAvatar } };
+    const updatedUser = await this.updateUserById(userId, dto);
 
-      return this.responseService.createSuccessResponse(
-        HttpStatus.OK,
-        updatedUser,
-      );
-    } catch (error) {
-      console.error('Error while choosing avatar:', error);
-      return this.responseService.createErrorResponse(
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessages.ERROR_OCCURRED,
-      );
-    }
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      updatedUser,
+    );
   }
 
   private async removedFilesAndFolder(filesArr: string[]) {
@@ -333,7 +255,7 @@ export class UserService {
       const folderPath = this.cloudinaryService.getFolderPath(filesArr[0]);
       await this.cloudinaryService.deleteFilesAndFolder(folderPath);
     } else {
-      return this.responseService.createErrorResponse(
+      throw new AppError(
         HttpStatus.BAD_REQUEST,
         errorMessages.NOT_FILES_TO_DELETE,
       );
@@ -343,33 +265,25 @@ export class UserService {
   async deleteAllAvatars(
     userId: Types.ObjectId,
   ): Promise<ApiResponse<UserInfo>> {
-    try {
-      const user = await this.userModel.findById(userId);
-      this.isValidUser(user);
+    const user = await this.userModel.findById(userId);
+    this.isValidUser(user);
 
-      const allAvatars = user.avatars.resources;
-      await this.removedFilesAndFolder(allAvatars);
+    const allAvatars = user.avatars.resources;
+    await this.removedFilesAndFolder(allAvatars);
 
-      const dto = {
-        $set: {
-          'avatars.resources': [],
-          'avatars.selected': defaultImages.USER_AVATAR,
-        },
-      };
+    const dto = {
+      $set: {
+        'avatars.resources': [],
+        'avatars.selected': defaultImages.USER_AVATAR,
+      },
+    };
 
-      const updatedUser = await this.updateUserById(userId, dto);
+    const updatedUser = await this.updateUserById(userId, dto);
 
-      return this.responseService.createSuccessResponse(
-        HttpStatus.OK,
-        updatedUser,
-      );
-    } catch (error) {
-      console.error('Error deleting all user avatars:', error);
-      return this.responseService.createErrorResponse(
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessages.ERROR_OCCURRED,
-      );
-    }
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      updatedUser,
+    );
   }
 
   async uploadPoster(
@@ -403,99 +317,67 @@ export class UserService {
     posterPublicId: string,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<UserInfo>> {
-    try {
-      const user = await this.userModel.findById(userId);
-      this.isValidUser(user);
+    const user = await this.userModel.findById(userId);
+    this.isValidUser(user);
 
-      const posters = user.posters.resources;
-      const selectedPoster = this.findFileByResources(posters, posterPublicId);
-      this.isValidSelectedFile(selectedPoster);
+    const posters = user.posters.resources;
+    const selectedPoster = this.findFileByResources(posters, posterPublicId);
+    this.isValidSelectedFile(selectedPoster);
 
-      const dto = { $set: { 'posters.selected': selectedPoster } };
-      const updatedUser = await this.updateUserById(userId, dto);
+    const dto = { $set: { 'posters.selected': selectedPoster } };
+    const updatedUser = await this.updateUserById(userId, dto);
 
-      return this.responseService.createSuccessResponse(
-        HttpStatus.OK,
-        updatedUser,
-      );
-    } catch (error) {
-      console.error('Error while choosing poster:', error);
-      return this.responseService.createErrorResponse(
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessages.ERROR_OCCURRED,
-      );
-    }
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      updatedUser,
+    );
   }
 
   async deleteAllPosters(
     userId: Types.ObjectId,
   ): Promise<ApiResponse<UserInfo>> {
-    try {
-      const user = await this.userModel.findById(userId);
-      this.isValidUser(user);
+    const user = await this.userModel.findById(userId);
+    this.isValidUser(user);
 
-      const allPosters = user.posters.resources;
-      await this.removedFilesAndFolder(allPosters);
+    const allPosters = user.posters.resources;
+    await this.removedFilesAndFolder(allPosters);
 
-      const dto = {
-        $set: {
-          'posters.resources': [],
-          'posters.selected': defaultImages.USER_POSTER,
-        },
-      };
+    const dto = {
+      $set: {
+        'posters.resources': [],
+        'posters.selected': defaultImages.USER_POSTER,
+      },
+    };
 
-      const updatedUser = await this.updateUserById(userId, dto);
+    const updatedUser = await this.updateUserById(userId, dto);
 
-      return this.responseService.createSuccessResponse(
-        HttpStatus.OK,
-        updatedUser,
-      );
-    } catch (error) {
-      console.error('Error deleting all user posters:', error);
-      return this.responseService.createErrorResponse(
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessages.ERROR_OCCURRED,
-      );
-    }
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      updatedUser,
+    );
   }
 
   async getCurrentUser(userId: Types.ObjectId): Promise<ApiResponse<UserInfo>> {
-    try {
-      const user = await this.userModel.findById(userId);
-      this.isValidUser(user);
-      const sanitizedUser = sanitizeUserData(user);
+    const user = await this.userModel.findById(userId);
+    this.isValidUser(user);
+    const sanitizedUser = sanitizeUserData(user);
 
-      return this.responseService.createSuccessResponse(
-        HttpStatus.OK,
-        sanitizedUser,
-      );
-    } catch (error) {
-      console.error('Error getting current user data:', error);
-      return this.responseService.createErrorResponse(
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessages.ERROR_OCCURRED,
-      );
-    }
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      sanitizedUser,
+    );
   }
 
   async deleteProfile(userId: Types.ObjectId): Promise<ApiResponse> {
-    try {
-      const user = await this.userModel.findById(userId);
-      this.isValidUser(user);
+    const user = await this.userModel.findById(userId);
+    this.isValidUser(user);
 
-      await this.removedFilesAndFolder(user.avatars.resources);
-      await this.removedFilesAndFolder(user.posters.resources);
+    await this.removedFilesAndFolder(user.avatars.resources);
+    await this.removedFilesAndFolder(user.posters.resources);
 
-      await this.userModel.findByIdAndDelete(userId);
-      await this.tokenService.deleteTokensByDb(new Types.ObjectId(userId));
+    await this.userModel.findByIdAndDelete(userId);
+    await this.tokenService.deleteTokensByDb(new Types.ObjectId(userId));
 
-      return this.responseService.createSuccessResponse(HttpStatus.OK);
-    } catch (error) {
-      console.error('Error deleting user:', error);
-      return this.responseService.createErrorResponse(
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessages.ERROR_OCCURRED,
-      );
-    }
+    return this.responseService.createSuccessResponse(HttpStatus.OK);
   }
 }

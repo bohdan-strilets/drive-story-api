@@ -20,4 +20,5 @@ export const errorMessages = {
   INVALID_DATA_FORMAT: 'Invalid data format.',
   CAR_NOT_FOUND: 'The car with the current ID was nod found.',
   CHECK_ENTERED_DATA: 'Check the entered data.',
+  USER_NOT_FUND: 'The user with the current ID was not found.',
 };

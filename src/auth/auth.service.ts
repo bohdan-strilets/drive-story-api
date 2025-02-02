@@ -2,6 +2,7 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { OAuth2Client, TokenPayload } from 'google-auth-library';
 import { Model } from 'mongoose';
+import { AppError } from 'src/error/app-error';
 import { defaultImages } from 'src/helpers/default-images';
 import { errorMessages } from 'src/helpers/error-messages';
 import { sanitizeUserData } from 'src/helpers/sanitize-user-data';
@@ -27,8 +28,14 @@ export class AuthService {
     private readonly responseService: ResponseService,
   ) {}
 
-  private async findUserByEmail(email: string): Promise<UserDocument> {
-    return await this.userModel.findOne({ email });
+  private async findUserByEmail(email: string): Promise<UserDocument | void> {
+    const user = await this.userModel.findOne({ email });
+
+    if (!user) {
+      throw new AppError(HttpStatus.NOT_FOUND, errorMessages.USER_NOT_FOUND);
+    }
+
+    return user;
   }
 
   private async createUser(
@@ -71,89 +78,68 @@ export class AuthService {
   async registration(
     dto: AuthDto,
   ): Promise<ApiResponse<AuthResponse> | ApiResponse> {
-    try {
-      const { email, password } = dto;
+    const { email, password } = dto;
 
-      const userExists = await this.findUserByEmail(email);
-      if (!!userExists) {
-        return this.responseService.createErrorResponse(
-          HttpStatus.CONFLICT,
-          errorMessages.EMAIL_IN_USE_ERROR,
-        );
-      }
-
-      const createdUser = await this.createUser(email, password);
-      await this.sendActivationEmail(createdUser);
-
-      const response = await this.createAuthResponse(createdUser);
-      return this.responseService.createSuccessResponse<AuthResponse>(
-        HttpStatus.CREATED,
-        response,
-      );
-    } catch (error) {
-      console.error('Registration error:', error);
-      return this.responseService.createErrorResponse(
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessages.ERROR_OCCURRED,
-      );
+    const userExists = await this.findUserByEmail(email);
+    if (!!userExists) {
+      throw new AppError(HttpStatus.CONFLICT, errorMessages.EMAIL_IN_USE_ERROR);
     }
+
+    const createdUser = await this.createUser(email, password);
+    await this.sendActivationEmail(createdUser);
+
+    const response = await this.createAuthResponse(createdUser);
+    return this.responseService.createSuccessResponse<AuthResponse>(
+      HttpStatus.CREATED,
+      response,
+    );
   }
 
   private async userValidation(
     user: UserDocument,
     password: string,
-  ): Promise<ApiResponse | void> {
+  ): Promise<void> {
     const isPasswordValid = await this.passwordService.checkPassword(
       password,
       user.password,
     );
 
     if (!isPasswordValid) {
-      return this.responseService.createErrorResponse(
+      throw new AppError(
         HttpStatus.BAD_REQUEST,
         errorMessages.INVALID_PASSWORD_ERROR,
       );
     }
 
     if (!user.isActivated) {
-      return this.responseService.createErrorResponse(
+      throw new AppError(
         HttpStatus.BAD_REQUEST,
-        errorMessages.INACTIVE_EMAIL_ERROR,
+        errorMessages.INVALID_PASSWORD_ERROR,
       );
     }
   }
 
   async login(dto: AuthDto): Promise<ApiResponse<AuthResponse> | ApiResponse> {
-    try {
-      const { email, password } = dto;
+    const { email, password } = dto;
+    const user = await this.findUserByEmail(email);
 
-      const user = await this.findUserByEmail(email);
-      if (!user) {
-        return this.responseService.createErrorResponse(
-          HttpStatus.BAD_REQUEST,
-          errorMessages.INVALID_EMAIL_ERROR,
-        );
-      }
-
-      await this.userValidation(user, password);
-
-      const response = await this.createAuthResponse(user);
-      return this.responseService.createSuccessResponse<AuthResponse>(
-        HttpStatus.OK,
-        response,
-      );
-    } catch (error) {
-      console.error('Login error:', error);
-      return this.responseService.createErrorResponse(
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessages.ERROR_OCCURRED,
+    if (!user) {
+      throw new AppError(
+        HttpStatus.BAD_REQUEST,
+        errorMessages.INVALID_EMAIL_ERROR,
       );
     }
+
+    await this.userValidation(user, password);
+
+    const response = await this.createAuthResponse(user);
+    return this.responseService.createSuccessResponse<AuthResponse>(
+      HttpStatus.OK,
+      response,
+    );
   }
 
-  private async tokenValidation(
-    refreshToken: string,
-  ): Promise<ApiResponse | Payload> {
+  private async tokenValidation(refreshToken: string): Promise<Payload | void> {
     const payload = this.tokenService.checkToken(
       refreshToken,
       TokenName.REFRESH,
@@ -162,7 +148,7 @@ export class AuthService {
     const tokenFromDb = await this.tokenService.findTokenFromDb(payload._id);
 
     if (!payload || !tokenFromDb) {
-      return this.responseService.createErrorResponse(
+      throw new AppError(
         HttpStatus.UNAUTHORIZED,
         errorMessages.USER_NOT_AUTHORIZED,
       );
@@ -171,61 +157,42 @@ export class AuthService {
     return payload;
   }
 
-  async logout(refreshToken: string): Promise<ApiResponse> {
-    try {
-      if (!refreshToken) {
-        return this.responseService.createErrorResponse(
-          HttpStatus.UNAUTHORIZED,
-          errorMessages.USER_NOT_AUTHORIZED,
-        );
-      }
-
-      const payload = (await this.tokenValidation(refreshToken)) as Payload;
-      await this.tokenService.deleteTokensByDb(payload._id);
-
-      return this.responseService.createSuccessResponse(HttpStatus.OK);
-    } catch (error) {
-      console.error('Logout error:', error);
-      return this.responseService.createErrorResponse(
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessages.ERROR_OCCURRED,
+  async logout(refreshToken: string): Promise<ApiResponse | ApiResponse> {
+    if (!refreshToken) {
+      throw new AppError(
+        HttpStatus.UNAUTHORIZED,
+        errorMessages.USER_NOT_AUTHORIZED,
       );
     }
+
+    const payload = (await this.tokenValidation(refreshToken)) as Payload;
+    await this.tokenService.deleteTokensByDb(payload._id);
+
+    return this.responseService.createSuccessResponse(HttpStatus.OK);
   }
 
   async refreshToken(
     refreshToken: string,
   ): Promise<ApiResponse<AuthResponse> | ApiResponse> {
-    try {
-      if (!refreshToken) {
-        return this.responseService.createErrorResponse(
-          HttpStatus.UNAUTHORIZED,
-          errorMessages.USER_NOT_AUTHORIZED,
-        );
-      }
-
-      const payload = (await this.tokenValidation(refreshToken)) as Payload;
-      const userExists = await this.userModel.findById(payload._id);
-
-      if (!userExists) {
-        return this.responseService.createErrorResponse(
-          HttpStatus.NOT_FOUND,
-          errorMessages.USER_NOT_FOUND,
-        );
-      }
-
-      const response = await this.createAuthResponse(userExists);
-      return this.responseService.createSuccessResponse<AuthResponse>(
-        HttpStatus.CREATED,
-        response,
-      );
-    } catch (error) {
-      console.error('Refresh token error:', error);
-      return this.responseService.createErrorResponse(
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessages.ERROR_OCCURRED,
+    if (!refreshToken) {
+      throw new AppError(
+        HttpStatus.UNAUTHORIZED,
+        errorMessages.USER_NOT_AUTHORIZED,
       );
     }
+
+    const payload = (await this.tokenValidation(refreshToken)) as Payload;
+    const userExists = await this.userModel.findById(payload._id);
+
+    if (!userExists) {
+      throw new AppError(HttpStatus.NOT_FOUND, errorMessages.USER_NOT_FOUND);
+    }
+
+    const response = await this.createAuthResponse(userExists);
+    return this.responseService.createSuccessResponse<AuthResponse>(
+      HttpStatus.CREATED,
+      response,
+    );
   }
 
   private async verifyGoogleToken(token: string): Promise<TokenPayload | null> {
@@ -249,7 +216,7 @@ export class AuthService {
 
   private async createNewUserFromGooglePayload(
     googlePayload: TokenPayload,
-  ): Promise<User> {
+  ): Promise<UserDocument> {
     const userDto = {
       email: googlePayload.email,
       isActivated: googlePayload.email_verified,
@@ -269,36 +236,28 @@ export class AuthService {
   async googleAuth(
     token: string,
   ): Promise<ApiResponse<AuthResponse> | ApiResponse> {
-    try {
-      const googlePayload = await this.verifyGoogleToken(token);
-      if (!googlePayload || !googlePayload.email) {
-        return this.responseService.createErrorResponse(
-          HttpStatus.BAD_REQUEST,
-          errorMessages.INVALID_GOOGLE_TOKEN,
-        );
-      }
-
-      const email = googlePayload.email;
-      const user = await this.userModel.findOne({ email });
-
-      if (!user) {
-        await this.createNewUserFromGooglePayload(googlePayload);
-      }
-
-      const payload = this.tokenService.createPayload(user);
-      const tokens = await this.tokenService.createTokenPair(payload);
-      const response = { user: sanitizeUserData(user), tokens };
-
-      return this.responseService.createSuccessResponse(
-        user.isNew ? HttpStatus.CREATED : HttpStatus.OK,
-        response,
-      );
-    } catch (error) {
-      console.error('Google authentication error:', error);
-      return this.responseService.createErrorResponse(
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessages.ERROR_OCCURRED,
+    const googlePayload = await this.verifyGoogleToken(token);
+    if (!googlePayload || !googlePayload.email) {
+      throw new AppError(
+        HttpStatus.BAD_REQUEST,
+        errorMessages.INVALID_GOOGLE_TOKEN,
       );
     }
+
+    const email = googlePayload.email;
+    const user = await this.userModel.findOne({ email });
+
+    if (!user) {
+      await this.createNewUserFromGooglePayload(googlePayload);
+    }
+
+    const payload = this.tokenService.createPayload(user);
+    const tokens = await this.tokenService.createTokenPair(payload);
+    const response = { user: sanitizeUserData(user), tokens };
+
+    return this.responseService.createSuccessResponse(
+      user.isNew ? HttpStatus.CREATED : HttpStatus.OK,
+      response,
+    );
   }
 }

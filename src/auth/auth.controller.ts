@@ -60,7 +60,7 @@ export class AuthController {
   async logout(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<ApiResponse> {
+  ): Promise<ApiResponse | ApiResponse> {
     const refreshToken = req.cookies[cookieKeys.REFRESH_TOKEN];
     const data = await this.authService.logout(refreshToken);
 

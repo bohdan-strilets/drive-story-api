@@ -92,4 +92,9 @@ export class CarService {
     this.isValidCar(car);
     return this.responseService.createSuccessResponse(HttpStatus.OK, car);
   }
+
+  async getAll(userId: Types.ObjectId): Promise<ApiResponse<CarDocument[]>> {
+    const cars = await this.carModel.find({ owner: userId });
+    return this.responseService.createSuccessResponse(HttpStatus.OK, cars);
+  }
 }

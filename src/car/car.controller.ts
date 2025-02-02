@@ -50,4 +50,11 @@ export class CarController {
   ): Promise<ApiResponse<CarDocument>> {
     return this.carService.getById(carId);
   }
+
+  @Get('get-all')
+  async getAll(
+    @User('_id') userId: Types.ObjectId,
+  ): Promise<ApiResponse<CarDocument[]>> {
+    return this.carService.getAll(userId);
+  }
 }

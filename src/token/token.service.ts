@@ -11,7 +11,7 @@ import { TokenPair } from './types/token-pair.type';
 @Injectable()
 export class TokenService {
   constructor(
-    @InjectModel(Token.name) private TokenModel: Model<TokenDocument>,
+    @InjectModel(Token.name) private tokenModel: Model<TokenDocument>,
     private jwtService: JwtService,
   ) {}
 
@@ -42,13 +42,13 @@ export class TokenService {
     const refreshToken = await this.createRefreshToken(payload);
 
     const owner = payload._id;
-    const tokensFromDb = await this.TokenModel.findOne({ owner });
+    const tokensFromDb = await this.tokenModel.findOne({ owner });
 
     if (!tokensFromDb) {
-      await this.TokenModel.create({ refreshToken, owner });
+      await this.tokenModel.create({ refreshToken, owner });
     }
     if (tokensFromDb) {
-      await this.TokenModel.findByIdAndUpdate(tokensFromDb._id, {
+      await this.tokenModel.findByIdAndUpdate(tokensFromDb._id, {
         refreshToken,
       });
     }
@@ -77,7 +77,8 @@ export class TokenService {
   }
 
   async findTokenFromDb(userId: Types.ObjectId): Promise<TokenDocument | null> {
-    const tokens = await this.TokenModel.findOne({ owner: userId });
+    const owner = new Types.ObjectId(userId);
+    const tokens = await this.tokenModel.findOne({ owner });
 
     if (tokens) {
       return tokens;
@@ -87,6 +88,6 @@ export class TokenService {
   }
 
   async deleteTokensByDb(userId: Types.ObjectId): Promise<void> {
-    await this.TokenModel.findOneAndDelete({ owner: userId });
+    await this.tokenModel.findOneAndDelete({ owner: userId });
   }
 }

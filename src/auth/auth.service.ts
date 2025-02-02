@@ -28,16 +28,6 @@ export class AuthService {
     private readonly responseService: ResponseService,
   ) {}
 
-  private async findUserByEmail(email: string): Promise<UserDocument | void> {
-    const user = await this.userModel.findOne({ email });
-
-    if (!user) {
-      throw new AppError(HttpStatus.NOT_FOUND, errorMessages.USER_NOT_FOUND);
-    }
-
-    return user;
-  }
-
   private async createUser(
     email: string,
     password: string,
@@ -80,8 +70,9 @@ export class AuthService {
   ): Promise<ApiResponse<AuthResponse> | ApiResponse> {
     const { email, password } = dto;
 
-    const userExists = await this.findUserByEmail(email);
-    if (!!userExists) {
+    const userExists = await this.userModel.findOne({ email });
+
+    if (userExists) {
       throw new AppError(HttpStatus.CONFLICT, errorMessages.EMAIL_IN_USE_ERROR);
     }
 
@@ -121,7 +112,7 @@ export class AuthService {
 
   async login(dto: AuthDto): Promise<ApiResponse<AuthResponse> | ApiResponse> {
     const { email, password } = dto;
-    const user = await this.findUserByEmail(email);
+    const user = await this.userModel.findOne({ email });
 
     if (!user) {
       throw new AppError(
@@ -157,7 +148,7 @@ export class AuthService {
     return payload;
   }
 
-  async logout(refreshToken: string): Promise<ApiResponse | ApiResponse> {
+  async logout(refreshToken: string): Promise<ApiResponse> {
     if (!refreshToken) {
       throw new AppError(
         HttpStatus.UNAUTHORIZED,

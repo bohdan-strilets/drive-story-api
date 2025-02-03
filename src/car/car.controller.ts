@@ -3,14 +3,21 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Patch,
   Post,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { Types } from 'mongoose';
 import { Auth } from 'src/auth/decorators/auth.decorator';
+import { DEFAULT_FOLDER_FOR_FILES } from 'src/helpers/default-file-folder';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { User } from 'src/user/decorators/user.decorator';
+import { imageValidator } from 'src/user/pipes/image-validator.pipe';
 import { CarService } from './car.service';
 import { CarDto } from './dto/car.dto';
 import { ParseObjectIdPipe } from './pipes/parse-objectid.pipe';
@@ -56,5 +63,16 @@ export class CarController {
     @User('_id') userId: Types.ObjectId,
   ): Promise<ApiResponse<CarDocument[]>> {
     return this.carService.getAll(userId);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('upload-photo/:carId')
+  @UseInterceptors(FileInterceptor('photo', { dest: DEFAULT_FOLDER_FOR_FILES }))
+  async uploadAvatar(
+    @UploadedFile(imageValidator)
+    file: Express.Multer.File,
+    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
+  ): Promise<ApiResponse<CarDocument>> {
+    return this.carService.uploadPhoto(file, carId);
   }
 }

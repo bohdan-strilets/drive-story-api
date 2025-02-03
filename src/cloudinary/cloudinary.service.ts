@@ -182,7 +182,7 @@ export class CloudinaryService {
   async uploadFileAndUpdateModel<T extends Document>(
     file: Express.Multer.File,
     options: UploadOptions<T>,
-  ): Promise<ApiResponse<UserInfo>> {
+  ): Promise<T> {
     const { model, modelId, folderPath, fieldToUpdate } = options;
     const entity = await model.findById(modelId);
     this.isValidEntity(entity);
@@ -205,18 +205,7 @@ export class CloudinaryService {
     this.cleanupFile(file.path);
     if (uploadedImage) images.push(uploadedImage);
 
-    const updatedEntity: UserDocument = await this.updateEntity(
-      model,
-      modelId,
-      fieldToUpdate,
-      images,
-    );
-
-    const correctedEntity = sanitizeUserData(updatedEntity);
-    return this.responseService.createSuccessResponse(
-      HttpStatus.OK,
-      correctedEntity,
-    );
+    return await this.updateEntity(model, modelId, fieldToUpdate, images);
   }
 
   async deleteFileAndUpdateModel<T extends Document>(

@@ -1,7 +1,9 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { AppError } from 'src/error/app-error';
+import { CloudinaryFolders } from 'src/helpers/cloudinary-folders';
 import { defaultImages } from 'src/helpers/default-images';
 import { errorMessages } from 'src/helpers/error-messages';
 import { ResponseService } from 'src/response/response.service';
@@ -14,6 +16,7 @@ export class CarService {
   constructor(
     @InjectModel(Car.name) private carModel: Model<CarDocument>,
     private readonly responseService: ResponseService,
+    private readonly cloudinaryService: CloudinaryService,
   ) {}
 
   private isValidDto(dto: any): void {
@@ -96,5 +99,23 @@ export class CarService {
   async getAll(userId: Types.ObjectId): Promise<ApiResponse<CarDocument[]>> {
     const cars = await this.carModel.find({ owner: userId });
     return this.responseService.createSuccessResponse(HttpStatus.OK, cars);
+  }
+
+  async uploadPhoto(
+    file: Express.Multer.File,
+    carId: Types.ObjectId,
+  ): Promise<ApiResponse<CarDocument>> {
+    const updatedCar =
+      await this.cloudinaryService.uploadFileAndUpdateModel<CarDocument>(file, {
+        model: this.carModel,
+        modelId: carId,
+        folderPath: CloudinaryFolders.CAR_PHOTO,
+        fieldToUpdate: 'images.resources',
+      });
+
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      updatedCar,
+    );
   }
 }

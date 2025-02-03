@@ -194,14 +194,21 @@ export class UserService {
     file: Express.Multer.File,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<UserInfo>> {
-    return await this.cloudinaryService.uploadFileAndUpdateModel<UserDocument>(
-      file,
-      {
-        model: this.userModel,
-        modelId: userId,
-        folderPath: CloudinaryFolders.USER_AVATAR,
-        fieldToUpdate: 'avatars.resources',
-      },
+    const updatedUser =
+      await this.cloudinaryService.uploadFileAndUpdateModel<UserDocument>(
+        file,
+        {
+          model: this.userModel,
+          modelId: userId,
+          folderPath: CloudinaryFolders.USER_AVATAR,
+          fieldToUpdate: 'avatars.resources',
+        },
+      );
+
+    const sanitizedUser = sanitizeUserData(updatedUser);
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      sanitizedUser,
     );
   }
 
@@ -290,14 +297,21 @@ export class UserService {
     file: Express.Multer.File,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<UserInfo>> {
-    return await this.cloudinaryService.uploadFileAndUpdateModel<UserDocument>(
-      file,
-      {
-        model: this.userModel,
-        modelId: userId,
-        folderPath: CloudinaryFolders.USER_POSTER,
-        fieldToUpdate: 'posters.resources',
-      },
+    const updatedUser =
+      await this.cloudinaryService.uploadFileAndUpdateModel<UserDocument>(
+        file,
+        {
+          model: this.userModel,
+          modelId: userId,
+          folderPath: CloudinaryFolders.USER_POSTER,
+          fieldToUpdate: 'posters.resources',
+        },
+      );
+
+    const sanitizedUser = sanitizeUserData(updatedUser);
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      sanitizedUser,
     );
   }
 

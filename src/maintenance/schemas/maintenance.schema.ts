@@ -5,6 +5,7 @@ import { User } from 'src/user/schemes/user.schema';
 import { MaintenanceType } from '../enums/maintenance-type.enum';
 import { Status } from '../enums/status.enum';
 import { Parts, PartsDocument } from './parts.schema';
+import { Photos } from './photo.schema';
 
 export type ServiceDocument = HydratedDocument<Service>;
 
@@ -49,8 +50,8 @@ export class Service {
   @Prop({ default: null })
   endDate?: Date | null;
 
-  @Prop()
-  documentPhotos: any;
+  @Prop({ type: Photos })
+  documentPhotos: Photos;
 
   @Prop()
   createdAt: Date;

@@ -6,7 +6,7 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { Response } from 'express';
-import { errorMessages } from 'src/helpers/error-messages';
+import { errorMessages } from 'src/error/helpers/error-messages';
 import { ResponseService } from 'src/response/response.service';
 import { AppError } from './app-error';
 

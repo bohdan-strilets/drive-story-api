@@ -18,14 +18,14 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 import { Types } from 'mongoose';
 import { Auth } from 'src/auth/decorators/auth.decorator';
-import { DEFAULT_FOLDER_FOR_FILES } from 'src/helpers/default-file-folder';
+import { DEFAULT_FOLDER_FOR_FILES } from 'src/cloudinary/helpers/default-file-folder';
 import { ApiResponse } from 'src/response/types/api-response.type';
+import { imageValidator } from '../cloudinary/pipes/image-validator.pipe';
 import { User } from './decorators/user.decorator';
 import { EditPasswordDto } from './dto/edit-password.dto';
 import { EmailDto } from './dto/email.dto';
 import { ProfileDto } from './dto/profile.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
-import { imageValidator } from './pipes/image-validator.pipe';
 import { UserInfo } from './types/user-info';
 import { UserService } from './user.service';
 

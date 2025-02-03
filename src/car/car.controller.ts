@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
@@ -74,5 +75,13 @@ export class CarController {
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
   ): Promise<ApiResponse<CarDocument>> {
     return this.carService.uploadPhoto(file, carId);
+  }
+
+  @Delete('delete-photo/:carId')
+  async deletePhoto(
+    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
+    @Query('photoPublicId') photoPublicId: string,
+  ): Promise<ApiResponse<CarDocument>> {
+    return this.carService.deletePhoto(photoPublicId, carId);
   }
 }

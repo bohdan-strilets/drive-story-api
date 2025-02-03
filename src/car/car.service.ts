@@ -118,4 +118,22 @@ export class CarService {
       updatedCar,
     );
   }
+
+  async deletePhoto(
+    photoPublicId: string,
+    carId: Types.ObjectId,
+  ): Promise<ApiResponse<CarDocument>> {
+    const updatedCar =
+      await this.cloudinaryService.deleteFileAndUpdateModel<CarDocument>({
+        model: this.carModel,
+        publicId: photoPublicId,
+        modelId: carId,
+        fieldToUpdate: 'images.resources',
+      });
+
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      updatedCar,
+    );
+  }
 }

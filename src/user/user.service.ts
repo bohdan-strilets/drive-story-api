@@ -216,12 +216,19 @@ export class UserService {
     avatarPublicId: string,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<UserInfo>> {
-    return await this.cloudinaryService.deleteFileAndUpdateModel<UserDocument>({
-      model: this.userModel,
-      publicId: avatarPublicId,
-      userId,
-      fieldToUpdate: 'avatars.resources',
-    });
+    const updatedUser =
+      await this.cloudinaryService.deleteFileAndUpdateModel<UserDocument>({
+        model: this.userModel,
+        publicId: avatarPublicId,
+        modelId: userId,
+        fieldToUpdate: 'avatars.resources',
+      });
+
+    const sanitizedUser = sanitizeUserData(updatedUser);
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      sanitizedUser,
+    );
   }
 
   private findFileByResources(arr: string[], publicId: string): string {
@@ -319,12 +326,19 @@ export class UserService {
     posterPublicId: string,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<UserInfo>> {
-    return await this.cloudinaryService.deleteFileAndUpdateModel<UserDocument>({
-      model: this.userModel,
-      publicId: posterPublicId,
-      userId,
-      fieldToUpdate: 'posters.resources',
-    });
+    const updatedUser =
+      await this.cloudinaryService.deleteFileAndUpdateModel<UserDocument>({
+        model: this.userModel,
+        publicId: posterPublicId,
+        modelId: userId,
+        fieldToUpdate: 'posters.resources',
+      });
+
+    const sanitizedUser = sanitizeUserData(updatedUser);
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      sanitizedUser,
+    );
   }
 
   async selectPoster(

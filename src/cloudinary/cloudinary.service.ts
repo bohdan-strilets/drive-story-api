@@ -5,10 +5,6 @@ import { Document, Types } from 'mongoose';
 import { AppError } from 'src/error/app-error';
 import { errorMessages } from 'src/error/helpers/error-messages';
 import { ResponseService } from 'src/response/response.service';
-import { ApiResponse } from 'src/response/types/api-response.type';
-import { sanitizeUserData } from 'src/user/helpers/sanitize-user-data';
-import { UserDocument } from 'src/user/schemes/user.schema';
-import { UserInfo } from 'src/user/types/user-info';
 import { FileType } from './enums/file-type.enum';
 import { DeleteOptions } from './types/delete-options.type';
 import { UploadOptions } from './types/upload-options.type';
@@ -210,9 +206,9 @@ export class CloudinaryService {
 
   async deleteFileAndUpdateModel<T extends Document>(
     options: DeleteOptions<T>,
-  ): Promise<ApiResponse<UserInfo>> {
-    const { model, userId, publicId, fieldToUpdate } = options;
-    const entity = await model.findById(userId);
+  ): Promise<T> {
+    const { model, modelId, publicId, fieldToUpdate } = options;
+    const entity = await model.findById(modelId);
     this.isValidEntity(entity);
 
     try {
@@ -228,17 +224,11 @@ export class CloudinaryService {
     const images: string[] = this.getNestedProperty(entity, fieldToUpdate);
     const filteredImages = this.removeByPublicId(images, publicId);
 
-    const updatedEntity: UserDocument = await this.updateEntity(
+    return await this.updateEntity(
       model,
-      userId,
+      modelId,
       fieldToUpdate,
       filteredImages,
-    );
-
-    const correctedEntity = sanitizeUserData(updatedEntity);
-    return this.responseService.createSuccessResponse(
-      HttpStatus.OK,
-      correctedEntity,
     );
   }
 }

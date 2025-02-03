@@ -3,6 +3,6 @@ import { Document, Model, Types } from 'mongoose';
 export type DeleteOptions<T extends Document> = {
   model: Model<T>;
   publicId: string;
-  userId: Types.ObjectId;
+  modelId: Types.ObjectId;
   fieldToUpdate: string;
 };

@@ -7,6 +7,7 @@ import { errorMessages } from 'src/error/helpers/error-messages';
 import { ResponseService } from 'src/response/response.service';
 import { FileType } from './enums/file-type.enum';
 import { DeleteOptions } from './types/delete-options.type';
+import { SelectFileOptions } from './types/select-options.type';
 import { UploadOptions } from './types/upload-options.type';
 
 @Injectable()
@@ -154,7 +155,7 @@ export class CloudinaryService {
     model: any,
     modelId: Types.ObjectId,
     fieldToUpdate: string,
-    dto: string[],
+    dto: string[] | string,
   ) {
     try {
       return await model.findByIdAndUpdate(
@@ -229,6 +230,39 @@ export class CloudinaryService {
       modelId,
       fieldToUpdate,
       filteredImages,
+    );
+  }
+
+  private findFileByResources(arr: string[], publicId: string): string {
+    return arr.find((item) => item.includes(publicId));
+  }
+
+  private isValidSelectedFile(selectedAvatar: string): void {
+    if (!selectedAvatar) {
+      throw new AppError(
+        HttpStatus.BAD_REQUEST,
+        errorMessages.FILE_NON_EXISTENT,
+      );
+    }
+  }
+
+  async changeSelectedFileAndUpdateModel<T extends Document>(
+    options: SelectFileOptions<T>,
+  ): Promise<T> {
+    const { model, publicId, modelId, fieldToUpdate, resourcesPath } = options;
+    const entity = await model.findById(modelId);
+    this.isValidEntity(entity);
+
+    const images: string[] = this.getNestedProperty(entity, resourcesPath);
+
+    const selectedPoster = this.findFileByResources(images, publicId);
+    this.isValidSelectedFile(selectedPoster);
+
+    return await this.updateEntity(
+      model,
+      modelId,
+      fieldToUpdate,
+      selectedPoster,
     );
   }
 }

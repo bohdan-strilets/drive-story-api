@@ -136,4 +136,25 @@ export class CarService {
       updatedCar,
     );
   }
+
+  async selectMainPhoto(
+    photoPublicId: string,
+    carId: Types.ObjectId,
+  ): Promise<ApiResponse<CarDocument>> {
+    const updatedCar =
+      await this.cloudinaryService.changeSelectedFileAndUpdateModel<CarDocument>(
+        {
+          model: this.carModel,
+          publicId: photoPublicId,
+          modelId: carId,
+          fieldToUpdate: 'images.selected',
+          resourcesPath: 'images.resources',
+        },
+      );
+
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      updatedCar,
+    );
+  }
 }

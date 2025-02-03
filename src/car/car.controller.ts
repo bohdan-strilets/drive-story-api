@@ -84,4 +84,12 @@ export class CarController {
   ): Promise<ApiResponse<CarDocument>> {
     return this.carService.deletePhoto(photoPublicId, carId);
   }
+
+  @Patch('select-main-photo/:carId')
+  async selectMainPhoto(
+    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
+    @Query('photoPublicId') photoPublicId: string,
+  ): Promise<ApiResponse<CarDocument>> {
+    return this.carService.selectMainPhoto(photoPublicId, carId);
+  }
 }

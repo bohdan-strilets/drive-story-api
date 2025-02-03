@@ -6,13 +6,13 @@ import { AuthModule } from './auth/auth.module';
 import { CarModule } from './car/car.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { HttpExceptionFilter } from './error/http-exception.filter';
+import { MaintenanceModule } from './maintenance/maintenance.module';
 import { PasswordModule } from './password/password.module';
 import { ResponseModule } from './response/response.module';
 import { ResponseService } from './response/response.service';
 import { SendgridModule } from './sendgrid/sendgrid.module';
 import { TokenModule } from './token/token.module';
 import { UserModule } from './user/user.module';
-import { ServiceModule } from './service/service.module';
 
 @Module({
   imports: [
@@ -26,7 +26,7 @@ import { ServiceModule } from './service/service.module';
     CloudinaryModule,
     ResponseModule,
     CarModule,
-    ServiceModule,
+    MaintenanceModule,
   ],
   providers: [
     ResponseService,

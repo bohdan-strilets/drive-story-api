@@ -231,36 +231,25 @@ export class UserService {
     );
   }
 
-  private findFileByResources(arr: string[], publicId: string): string {
-    return arr.find((item) => item.includes(publicId));
-  }
-
-  private isValidSelectedFile(selectedAvatar: string) {
-    if (!!selectedAvatar) {
-      throw new AppError(
-        HttpStatus.BAD_REQUEST,
-        errorMessages.FILE_NON_EXISTENT,
-      );
-    }
-  }
-
   async selectAvatar(
     avatarPublicId: string,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<UserInfo>> {
-    const user = await this.userModel.findById(userId);
-    this.isValidUser(user);
+    const updatedUser =
+      await this.cloudinaryService.changeSelectedFileAndUpdateModel<UserDocument>(
+        {
+          model: this.userModel,
+          publicId: avatarPublicId,
+          modelId: userId,
+          fieldToUpdate: 'avatars.selected',
+          resourcesPath: 'avatars.resources',
+        },
+      );
 
-    const avatars = user.avatars.resources;
-    const selectedAvatar = this.findFileByResources(avatars, avatarPublicId);
-    this.isValidSelectedFile(selectedAvatar);
-
-    const dto = { $set: { 'avatars.selected': selectedAvatar } };
-    const updatedUser = await this.updateUserById(userId, dto);
-
+    const sanitizedUser = sanitizeUserData(updatedUser);
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
-      updatedUser,
+      sanitizedUser,
     );
   }
 
@@ -345,19 +334,21 @@ export class UserService {
     posterPublicId: string,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<UserInfo>> {
-    const user = await this.userModel.findById(userId);
-    this.isValidUser(user);
+    const updatedUser =
+      await this.cloudinaryService.changeSelectedFileAndUpdateModel<UserDocument>(
+        {
+          model: this.userModel,
+          publicId: posterPublicId,
+          modelId: userId,
+          fieldToUpdate: 'posters.selected',
+          resourcesPath: 'posters.resources',
+        },
+      );
 
-    const posters = user.posters.resources;
-    const selectedPoster = this.findFileByResources(posters, posterPublicId);
-    this.isValidSelectedFile(selectedPoster);
-
-    const dto = { $set: { 'posters.selected': selectedPoster } };
-    const updatedUser = await this.updateUserById(userId, dto);
-
+    const sanitizedUser = sanitizeUserData(updatedUser);
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
-      updatedUser,
+      sanitizedUser,
     );
   }
 

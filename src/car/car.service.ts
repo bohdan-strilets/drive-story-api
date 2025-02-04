@@ -19,21 +19,10 @@ export class CarService {
     private readonly cloudinaryService: CloudinaryService,
   ) {}
 
-  private isValidDto(dto: any): void {
-    if (!dto) {
-      throw new AppError(
-        HttpStatus.BAD_REQUEST,
-        errorMessages.CHECK_ENTERED_DATA,
-      );
-    }
-  }
-
   async addCar(
     userId: Types.ObjectId,
     dto: CarDto,
   ): Promise<ApiResponse<CarDocument>> {
-    this.isValidDto(dto);
-
     const data = {
       owner: userId,
       images: {
@@ -69,7 +58,6 @@ export class CarService {
     carId: Types.ObjectId,
     dto: CarDto,
   ): Promise<ApiResponse<CarDocument>> {
-    this.isValidDto(dto);
     const updatedCar = await this.updateCarModel(carId, dto);
 
     return this.responseService.createSuccessResponse(

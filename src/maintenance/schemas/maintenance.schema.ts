@@ -3,14 +3,14 @@ import { HydratedDocument, Types } from 'mongoose';
 import { Car } from 'src/car/schemas/car.schema';
 import { User } from 'src/user/schemes/user.schema';
 import { MaintenanceType } from '../enums/maintenance-type.enum';
-import { Status } from '../enums/status.enum';
+import { ProcessStatus } from '../enums/process-status.enum';
 import { Parts, PartsDocument } from './parts.schema';
 import { Photos } from './photo.schema';
 
-export type ServiceDocument = HydratedDocument<Service>;
+export type MaintenanceDocument = HydratedDocument<Maintenance>;
 
 @Schema({ versionKey: false, timestamps: true })
-export class Service {
+export class Maintenance {
   @Prop({ default: () => new Types.ObjectId() })
   _id: Types.ObjectId;
 
@@ -26,11 +26,11 @@ export class Service {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   owner: User;
 
-  @Prop({ default: MaintenanceType.MAINTENANCE, enum: MaintenanceType })
+  @Prop({ required: true, enum: MaintenanceType })
   serviceType: MaintenanceType;
 
-  @Prop({ default: Status.PENDING, enum: Status })
-  status: Status;
+  @Prop({ default: ProcessStatus.PENDING, enum: ProcessStatus })
+  processStatus: ProcessStatus;
 
   @Prop({ default: 0 })
   costEstimate: number;
@@ -41,8 +41,8 @@ export class Service {
   @Prop({ default: null })
   completionDate?: Date | null;
 
-  @Prop({ type: Parts, default: null })
-  partsUsed: PartsDocument | null;
+  @Prop({ type: [Parts], default: [] })
+  partsUsed: PartsDocument[];
 
   @Prop({ default: null })
   startDate?: Date | null;
@@ -51,7 +51,7 @@ export class Service {
   endDate?: Date | null;
 
   @Prop({ type: Photos })
-  documentPhotos: Photos;
+  photos: Photos;
 
   @Prop()
   createdAt: Date;
@@ -60,4 +60,4 @@ export class Service {
   updatedAt: Date;
 }
 
-export const ServiceSchema = SchemaFactory.createForClass(Service);
+export const MaintenanceSchema = SchemaFactory.createForClass(Maintenance);

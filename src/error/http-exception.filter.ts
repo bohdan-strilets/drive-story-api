@@ -24,7 +24,13 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     if (exception instanceof HttpException) {
       status = exception.getStatus();
-      message = exception.message;
+      const exceptionResponse = exception.getResponse();
+
+      if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
+        message = (exceptionResponse as any).message[0] || 'Validation failed';
+      } else {
+        message = exception.message;
+      }
     }
 
     if (exception instanceof AppError) {

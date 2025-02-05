@@ -59,19 +59,31 @@ export class MaintenanceService {
     return maintenance;
   }
 
+  private async findMaintenanceAndCheckAccessRights(
+    maintenanceId: Types.ObjectId,
+    carId: Types.ObjectId,
+    userId: Types.ObjectId,
+  ): Promise<void> {
+    const maintenance = await this.findMaintenance(maintenanceId);
+    this.carRepository.checkAccessRights(maintenance.carId, carId);
+    this.carRepository.checkAccessRights(maintenance.owner, userId);
+  }
+
   private async updateMaintenance(
     maintenanceId: Types.ObjectId,
     carId: Types.ObjectId,
     userId: Types.ObjectId,
     dto: any,
-  ) {
-    const maintenance = await this.findMaintenance(maintenanceId);
-    this.carRepository.checkAccessRights(maintenance.carId, carId);
-    this.carRepository.checkAccessRights(maintenance.owner, userId);
+  ): Promise<MaintenanceDocument> {
+    await this.findMaintenanceAndCheckAccessRights(
+      maintenanceId,
+      carId,
+      userId,
+    );
 
     const params = { new: true };
     return await this.maintenanceModel.findByIdAndUpdate(
-      maintenance,
+      maintenanceId,
       dto,
       params,
     );
@@ -93,6 +105,26 @@ export class MaintenanceService {
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
       updatedMaintenance,
+    );
+  }
+
+  async delete(
+    maintenanceId: Types.ObjectId,
+    carId: Types.ObjectId,
+    userId: Types.ObjectId,
+  ): Promise<ApiResponse<MaintenanceDocument>> {
+    await this.findMaintenanceAndCheckAccessRights(
+      maintenanceId,
+      carId,
+      userId,
+    );
+
+    const deletedMaintenance =
+      await this.maintenanceModel.findByIdAndDelete(maintenanceId);
+
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      deletedMaintenance,
     );
   }
 }

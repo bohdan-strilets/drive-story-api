@@ -59,4 +59,13 @@ export class ImageController {
   ): Promise<ApiResponse<ImageDocument>> {
     return this.imageService.select(userId, entityId, entityType, filePublicId);
   }
+
+  @Delete('delete-all/:entityId')
+  async deleteAll(
+    @User('_id') userId: Types.ObjectId,
+    @Param('entityId', ParseObjectIdPipe) entityId: Types.ObjectId,
+    @Query('entityType') entityType: EntityType,
+  ): Promise<ApiResponse<ImageDocument>> {
+    return this.imageService.deleteAll(userId, entityId, entityType);
+  }
 }

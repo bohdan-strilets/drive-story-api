@@ -192,4 +192,31 @@ export class ImageService {
       updatedImage,
     );
   }
+
+  private async removedFilesAndFolder(resources: string[]) {
+    if (resources.length > 0) {
+      const folderPath = this.cloudinaryService.getFolderPath(resources[0]);
+      await this.cloudinaryService.deleteFilesAndFolder(folderPath);
+    } else {
+      throw new AppError(
+        HttpStatus.BAD_REQUEST,
+        errorMessages.NOT_FILES_TO_DELETE,
+      );
+    }
+  }
+
+  async deleteAll(
+    userId: Types.ObjectId,
+    entityId: Types.ObjectId,
+    entityType: EntityType,
+  ): Promise<ApiResponse<ImageDocument>> {
+    const image = await this.findImage(userId, entityId, entityType);
+    await this.removedFilesAndFolder(image.resources);
+    const deletedImage = await this.imageModel.findByIdAndDelete(image._id);
+
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      deletedImage,
+    );
+  }
 }

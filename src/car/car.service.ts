@@ -4,10 +4,9 @@ import { Model, Types } from 'mongoose';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { CloudinaryFolders } from 'src/cloudinary/helpers/cloudinary-folders';
 import { defaultImages } from 'src/cloudinary/helpers/default-images';
-import { AppError } from 'src/error/app-error';
-import { errorMessages } from 'src/error/helpers/error-messages';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
+import { CarRepository } from './car.repository';
 import { CarDto } from './dto/car.dto';
 import { Car, CarDocument } from './schemas/car.schema';
 
@@ -17,6 +16,7 @@ export class CarService {
     @InjectModel(Car.name) private carModel: Model<CarDocument>,
     private readonly responseService: ResponseService,
     private readonly cloudinaryService: CloudinaryService,
+    private readonly carRepository: CarRepository,
   ) {}
 
   async addCar(
@@ -39,51 +39,16 @@ export class CarService {
     );
   }
 
-  private async updateCarModel(
-    carId: Types.ObjectId,
-    userId: Types.ObjectId,
-    dto: any,
-  ): Promise<CarDocument> {
-    const updatedCar = await this.carModel.findByIdAndUpdate(carId, dto, {
-      new: true,
-    });
-
-    if (!updatedCar) {
-      throw new AppError(HttpStatus.NOT_FOUND, errorMessages.CAR_NOT_FOUND);
-    }
-
-    this.checkCarByOwner(updatedCar.owner, userId);
-    return updatedCar;
-  }
-
-  private checkCarByOwner(
-    carOwnerId: Types.ObjectId,
-    ownerId: Types.ObjectId,
-  ): void {
-    if (!carOwnerId.equals(ownerId)) {
-      throw new AppError(
-        HttpStatus.FORBIDDEN,
-        errorMessages.YOU_DO_NOT_OWN_CAR,
-      );
-    }
-  }
-
-  private async findCarById(carId: Types.ObjectId): Promise<CarDocument> {
-    const car = await this.carModel.findById(carId);
-
-    if (!car) {
-      throw new AppError(HttpStatus.NOT_FOUND, errorMessages.CAR_NOT_FOUND);
-    }
-
-    return car;
-  }
-
   async updateCar(
     carId: Types.ObjectId,
     userId: Types.ObjectId,
     dto: CarDto,
   ): Promise<ApiResponse<CarDocument>> {
-    const updatedCar = await this.updateCarModel(carId, userId, dto);
+    const updatedCar = await this.carRepository.updateCarModel(
+      carId,
+      userId,
+      dto,
+    );
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
@@ -95,8 +60,8 @@ export class CarService {
     carId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<CarDocument>> {
-    const car = await this.findCarById(carId);
-    this.checkCarByOwner(car.owner, userId);
+    const car = await this.carRepository.findCarById(carId);
+    this.carRepository.checkCarByOwner(car.owner, userId);
 
     const deletedCar = await this.carModel.findByIdAndDelete(carId);
     return this.responseService.createSuccessResponse(
@@ -109,8 +74,8 @@ export class CarService {
     carId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<CarDocument>> {
-    const car = await this.findCarById(carId);
-    this.checkCarByOwner(car.owner, userId);
+    const car = await this.carRepository.findCarById(carId);
+    this.carRepository.checkCarByOwner(car.owner, userId);
     return this.responseService.createSuccessResponse(HttpStatus.OK, car);
   }
 

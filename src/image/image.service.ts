@@ -103,7 +103,7 @@ export class ImageService {
       entityType,
       default: defaultImage,
       resources,
-      selected: defaultImage,
+      selected: uploadedImageUrl,
     };
 
     const result = await this.updateModel(image, dto);
@@ -136,6 +136,12 @@ export class ImageService {
   ): Promise<ApiResponse<ImageDocument>> {
     const image = await this.findImage(userId, entityId, entityType);
     const resources = image.resources;
+    const selected = image.selected;
+
+    if (selected.includes(filePublicId)) {
+      const defaultImage = this.getDefaultImage(entityType);
+      await this.selectFile(image, defaultImage);
+    }
 
     await this.cloudinaryService.deleteFile(filePublicId, FileType.IMAGE);
 

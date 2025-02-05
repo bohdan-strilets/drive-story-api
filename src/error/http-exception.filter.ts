@@ -27,7 +27,12 @@ export class HttpExceptionFilter implements ExceptionFilter {
       const exceptionResponse = exception.getResponse();
 
       if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
-        message = (exceptionResponse as any).message[0] || 'Validation failed';
+        const msg = (exceptionResponse as any).message;
+        if (typeof msg === 'string') {
+          message = msg;
+        } else {
+          message = (msg as string[]).join(', ');
+        }
       } else {
         message = exception.message;
       }

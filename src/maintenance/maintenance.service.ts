@@ -142,4 +142,19 @@ export class MaintenanceService {
       maintenance,
     );
   }
+
+  async all(
+    carId: Types.ObjectId,
+    userId: Types.ObjectId,
+  ): Promise<ApiResponse<MaintenanceDocument[]>> {
+    const maintenances = await this.maintenanceModel.find({
+      carId,
+      owner: userId,
+    });
+
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      maintenances,
+    );
+  }
 }

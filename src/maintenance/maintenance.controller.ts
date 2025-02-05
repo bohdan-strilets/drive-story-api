@@ -57,4 +57,12 @@ export class MaintenanceController {
   ): Promise<ApiResponse<MaintenanceDocument>> {
     return this.maintenanceService.byId(maintenanceId, carId, userId);
   }
+
+  @Get('all/:carId')
+  async all(
+    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
+    @User('_id') userId: Types.ObjectId,
+  ): Promise<ApiResponse<MaintenanceDocument[]>> {
+    return this.maintenanceService.all(carId, userId);
+  }
 }

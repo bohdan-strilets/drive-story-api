@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { Types } from 'mongoose';
 import { Auth } from 'src/auth/decorators/auth.decorator';
@@ -62,7 +63,9 @@ export class MaintenanceController {
   async all(
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
     @User('_id') userId: Types.ObjectId,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
   ): Promise<ApiResponse<MaintenanceDocument[]>> {
-    return this.maintenanceService.all(carId, userId);
+    return this.maintenanceService.all(carId, userId, page, limit);
   }
 }

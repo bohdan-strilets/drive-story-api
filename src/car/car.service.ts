@@ -75,8 +75,18 @@ export class CarService {
     return this.responseService.createSuccessResponse(HttpStatus.OK, car);
   }
 
-  async all(userId: Types.ObjectId): Promise<ApiResponse<CarDocument[]>> {
-    const cars = await this.carModel.find({ owner: userId });
+  async all(
+    userId: Types.ObjectId,
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<ApiResponse<CarDocument[]>> {
+    const skip = (page - 1) * limit;
+
+    const cars = await this.carModel
+      .find({ owner: userId })
+      .skip(skip)
+      .limit(limit);
+
     return this.responseService.createSuccessResponse(HttpStatus.OK, cars);
   }
 

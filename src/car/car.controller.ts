@@ -65,8 +65,10 @@ export class CarController {
   @Get('all')
   async all(
     @User('_id') userId: Types.ObjectId,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
   ): Promise<ApiResponse<CarDocument[]>> {
-    return this.carService.all(userId);
+    return this.carService.all(userId, page, limit);
   }
 
   @HttpCode(HttpStatus.OK)

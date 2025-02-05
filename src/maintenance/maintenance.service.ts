@@ -146,11 +146,18 @@ export class MaintenanceService {
   async all(
     carId: Types.ObjectId,
     userId: Types.ObjectId,
+    page: number = 1,
+    limit: number = 10,
   ): Promise<ApiResponse<MaintenanceDocument[]>> {
-    const maintenances = await this.maintenanceModel.find({
-      carId,
-      owner: userId,
-    });
+    const skip = (page - 1) * limit;
+
+    const maintenances = await this.maintenanceModel
+      .find({
+        carId,
+        owner: userId,
+      })
+      .skip(skip)
+      .limit(limit);
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,

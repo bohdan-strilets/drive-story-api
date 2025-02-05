@@ -3,6 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { CarModule } from 'src/car/car.module';
 import { ResponseModule } from 'src/response/response.module';
 import { MaintenanceController } from './maintenance.controller';
+import { MaintenanceRepository } from './maintenance.repository';
 import { MaintenanceService } from './maintenance.service';
 import { Maintenance, MaintenanceSchema } from './schemas/maintenance.schema';
 
@@ -15,6 +16,6 @@ import { Maintenance, MaintenanceSchema } from './schemas/maintenance.schema';
     CarModule,
   ],
   controllers: [MaintenanceController],
-  providers: [MaintenanceService],
+  providers: [MaintenanceService, MaintenanceRepository],
 })
 export class MaintenanceModule {}

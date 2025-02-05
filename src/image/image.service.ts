@@ -4,6 +4,8 @@ import { Model, Types } from 'mongoose';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { FileType } from 'src/cloudinary/enums/file-type.enum';
 import { defaultImages } from 'src/cloudinary/helpers/default-images';
+import { AppError } from 'src/error/app-error';
+import { errorMessages } from 'src/error/helpers/error-messages';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { EntityType } from './enums/entity-type.enum';
@@ -106,5 +108,82 @@ export class ImageService {
 
     const result = await this.updateModel(image, dto);
     return this.responseService.createSuccessResponse(HttpStatus.OK, result);
+  }
+
+  private removeByPublicId(images: string[], publicId: string): string[] {
+    return images.filter((item: string) => !item.includes(publicId));
+  }
+
+  private async deleteFile(imageFromDB: ImageDocument, dto: string[]) {
+    const updatedImage = await this.imageModel.findByIdAndUpdate(
+      imageFromDB._id,
+      { $set: { resources: dto } },
+      { new: true },
+    );
+
+    if (dto.length === 0) {
+      await this.imageModel.findByIdAndDelete(imageFromDB._id);
+    }
+
+    return updatedImage;
+  }
+
+  async delete(
+    userId: Types.ObjectId,
+    entityId: Types.ObjectId,
+    entityType: EntityType,
+    filePublicId: string,
+  ): Promise<ApiResponse<ImageDocument>> {
+    const image = await this.findImage(userId, entityId, entityType);
+    const resources = image.resources;
+
+    await this.cloudinaryService.deleteFile(filePublicId, FileType.IMAGE);
+
+    const filteredResources = this.removeByPublicId(resources, filePublicId);
+    const updatedImage = await this.deleteFile(image, filteredResources);
+
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      updatedImage,
+    );
+  }
+
+  private findFileByResources(resources: string[], publicId: string): string {
+    const imageUrl = resources.find((item) => item.includes(publicId));
+
+    if (!imageUrl) {
+      throw new AppError(
+        HttpStatus.BAD_REQUEST,
+        errorMessages.FILE_NON_EXISTENT,
+      );
+    }
+
+    return imageUrl;
+  }
+
+  private async selectFile(imageFromDB: ImageDocument, dto: string) {
+    return await this.imageModel.findByIdAndUpdate(
+      imageFromDB._id,
+      { $set: { selected: dto } },
+      { new: true },
+    );
+  }
+
+  async select(
+    userId: Types.ObjectId,
+    entityId: Types.ObjectId,
+    entityType: EntityType,
+    filePublicId: string,
+  ): Promise<ApiResponse<ImageDocument>> {
+    const image = await this.findImage(userId, entityId, entityType);
+    const resources = image.resources;
+
+    const selectedImage = this.findFileByResources(resources, filePublicId);
+    const updatedImage = await this.selectFile(image, selectedImage);
+
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      updatedImage,
+    );
   }
 }

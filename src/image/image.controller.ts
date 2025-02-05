@@ -1,8 +1,10 @@
 import {
   Controller,
+  Delete,
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
   Query,
   UploadedFile,
@@ -36,5 +38,25 @@ export class ImageController {
     file: Express.Multer.File,
   ): Promise<ApiResponse<ImageDocument>> {
     return this.imageService.upload(userId, entityId, entityType, file);
+  }
+
+  @Delete('delete/:entityId')
+  async delete(
+    @User('_id') userId: Types.ObjectId,
+    @Param('entityId', ParseObjectIdPipe) entityId: Types.ObjectId,
+    @Query('entityType') entityType: EntityType,
+    @Query('filePublicId') filePublicId: string,
+  ): Promise<ApiResponse<ImageDocument>> {
+    return this.imageService.delete(userId, entityId, entityType, filePublicId);
+  }
+
+  @Patch('select/:entityId')
+  async select(
+    @User('_id') userId: Types.ObjectId,
+    @Param('entityId', ParseObjectIdPipe) entityId: Types.ObjectId,
+    @Query('entityType') entityType: EntityType,
+    @Query('filePublicId') filePublicId: string,
+  ): Promise<ApiResponse<ImageDocument>> {
+    return this.imageService.select(userId, entityId, entityType, filePublicId);
   }
 }

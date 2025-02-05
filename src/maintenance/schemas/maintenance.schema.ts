@@ -1,7 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
 import { Car } from 'src/car/schemas/car.schema';
-import { User } from 'src/user/schemes/user.schema';
 import { MaintenanceType } from '../enums/maintenance-type.enum';
 import { ProcessStatus } from '../enums/process-status.enum';
 import { Parts, PartsDocument } from './parts.schema';
@@ -18,13 +17,13 @@ export class Maintenance {
   carId: Car;
 
   // @Prop({ type: Types.ObjectId, ref: 'Contact', required: true })
-  // contactId: Contact;
+  // contactId: Types.ObjectId;
 
   // @Prop({ type: Types.ObjectId, ref: 'Location', required: true })
-  // repairLocationId: Location;
+  // repairLocationId: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-  owner: User;
+  owner: Types.ObjectId;
 
   @Prop({ required: true, enum: MaintenanceType })
   serviceType: MaintenanceType;

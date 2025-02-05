@@ -46,9 +46,9 @@ export class ImageController {
     @User('_id') userId: Types.ObjectId,
     @Param('entityId', ParseObjectIdPipe) entityId: Types.ObjectId,
     @Query('entityType') entityType: EntityType,
-    @Query('filePublicId') filePublicId: string,
+    @Query('publicId') publicId: string,
   ): Promise<ApiResponse<ImageDocument>> {
-    return this.imageService.delete(userId, entityId, entityType, filePublicId);
+    return this.imageService.delete(userId, entityId, entityType, publicId);
   }
 
   @Patch('select/:entityId')
@@ -56,9 +56,9 @@ export class ImageController {
     @User('_id') userId: Types.ObjectId,
     @Param('entityId', ParseObjectIdPipe) entityId: Types.ObjectId,
     @Query('entityType') entityType: EntityType,
-    @Query('filePublicId') filePublicId: string,
+    @Query('publicId') publicId: string,
   ): Promise<ApiResponse<ImageDocument>> {
-    return this.imageService.select(userId, entityId, entityType, filePublicId);
+    return this.imageService.select(userId, entityId, entityType, publicId);
   }
 
   @Delete('delete-all/:entityId')

@@ -61,25 +61,38 @@ export class ImageService {
     entityId: Types.ObjectId,
     entityType: EntityType,
   ): Promise<ImageDocument> {
-    return await this.imageModel.findOne({
+    const imageRecord = await this.imageModel.findOne({
       owner: userId,
       entityId,
       entityType,
     });
+
+    if (!imageRecord) {
+      throw new AppError(HttpStatus.NOT_FOUND, errorMessages.IMAGE_NOT_FOUND);
+    }
+
+    return imageRecord;
   }
 
   private async updateModel(
-    image: ImageDocument,
-    dto: any,
+    imageRecord: ImageDocument,
+    updateData: any,
   ): Promise<ImageDocument> {
-    let result: ImageDocument;
-    if (image) {
-      const params = { new: true };
-      result = await this.imageModel.findByIdAndUpdate(image._id, dto, params);
+    let updatedRecord: ImageDocument;
+
+    if (imageRecord) {
+      updatedRecord = await this.imageModel.findByIdAndUpdate(
+        imageRecord._id,
+        updateData,
+        {
+          new: true,
+        },
+      );
     } else {
-      result = await this.imageModel.create(dto);
+      updatedRecord = await this.imageModel.create(updateData);
     }
-    return result;
+
+    return updatedRecord;
   }
 
   async upload(
@@ -91,38 +104,44 @@ export class ImageService {
     const uploadedImageUrl = await this.uploadFile(entityId, entityType, file);
     const defaultImage = this.getDefaultImage(entityType);
 
-    const image = await this.findImage(userId, entityId, entityType);
+    const imageRecord = await this.findImage(userId, entityId, entityType);
 
-    const resources = image
-      ? [...image.resources, uploadedImageUrl]
+    const imageUrls = imageRecord
+      ? [...imageRecord.resources, uploadedImageUrl]
       : [uploadedImageUrl];
 
-    const dto = {
+    const updateData = {
       owner: userId,
       entityId,
       entityType,
       default: defaultImage,
-      resources,
+      resources: imageUrls,
       selected: uploadedImageUrl,
     };
 
-    const result = await this.updateModel(image, dto);
-    return this.responseService.createSuccessResponse(HttpStatus.OK, result);
+    const updatedRecord = await this.updateModel(imageRecord, updateData);
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      updatedRecord,
+    );
   }
 
-  private removeByPublicId(images: string[], publicId: string): string[] {
-    return images.filter((item: string) => !item.includes(publicId));
+  private removeByPublicId(
+    imageUrls: string[] = [],
+    publicId: string,
+  ): string[] {
+    return imageUrls.filter((item: string) => !item.includes(publicId));
   }
 
-  private async deleteFile(imageFromDB: ImageDocument, dto: string[]) {
+  private async deleteFile(imageRecord: ImageDocument, updateData: string[]) {
     const updatedImage = await this.imageModel.findByIdAndUpdate(
-      imageFromDB._id,
-      { $set: { resources: dto } },
+      imageRecord._id,
+      { $set: { resources: updateData } },
       { new: true },
     );
 
-    if (dto.length === 0) {
-      await this.imageModel.findByIdAndDelete(imageFromDB._id);
+    if (updateData.length === 0) {
+      await this.imageModel.findByIdAndDelete(imageRecord._id);
     }
 
     return updatedImage;
@@ -132,21 +151,21 @@ export class ImageService {
     userId: Types.ObjectId,
     entityId: Types.ObjectId,
     entityType: EntityType,
-    filePublicId: string,
+    publicId: string,
   ): Promise<ApiResponse<ImageDocument>> {
-    const image = await this.findImage(userId, entityId, entityType);
-    const resources = image.resources;
-    const selected = image.selected;
+    const imageRecord = await this.findImage(userId, entityId, entityType);
+    const imageUrls = imageRecord.resources;
+    const selectedUrl = imageRecord.selected;
 
-    if (selected.includes(filePublicId)) {
+    if (selectedUrl.includes(publicId)) {
       const defaultImage = this.getDefaultImage(entityType);
-      await this.selectFile(image, defaultImage);
+      await this.selectFile(imageRecord, defaultImage);
     }
 
-    await this.cloudinaryService.deleteFile(filePublicId, FileType.IMAGE);
+    await this.cloudinaryService.deleteFile(publicId, FileType.IMAGE);
 
-    const filteredResources = this.removeByPublicId(resources, filePublicId);
-    const updatedImage = await this.deleteFile(image, filteredResources);
+    const filteredImageUrls = this.removeByPublicId(imageUrls, publicId);
+    const updatedImage = await this.deleteFile(imageRecord, filteredImageUrls);
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
@@ -154,8 +173,11 @@ export class ImageService {
     );
   }
 
-  private findFileByResources(resources: string[], publicId: string): string {
-    const imageUrl = resources.find((item) => item.includes(publicId));
+  private findFileByResources(
+    imageUrls: string[] = [],
+    publicId: string,
+  ): string {
+    const imageUrl = imageUrls.find((item) => item.includes(publicId));
 
     if (!imageUrl) {
       throw new AppError(
@@ -167,10 +189,10 @@ export class ImageService {
     return imageUrl;
   }
 
-  private async selectFile(imageFromDB: ImageDocument, dto: string) {
+  private async selectFile(imageRecord: ImageDocument, updateData: string) {
     return await this.imageModel.findByIdAndUpdate(
-      imageFromDB._id,
-      { $set: { selected: dto } },
+      imageRecord._id,
+      { $set: { selected: updateData } },
       { new: true },
     );
   }
@@ -179,13 +201,13 @@ export class ImageService {
     userId: Types.ObjectId,
     entityId: Types.ObjectId,
     entityType: EntityType,
-    filePublicId: string,
+    publicId: string,
   ): Promise<ApiResponse<ImageDocument>> {
-    const image = await this.findImage(userId, entityId, entityType);
-    const resources = image.resources;
+    const imageRecord = await this.findImage(userId, entityId, entityType);
+    const imageUrls = imageRecord.resources;
 
-    const selectedImage = this.findFileByResources(resources, filePublicId);
-    const updatedImage = await this.selectFile(image, selectedImage);
+    const selectedImage = this.findFileByResources(imageUrls, publicId);
+    const updatedImage = await this.selectFile(imageRecord, selectedImage);
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
@@ -193,9 +215,9 @@ export class ImageService {
     );
   }
 
-  private async removedFilesAndFolder(resources: string[]) {
-    if (resources.length > 0) {
-      const folderPath = this.cloudinaryService.getFolderPath(resources[0]);
+  private async removedFilesAndFolder(imageUrls: string[]) {
+    if (imageUrls.length > 0) {
+      const folderPath = this.cloudinaryService.getFolderPath(imageUrls[0]);
       await this.cloudinaryService.deleteFilesAndFolder(folderPath);
     } else {
       throw new AppError(
@@ -210,9 +232,11 @@ export class ImageService {
     entityId: Types.ObjectId,
     entityType: EntityType,
   ): Promise<ApiResponse<ImageDocument>> {
-    const image = await this.findImage(userId, entityId, entityType);
-    await this.removedFilesAndFolder(image.resources);
-    const deletedImage = await this.imageModel.findByIdAndDelete(image._id);
+    const imageRecord = await this.findImage(userId, entityId, entityType);
+    await this.removedFilesAndFolder(imageRecord.resources);
+    const deletedImage = await this.imageModel.findByIdAndDelete(
+      imageRecord._id,
+    );
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
@@ -225,7 +249,10 @@ export class ImageService {
     entityId: Types.ObjectId,
     entityType: EntityType,
   ): Promise<ApiResponse<ImageDocument>> {
-    const image = await this.findImage(userId, entityId, entityType);
-    return this.responseService.createSuccessResponse(HttpStatus.OK, image);
+    const imageRecord = await this.findImage(userId, entityId, entityType);
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      imageRecord,
+    );
   }
 }

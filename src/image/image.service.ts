@@ -219,4 +219,13 @@ export class ImageService {
       deletedImage,
     );
   }
+
+  async getAll(
+    userId: Types.ObjectId,
+    entityId: Types.ObjectId,
+    entityType: EntityType,
+  ): Promise<ApiResponse<ImageDocument>> {
+    const image = await this.findImage(userId, entityId, entityType);
+    return this.responseService.createSuccessResponse(HttpStatus.OK, image);
+  }
 }

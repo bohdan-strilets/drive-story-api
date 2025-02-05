@@ -1,6 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import { CarRepository } from 'src/car/car.repository';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { FileType } from 'src/cloudinary/enums/file-type.enum';
 import { defaultImages } from 'src/cloudinary/helpers/default-images';
@@ -19,6 +20,7 @@ export class ImageService {
     private readonly cloudinaryService: CloudinaryService,
     private readonly responseService: ResponseService,
     private readonly maintenanceRepository: MaintenanceRepository,
+    private readonly carRepository: CarRepository,
   ) {}
 
   private async uploadFile(
@@ -106,7 +108,7 @@ export class ImageService {
         break;
 
       case EntityType.CARS:
-        console.log('Bind image for car');
+        await this.carRepository.updateImage(entityId, data);
         break;
 
       case EntityType.MAINTENANCE:

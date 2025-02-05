@@ -39,4 +39,16 @@ export class CarRepository {
 
     return car;
   }
+
+  async updateImage(
+    carId: Types.ObjectId,
+    data: Types.ObjectId | null,
+  ): Promise<CarDocument> {
+    await this.findCar(carId);
+    return await this.carModel.findByIdAndUpdate(
+      carId,
+      { $set: { images: data } },
+      { new: true },
+    );
+  }
 }

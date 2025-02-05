@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { CarModule } from 'src/car/car.module';
 import { CloudinaryModule } from 'src/cloudinary/cloudinary.module';
 import { MaintenanceModule } from 'src/maintenance/maintenance.module';
 import { ResponseModule } from 'src/response/response.module';
@@ -13,6 +14,7 @@ import { Image, ImageSchema } from './schemas/image.schema';
     CloudinaryModule,
     ResponseModule,
     MaintenanceModule,
+    CarModule,
   ],
   controllers: [ImageController],
   providers: [ImageService],

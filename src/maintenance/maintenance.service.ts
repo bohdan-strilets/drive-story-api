@@ -3,6 +3,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CarRepository } from 'src/car/car.repository';
 import { defaultImages } from 'src/cloudinary/helpers/default-images';
+import { AppError } from 'src/error/app-error';
+import { errorMessages } from 'src/error/helpers/error-messages';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { MaintenanceDto } from './dto/maintenance.dto';
@@ -17,13 +19,13 @@ export class MaintenanceService {
     private readonly carRepository: CarRepository,
   ) {}
 
-  async addMaintenance(
+  async add(
     userId: Types.ObjectId,
     carId: Types.ObjectId,
     dto: MaintenanceDto,
   ): Promise<ApiResponse<MaintenanceDocument>> {
     const car = await this.carRepository.findCarById(carId);
-    this.carRepository.checkCarByOwner(car.owner, userId);
+    this.carRepository.checkAccessRights(car.owner, userId);
 
     const data = {
       carId,
@@ -39,6 +41,58 @@ export class MaintenanceService {
     return this.responseService.createSuccessResponse(
       HttpStatus.CREATED,
       newMaintenance,
+    );
+  }
+
+  private async findMaintenance(
+    maintenanceId: Types.ObjectId,
+  ): Promise<MaintenanceDocument> {
+    const maintenance = await this.maintenanceModel.findById(maintenanceId);
+
+    if (!maintenance) {
+      throw new AppError(
+        HttpStatus.NOT_FOUND,
+        errorMessages.MAINTENANCE_NOT_FOUND,
+      );
+    }
+
+    return maintenance;
+  }
+
+  private async updateMaintenance(
+    maintenanceId: Types.ObjectId,
+    carId: Types.ObjectId,
+    userId: Types.ObjectId,
+    dto: any,
+  ) {
+    const maintenance = await this.findMaintenance(maintenanceId);
+    this.carRepository.checkAccessRights(maintenance.carId, carId);
+    this.carRepository.checkAccessRights(maintenance.owner, userId);
+
+    const params = { new: true };
+    return await this.maintenanceModel.findByIdAndUpdate(
+      maintenance,
+      dto,
+      params,
+    );
+  }
+
+  async update(
+    maintenanceId: Types.ObjectId,
+    carId: Types.ObjectId,
+    userId: Types.ObjectId,
+    dto: MaintenanceDto,
+  ): Promise<ApiResponse<MaintenanceDocument>> {
+    const updatedMaintenance = await this.updateMaintenance(
+      maintenanceId,
+      carId,
+      userId,
+      dto,
+    );
+
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      updatedMaintenance,
     );
   }
 }

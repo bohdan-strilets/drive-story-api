@@ -15,27 +15,17 @@ export class CarRepository {
     dto: any,
   ): Promise<CarDocument> {
     const car = await this.findCarById(carId);
-    this.checkCarByOwner(car.owner, userId);
+    this.checkAccessRights(car.owner, userId);
     const params = { new: true };
 
-    const updatedCar = await this.carModel.findByIdAndUpdate(
-      carId,
-      dto,
-      params,
-    );
-
-    if (!updatedCar) {
-      throw new AppError(HttpStatus.NOT_FOUND, errorMessages.CAR_NOT_FOUND);
-    }
-
-    return updatedCar;
+    return await this.carModel.findByIdAndUpdate(carId, dto, params);
   }
 
-  checkCarByOwner(carOwnerId: Types.ObjectId, ownerId: Types.ObjectId): void {
-    if (!carOwnerId.equals(ownerId)) {
+  checkAccessRights(firstId: Types.ObjectId, secondId: Types.ObjectId): void {
+    if (!firstId.equals(secondId)) {
       throw new AppError(
         HttpStatus.FORBIDDEN,
-        errorMessages.YOU_DO_NOT_OWN_CAR,
+        errorMessages.DO_NOT_HAVE_ACCESS_RIGHT,
       );
     }
   }

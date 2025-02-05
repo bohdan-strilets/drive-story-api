@@ -61,7 +61,7 @@ export class CarService {
     userId: Types.ObjectId,
   ): Promise<ApiResponse<CarDocument>> {
     const car = await this.carRepository.findCarById(carId);
-    this.carRepository.checkCarByOwner(car.owner, userId);
+    this.carRepository.checkAccessRights(car.owner, userId);
 
     const deletedCar = await this.carModel.findByIdAndDelete(carId);
     return this.responseService.createSuccessResponse(
@@ -75,7 +75,7 @@ export class CarService {
     userId: Types.ObjectId,
   ): Promise<ApiResponse<CarDocument>> {
     const car = await this.carRepository.findCarById(carId);
-    this.carRepository.checkCarByOwner(car.owner, userId);
+    this.carRepository.checkAccessRights(car.owner, userId);
     return this.responseService.createSuccessResponse(HttpStatus.OK, car);
   }
 

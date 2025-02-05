@@ -2,7 +2,6 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CarRepository } from 'src/car/car.repository';
-import { defaultImages } from 'src/cloudinary/helpers/default-images';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { MaintenanceDto } from './dto/maintenance.dto';
@@ -30,10 +29,6 @@ export class MaintenanceService {
     const data = {
       carId,
       owner: userId,
-      photos: {
-        default: defaultImages.NOT_IMAGE,
-        selected: defaultImages.NOT_IMAGE,
-      },
       ...dto,
     };
 

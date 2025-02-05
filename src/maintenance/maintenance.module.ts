@@ -17,5 +17,6 @@ import { Maintenance, MaintenanceSchema } from './schemas/maintenance.schema';
   ],
   controllers: [MaintenanceController],
   providers: [MaintenanceService, MaintenanceRepository],
+  exports: [MaintenanceRepository],
 })
 export class MaintenanceModule {}

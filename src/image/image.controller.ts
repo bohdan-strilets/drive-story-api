@@ -1,7 +1,6 @@
 import {
   Controller,
   Delete,
-  Get,
   HttpCode,
   HttpStatus,
   Param,
@@ -68,14 +67,5 @@ export class ImageController {
     @Query('entityType') entityType: EntityType,
   ): Promise<ApiResponse<ImageDocument>> {
     return this.imageService.deleteAll(userId, entityId, entityType);
-  }
-
-  @Get('get-all/:entityId')
-  async getAll(
-    @User('_id') userId: Types.ObjectId,
-    @Param('entityId', ParseObjectIdPipe) entityId: Types.ObjectId,
-    @Query('entityType') entityType: EntityType,
-  ): Promise<ApiResponse<ImageDocument>> {
-    return this.imageService.getAll(userId, entityId, entityType);
   }
 }

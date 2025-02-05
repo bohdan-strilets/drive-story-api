@@ -3,7 +3,6 @@ import { HydratedDocument, Types } from 'mongoose';
 import { MaintenanceType } from '../enums/maintenance-type.enum';
 import { ProcessStatus } from '../enums/process-status.enum';
 import { Parts, PartsDocument } from './parts.schema';
-import { Photos } from './photo.schema';
 
 export type MaintenanceDocument = HydratedDocument<Maintenance>;
 
@@ -48,8 +47,8 @@ export class Maintenance {
   @Prop({ default: null })
   endDate?: Date | null;
 
-  @Prop({ type: Photos })
-  photos: Photos;
+  @Prop({ type: Types.ObjectId, ref: 'Image', default: null })
+  photos: Types.ObjectId | null;
 
   @Prop()
   createdAt: Date;

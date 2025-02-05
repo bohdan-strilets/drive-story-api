@@ -17,7 +17,12 @@ export class MaintenanceRepository {
   async findMaintenance(
     maintenanceId: Types.ObjectId,
   ): Promise<MaintenanceDocument> {
-    const maintenance = await this.maintenanceModel.findById(maintenanceId);
+    const maintenance = await this.maintenanceModel
+      .findById(maintenanceId)
+      .populate({
+        path: 'photos',
+        model: 'Image',
+      });
 
     if (!maintenance) {
       throw new AppError(
@@ -56,6 +61,18 @@ export class MaintenanceRepository {
       maintenanceId,
       dto,
       params,
+    );
+  }
+
+  async updateImage(
+    maintenanceId: Types.ObjectId,
+    data: Types.ObjectId | null,
+  ): Promise<MaintenanceDocument> {
+    await this.findMaintenance(maintenanceId);
+    return await this.maintenanceModel.findByIdAndUpdate(
+      maintenanceId,
+      { $set: { photos: data } },
+      { new: true },
     );
   }
 }

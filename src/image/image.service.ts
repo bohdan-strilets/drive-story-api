@@ -6,6 +6,7 @@ import { FileType } from 'src/cloudinary/enums/file-type.enum';
 import { defaultImages } from 'src/cloudinary/helpers/default-images';
 import { AppError } from 'src/error/app-error';
 import { errorMessages } from 'src/error/helpers/error-messages';
+import { MaintenanceRepository } from 'src/maintenance/maintenance.repository';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { EntityType } from './enums/entity-type.enum';
@@ -17,6 +18,7 @@ export class ImageService {
     @InjectModel(Image.name) private imageModel: Model<ImageDocument>,
     private readonly cloudinaryService: CloudinaryService,
     private readonly responseService: ResponseService,
+    private readonly maintenanceRepository: MaintenanceRepository,
   ) {}
 
   private async uploadFile(
@@ -61,17 +63,11 @@ export class ImageService {
     entityId: Types.ObjectId,
     entityType: EntityType,
   ): Promise<ImageDocument> {
-    const imageRecord = await this.imageModel.findOne({
+    return await this.imageModel.findOne({
       owner: userId,
       entityId,
       entityType,
     });
-
-    if (!imageRecord) {
-      throw new AppError(HttpStatus.NOT_FOUND, errorMessages.IMAGE_NOT_FOUND);
-    }
-
-    return imageRecord;
   }
 
   private async updateModel(
@@ -93,6 +89,34 @@ export class ImageService {
     }
 
     return updatedRecord;
+  }
+
+  private async updateImage(
+    entityType: EntityType,
+    entityId: Types.ObjectId,
+    data: Types.ObjectId | null,
+  ): Promise<void> {
+    switch (entityType) {
+      case EntityType.AVATARS:
+        console.log('Bind image for user avatar');
+        break;
+
+      case EntityType.POSTERS:
+        console.log('Bind image for user poster');
+        break;
+
+      case EntityType.CARS:
+        console.log('Bind image for car');
+        break;
+
+      case EntityType.MAINTENANCE:
+        await this.maintenanceRepository.updateImage(entityId, data);
+        break;
+
+      default:
+        console.log('No such entity was found.');
+        break;
+    }
   }
 
   async upload(
@@ -120,6 +144,8 @@ export class ImageService {
     };
 
     const updatedRecord = await this.updateModel(imageRecord, updateData);
+    await this.updateImage(entityType, entityId, updatedRecord._id);
+
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
       updatedRecord,
@@ -133,7 +159,12 @@ export class ImageService {
     return imageUrls.filter((item: string) => !item.includes(publicId));
   }
 
-  private async deleteFile(imageRecord: ImageDocument, updateData: string[]) {
+  private async deleteFile(
+    imageRecord: ImageDocument,
+    updateData: string[],
+    entityId: Types.ObjectId,
+    entityType: EntityType,
+  ) {
     const updatedImage = await this.imageModel.findByIdAndUpdate(
       imageRecord._id,
       { $set: { resources: updateData } },
@@ -142,6 +173,7 @@ export class ImageService {
 
     if (updateData.length === 0) {
       await this.imageModel.findByIdAndDelete(imageRecord._id);
+      await this.updateImage(entityType, entityId, null);
     }
 
     return updatedImage;
@@ -165,7 +197,12 @@ export class ImageService {
     await this.cloudinaryService.deleteFile(publicId, FileType.IMAGE);
 
     const filteredImageUrls = this.removeByPublicId(imageUrls, publicId);
-    const updatedImage = await this.deleteFile(imageRecord, filteredImageUrls);
+    const updatedImage = await this.deleteFile(
+      imageRecord,
+      filteredImageUrls,
+      entityId,
+      entityType,
+    );
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
@@ -234,6 +271,7 @@ export class ImageService {
   ): Promise<ApiResponse<ImageDocument>> {
     const imageRecord = await this.findImage(userId, entityId, entityType);
     await this.removedFilesAndFolder(imageRecord.resources);
+    await this.updateImage(entityType, entityId, null);
     const deletedImage = await this.imageModel.findByIdAndDelete(
       imageRecord._id,
     );
@@ -241,18 +279,6 @@ export class ImageService {
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
       deletedImage,
-    );
-  }
-
-  async getAll(
-    userId: Types.ObjectId,
-    entityId: Types.ObjectId,
-    entityType: EntityType,
-  ): Promise<ApiResponse<ImageDocument>> {
-    const imageRecord = await this.findImage(userId, entityId, entityType);
-    return this.responseService.createSuccessResponse(
-      HttpStatus.OK,
-      imageRecord,
     );
   }
 }

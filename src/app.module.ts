@@ -6,6 +6,7 @@ import { AuthModule } from './auth/auth.module';
 import { CarModule } from './car/car.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { HttpExceptionFilter } from './error/http-exception.filter';
+import { ImageModule } from './image/image.module';
 import { MaintenanceModule } from './maintenance/maintenance.module';
 import { PasswordModule } from './password/password.module';
 import { ResponseModule } from './response/response.module';
@@ -27,6 +28,7 @@ import { UserModule } from './user/user.module';
     ResponseModule,
     CarModule,
     MaintenanceModule,
+    ImageModule,
   ],
   providers: [
     ResponseService,

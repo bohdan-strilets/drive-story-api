@@ -24,7 +24,7 @@ export class MaintenanceService {
     carId: Types.ObjectId,
     dto: MaintenanceDto,
   ): Promise<ApiResponse<MaintenanceDocument>> {
-    const car = await this.carRepository.findCarById(carId);
+    const car = await this.carRepository.findCar(carId);
     this.carRepository.checkAccessRights(car.owner, userId);
 
     const data = {

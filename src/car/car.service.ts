@@ -19,7 +19,7 @@ export class CarService {
     private readonly carRepository: CarRepository,
   ) {}
 
-  async addCar(
+  async add(
     userId: Types.ObjectId,
     dto: CarDto,
   ): Promise<ApiResponse<CarDocument>> {
@@ -39,16 +39,12 @@ export class CarService {
     );
   }
 
-  async updateCar(
+  async update(
     carId: Types.ObjectId,
     userId: Types.ObjectId,
     dto: CarDto,
   ): Promise<ApiResponse<CarDocument>> {
-    const updatedCar = await this.carRepository.updateCarModel(
-      carId,
-      userId,
-      dto,
-    );
+    const updatedCar = await this.carRepository.updateCar(carId, userId, dto);
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
@@ -56,11 +52,11 @@ export class CarService {
     );
   }
 
-  async deleteCar(
+  async delete(
     carId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<CarDocument>> {
-    const car = await this.carRepository.findCarById(carId);
+    const car = await this.carRepository.findCar(carId);
     this.carRepository.checkAccessRights(car.owner, userId);
 
     const deletedCar = await this.carModel.findByIdAndDelete(carId);
@@ -70,21 +66,21 @@ export class CarService {
     );
   }
 
-  async getById(
+  async byId(
     carId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<CarDocument>> {
-    const car = await this.carRepository.findCarById(carId);
+    const car = await this.carRepository.findCar(carId);
     this.carRepository.checkAccessRights(car.owner, userId);
     return this.responseService.createSuccessResponse(HttpStatus.OK, car);
   }
 
-  async getAll(userId: Types.ObjectId): Promise<ApiResponse<CarDocument[]>> {
+  async all(userId: Types.ObjectId): Promise<ApiResponse<CarDocument[]>> {
     const cars = await this.carModel.find({ owner: userId });
     return this.responseService.createSuccessResponse(HttpStatus.OK, cars);
   }
 
-  async uploadPhoto(
+  async uploadImage(
     file: Express.Multer.File,
     carId: Types.ObjectId,
   ): Promise<ApiResponse<CarDocument>> {
@@ -102,7 +98,7 @@ export class CarService {
     );
   }
 
-  async deletePhoto(
+  async deleteImage(
     photoPublicId: string,
     carId: Types.ObjectId,
   ): Promise<ApiResponse<CarDocument>> {
@@ -120,7 +116,7 @@ export class CarService {
     );
   }
 
-  async selectMainPhoto(
+  async selectImage(
     photoPublicId: string,
     carId: Types.ObjectId,
   ): Promise<ApiResponse<CarDocument>> {

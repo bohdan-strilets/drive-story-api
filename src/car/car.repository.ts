@@ -9,7 +9,7 @@ import { Car, CarDocument } from './schemas/car.schema';
 export class CarRepository {
   constructor(@InjectModel(Car.name) private carModel: Model<CarDocument>) {}
 
-  async updateCarModel(
+  async updateCar(
     carId: Types.ObjectId,
     userId: Types.ObjectId,
     dto: any,
@@ -30,7 +30,7 @@ export class CarRepository {
     }
   }
 
-  async findCarById(carId: Types.ObjectId): Promise<CarDocument> {
+  async findCar(carId: Types.ObjectId): Promise<CarDocument> {
     const car = await this.carModel.findById(carId);
 
     if (!car) {

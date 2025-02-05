@@ -30,69 +30,69 @@ export class CarController {
   constructor(private readonly carService: CarService) {}
 
   @Post('add')
-  async addCar(
+  async add(
     @Body() dto: CarDto,
     @User('_id') userId: Types.ObjectId,
   ): Promise<ApiResponse<CarDocument>> {
-    return this.carService.addCar(userId, dto);
+    return this.carService.add(userId, dto);
   }
 
   @Patch('update/:carId')
-  async updateCar(
+  async update(
     @Body() dto: CarDto,
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
     @User('_id') userId: Types.ObjectId,
   ): Promise<ApiResponse<CarDocument>> {
-    return this.carService.updateCar(carId, userId, dto);
+    return this.carService.update(carId, userId, dto);
   }
 
   @Delete('delete/:carId')
-  async deleteCar(
+  async delete(
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
     @User('_id') userId: Types.ObjectId,
   ): Promise<ApiResponse<CarDocument>> {
-    return this.carService.deleteCar(carId, userId);
+    return this.carService.delete(carId, userId);
   }
 
-  @Get('get/:carId')
-  async getById(
+  @Get('by-id/:carId')
+  async byId(
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
     @User('_id') userId: Types.ObjectId,
   ): Promise<ApiResponse<CarDocument>> {
-    return this.carService.getById(carId, userId);
+    return this.carService.byId(carId, userId);
   }
 
-  @Get('get-all')
-  async getAll(
+  @Get('all')
+  async all(
     @User('_id') userId: Types.ObjectId,
   ): Promise<ApiResponse<CarDocument[]>> {
-    return this.carService.getAll(userId);
+    return this.carService.all(userId);
   }
 
   @HttpCode(HttpStatus.OK)
-  @Post('upload-photo/:carId')
+  @Post('upload-image/:carId')
   @UseInterceptors(FileInterceptor('photo', { dest: DEFAULT_FOLDER_FOR_FILES }))
-  async uploadAvatar(
+  async uploadImage(
     @UploadedFile(imageValidator)
     file: Express.Multer.File,
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
   ): Promise<ApiResponse<CarDocument>> {
-    return this.carService.uploadPhoto(file, carId);
+    return this.carService.uploadImage(file, carId);
   }
 
-  @Delete('delete-photo/:carId')
-  async deletePhoto(
+  @Delete('delete-image/:carId')
+  async deleteImage(
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
     @Query('photoPublicId') photoPublicId: string,
   ): Promise<ApiResponse<CarDocument>> {
-    return this.carService.deletePhoto(photoPublicId, carId);
+    return this.carService.deleteImage(photoPublicId, carId);
   }
 
-  @Patch('select-main-photo/:carId')
-  async selectMainPhoto(
+  @Patch('select-image/:carId')
+  async selectImage(
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
     @Query('photoPublicId') photoPublicId: string,
   ): Promise<ApiResponse<CarDocument>> {
-    return this.carService.selectMainPhoto(photoPublicId, carId);
+    return this.carService.selectImage(photoPublicId, carId);
   }
 }

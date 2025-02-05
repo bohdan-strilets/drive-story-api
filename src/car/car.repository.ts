@@ -14,7 +14,7 @@ export class CarRepository {
     userId: Types.ObjectId,
     dto: any,
   ): Promise<CarDocument> {
-    const car = await this.findCarById(carId);
+    const car = await this.findCar(carId);
     this.checkAccessRights(car.owner, userId);
     const params = { new: true };
 

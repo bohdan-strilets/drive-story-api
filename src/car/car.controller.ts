@@ -41,22 +41,25 @@ export class CarController {
   async updateCar(
     @Body() dto: CarDto,
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
+    @User('_id') userId: Types.ObjectId,
   ): Promise<ApiResponse<CarDocument>> {
-    return this.carService.updateCar(carId, dto);
+    return this.carService.updateCar(carId, userId, dto);
   }
 
   @Delete('delete/:carId')
   async deleteCar(
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
+    @User('_id') userId: Types.ObjectId,
   ): Promise<ApiResponse<CarDocument>> {
-    return this.carService.deleteCar(carId);
+    return this.carService.deleteCar(carId, userId);
   }
 
   @Get('get/:carId')
   async getById(
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
+    @User('_id') userId: Types.ObjectId,
   ): Promise<ApiResponse<CarDocument>> {
-    return this.carService.getById(carId);
+    return this.carService.getById(carId, userId);
   }
 
   @Get('get-all')

@@ -1,6 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
-import { User } from 'src/user/schemes/user.schema';
 import { BasicInfo } from './basic-info.schema';
 import { Images } from './images.schema';
 import { Ownership } from './ownership.schema';
@@ -15,7 +14,7 @@ export class Car {
   _id: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-  owner: User;
+  owner: Types.ObjectId;
 
   @Prop({ type: BasicInfo, default: {} })
   basicInfo: BasicInfo;

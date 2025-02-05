@@ -21,4 +21,5 @@ export const errorMessages = {
   CAR_NOT_FOUND: 'The car with the current ID was nod found.',
   CHECK_ENTERED_DATA: 'Check the entered data.',
   USER_NOT_FUND: 'The user with the current ID was not found.',
+  YOU_DO_NOT_OWN_CAR: 'You do not own this car',
 };

@@ -41,6 +41,7 @@ export class CarService {
 
   private async updateCarModel(
     carId: Types.ObjectId,
+    userId: Types.ObjectId,
     dto: any,
   ): Promise<CarDocument> {
     const updatedCar = await this.carModel.findByIdAndUpdate(carId, dto, {
@@ -51,14 +52,38 @@ export class CarService {
       throw new AppError(HttpStatus.NOT_FOUND, errorMessages.CAR_NOT_FOUND);
     }
 
+    this.checkCarByOwner(updatedCar.owner, userId);
     return updatedCar;
+  }
+
+  private checkCarByOwner(
+    carOwnerId: Types.ObjectId,
+    ownerId: Types.ObjectId,
+  ): void {
+    if (!carOwnerId.equals(ownerId)) {
+      throw new AppError(
+        HttpStatus.FORBIDDEN,
+        errorMessages.YOU_DO_NOT_OWN_CAR,
+      );
+    }
+  }
+
+  private async findCarById(carId: Types.ObjectId): Promise<CarDocument> {
+    const car = await this.carModel.findById(carId);
+
+    if (!car) {
+      throw new AppError(HttpStatus.NOT_FOUND, errorMessages.CAR_NOT_FOUND);
+    }
+
+    return car;
   }
 
   async updateCar(
     carId: Types.ObjectId,
+    userId: Types.ObjectId,
     dto: CarDto,
   ): Promise<ApiResponse<CarDocument>> {
-    const updatedCar = await this.updateCarModel(carId, dto);
+    const updatedCar = await this.updateCarModel(carId, userId, dto);
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
@@ -66,21 +91,26 @@ export class CarService {
     );
   }
 
-  private isValidCar(car: CarDocument): void {
-    if (!car) {
-      throw new AppError(HttpStatus.NOT_FOUND, errorMessages.CAR_NOT_FOUND);
-    }
-  }
+  async deleteCar(
+    carId: Types.ObjectId,
+    userId: Types.ObjectId,
+  ): Promise<ApiResponse<CarDocument>> {
+    const car = await this.findCarById(carId);
+    this.checkCarByOwner(car.owner, userId);
 
-  async deleteCar(carId: Types.ObjectId): Promise<ApiResponse<CarDocument>> {
     const deletedCar = await this.carModel.findByIdAndDelete(carId);
-    this.isValidCar(deletedCar);
-    return this.responseService.createSuccessResponse(HttpStatus.OK);
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      deletedCar,
+    );
   }
 
-  async getById(carId: Types.ObjectId): Promise<ApiResponse<CarDocument>> {
-    const car = await this.carModel.findById(carId);
-    this.isValidCar(car);
+  async getById(
+    carId: Types.ObjectId,
+    userId: Types.ObjectId,
+  ): Promise<ApiResponse<CarDocument>> {
+    const car = await this.findCarById(carId);
+    this.checkCarByOwner(car.owner, userId);
     return this.responseService.createSuccessResponse(HttpStatus.OK, car);
   }
 

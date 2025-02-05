@@ -127,4 +127,19 @@ export class MaintenanceService {
       deletedMaintenance,
     );
   }
+
+  async byId(
+    maintenanceId: Types.ObjectId,
+    carId: Types.ObjectId,
+    userId: Types.ObjectId,
+  ): Promise<ApiResponse<MaintenanceDocument>> {
+    const maintenance = await this.findMaintenance(maintenanceId);
+    this.carRepository.checkAccessRights(maintenance.carId, carId);
+    this.carRepository.checkAccessRights(maintenance.owner, userId);
+
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      maintenance,
+    );
+  }
 }

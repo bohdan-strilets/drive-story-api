@@ -1,7 +1,7 @@
 import { UserDocument } from 'src/user/schemes/user.schema';
 import { UserInfo } from 'src/user/types/user-info';
 
-export const sanitizeUserData = (user: UserDocument): UserInfo => {
+export const getSafeUserData = (user: UserDocument): UserInfo => {
   return {
     _id: user._id,
     email: user.email,

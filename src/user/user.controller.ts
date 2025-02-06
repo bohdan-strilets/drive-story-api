@@ -8,19 +8,13 @@ import {
   Param,
   Patch,
   Post,
-  Query,
   Res,
-  UploadedFile,
-  UseInterceptors,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 import { Types } from 'mongoose';
 import { Auth } from 'src/auth/decorators/auth.decorator';
-import { DEFAULT_FOLDER_FOR_FILES } from 'src/cloudinary/helpers/default-file-folder';
 import { ApiResponse } from 'src/response/types/api-response.type';
-import { imageValidator } from '../cloudinary/pipes/image-validator.pipe';
 import { User } from './decorators/user.decorator';
 import { EditPasswordDto } from './dto/edit-password.dto';
 import { EmailDto } from './dto/email.dto';
@@ -115,86 +109,6 @@ export class UserController {
   }
 
   @Auth()
-  @HttpCode(HttpStatus.OK)
-  @Post('upload-avatar')
-  @UseInterceptors(
-    FileInterceptor('avatar', { dest: DEFAULT_FOLDER_FOR_FILES }),
-  )
-  async uploadAvatar(
-    @UploadedFile(imageValidator)
-    file: Express.Multer.File,
-    @User('_id') userId: Types.ObjectId,
-  ): Promise<ApiResponse<UserInfo>> {
-    return this.userService.uploadAvatar(file, userId);
-  }
-
-  @Auth()
-  @Delete('delete-avatar')
-  async deleteAvatar(
-    @User('_id') userId: Types.ObjectId,
-    @Query('avatarPublicId') avatarPublicId: string,
-  ): Promise<ApiResponse<UserInfo>> {
-    return this.userService.deleteAvatar(avatarPublicId, userId);
-  }
-
-  @Auth()
-  @Patch('select-avatar')
-  async selectAvatar(
-    @User('_id') userId: Types.ObjectId,
-    @Query('avatarPublicId') avatarPublicId: string,
-  ): Promise<ApiResponse<UserInfo>> {
-    return this.userService.selectAvatar(avatarPublicId, userId);
-  }
-
-  @Auth()
-  @Delete('delete-all-avatars')
-  async deleteAllAvatars(
-    @User('_id') userId: Types.ObjectId,
-  ): Promise<ApiResponse<UserInfo>> {
-    return this.userService.deleteAllAvatars(userId);
-  }
-
-  @Auth()
-  @HttpCode(HttpStatus.OK)
-  @Post('upload-poster')
-  @UseInterceptors(
-    FileInterceptor('poster', { dest: DEFAULT_FOLDER_FOR_FILES }),
-  )
-  async uploadPoster(
-    @UploadedFile(imageValidator)
-    file: Express.Multer.File,
-    @User('_id') userId: Types.ObjectId,
-  ): Promise<ApiResponse<UserInfo>> {
-    return this.userService.uploadPoster(file, userId);
-  }
-
-  @Auth()
-  @Delete('delete-poster')
-  async deletePoster(
-    @User('_id') userId: Types.ObjectId,
-    @Query('posterPublicId') posterPublicId: string,
-  ): Promise<ApiResponse<UserInfo>> {
-    return this.userService.deletePoster(posterPublicId, userId);
-  }
-
-  @Auth()
-  @Patch('select-poster')
-  async selectPoster(
-    @User('_id') userId: Types.ObjectId,
-    @Query('posterPublicId') posterPublicId: string,
-  ): Promise<ApiResponse<UserInfo>> {
-    return this.userService.selectPoster(posterPublicId, userId);
-  }
-
-  @Auth()
-  @Delete('delete-all-posters')
-  async deleteAllPosters(
-    @User('_id') userId: Types.ObjectId,
-  ): Promise<ApiResponse<UserInfo>> {
-    return this.userService.deleteAllPosters(userId);
-  }
-
-  @Auth()
   @Get('current-user')
   async getCurrentUser(
     @User('_id') userId: Types.ObjectId,
@@ -203,10 +117,10 @@ export class UserController {
   }
 
   @Auth()
-  @Delete('delete-profile')
-  async deleteProfile(
+  @Delete('remove-profile')
+  async removeProfile(
     @User('_id') userId: Types.ObjectId,
-  ): Promise<ApiResponse> {
-    return this.userService.deleteProfile(userId);
+  ): Promise<ApiResponse<UserInfo>> {
+    return this.userService.removeProfile(userId);
   }
 }

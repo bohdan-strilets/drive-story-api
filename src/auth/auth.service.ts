@@ -12,7 +12,7 @@ import { SendgridService } from 'src/sendgrid/sendgrid.service';
 import TokenName from 'src/token/enums/token-name.enum';
 import { TokenService } from 'src/token/token.service';
 import { Payload } from 'src/token/types/payload.type';
-import { sanitizeUserData } from 'src/user/helpers/sanitize-user-data';
+import { getSafeUserData } from 'src/user/helpers/get-safe-data';
 import { User, UserDocument } from 'src/user/schemes/user.schema';
 import { v4 } from 'uuid';
 import { AuthDto } from './dto/auth.dto';
@@ -60,9 +60,9 @@ export class AuthService {
   private async createAuthResponse(user: UserDocument): Promise<AuthResponse> {
     const payload = this.tokenService.createPayload(user);
     const tokens = await this.tokenService.createTokenPair(payload);
-    const sanitizedUser = sanitizeUserData(user);
+    const safeData = getSafeUserData(user);
 
-    return { user: sanitizedUser, tokens };
+    return { user: safeData, tokens };
   }
 
   async registration(
@@ -244,7 +244,7 @@ export class AuthService {
 
     const payload = this.tokenService.createPayload(user);
     const tokens = await this.tokenService.createTokenPair(payload);
-    const response = { user: sanitizeUserData(user), tokens };
+    const response = { user: getSafeUserData(user), tokens };
 
     return this.responseService.createSuccessResponse(
       user.isNew ? HttpStatus.CREATED : HttpStatus.OK,

@@ -24,4 +24,5 @@ export const errorMessages = {
   MAINTENANCE_NOT_FOUND: 'Maintenance with the current ID was not found.',
   DO_NOT_HAVE_ACCESS_RIGHT: 'You do not have access rights.',
   IMAGE_NOT_FOUND: 'The image was not found.',
+  EMAIL_ALREADY: 'Email already.',
 };

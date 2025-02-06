@@ -7,6 +7,7 @@ import { SendgridModule } from 'src/sendgrid/sendgrid.module';
 import { TokenModule } from 'src/token/token.module';
 import { User, UserSchema } from './schemes/user.schema';
 import { UserController } from './user.controller';
+import { UserRepository } from './user.repository';
 import { UserService } from './user.service';
 
 @Module({
@@ -19,6 +20,7 @@ import { UserService } from './user.service';
     TokenModule,
   ],
   controllers: [UserController],
-  providers: [UserService],
+  providers: [UserService, UserRepository],
+  exports: [UserRepository],
 })
 export class UserModule {}

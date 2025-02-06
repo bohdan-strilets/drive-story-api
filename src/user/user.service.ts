@@ -1,17 +1,12 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
-import { CloudinaryFolders } from 'src/cloudinary/helpers/cloudinary-folders';
-import { defaultImages } from 'src/cloudinary/helpers/default-images';
-import { AppError } from 'src/error/app-error';
-import { errorMessages } from 'src/error/helpers/error-messages';
 import { PasswordService } from 'src/password/password.service';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { SendgridService } from 'src/sendgrid/sendgrid.service';
 import { TokenService } from 'src/token/token.service';
-import { sanitizeUserData } from 'src/user/helpers/sanitize-user-data';
+import { getSafeUserData } from 'src/user/helpers/get-safe-data';
 import { v4 } from 'uuid';
 import { EditPasswordDto } from './dto/edit-password.dto';
 import { EmailDto } from './dto/email.dto';
@@ -19,6 +14,7 @@ import { ProfileDto } from './dto/profile.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { User, UserDocument } from './schemes/user.schema';
 import { UserInfo } from './types/user-info';
+import { UserRepository } from './user.repository';
 
 @Injectable()
 export class UserService {
@@ -26,49 +22,30 @@ export class UserService {
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     private readonly sendgridService: SendgridService,
     private readonly passwordService: PasswordService,
-    private readonly cloudinaryService: CloudinaryService,
     private readonly responseService: ResponseService,
     private readonly tokenService: TokenService,
+    private readonly userRepository: UserRepository,
   ) {}
 
-  private async updateActivationStatus(
-    userId: Types.ObjectId,
-    activationToken: string | null = null,
-    isActivated: boolean = true,
-  ): Promise<UserDocument> {
-    const options = { activationToken, isActivated };
-    return await this.userModel.findByIdAndUpdate(userId, options, {
-      new: true,
-    });
-  }
-
   async activationEmail(activationToken: string): Promise<ApiResponse> {
-    const user = await this.userModel.findOne({ activationToken });
+    const user = await this.userRepository.findUser(
+      'activationToken',
+      activationToken,
+    );
 
-    if (!user) {
-      throw new AppError(
-        HttpStatus.NOT_FOUND,
-        errorMessages.ACTIVATION_TOKEN_ERROR,
-      );
-    }
-
-    await this.updateActivationStatus(user._id);
+    await this.userRepository.setActivationStatus(user._id);
     return this.responseService.createSuccessResponse(HttpStatus.OK);
   }
 
   async requestActivationEmailResend(dto: EmailDto): Promise<ApiResponse> {
     const { email } = dto;
 
-    const user = await this.userModel.findOne({ email });
-    const activationToken = v4();
+    const user = await this.userRepository.findUser('email', email);
+    const newActivationToken = v4();
 
-    if (!user) {
-      throw new AppError(HttpStatus.NOT_FOUND, errorMessages.USER_NOT_FOUND);
-    }
-
-    const updatedUser = await this.updateActivationStatus(
+    const updatedUser = await this.userRepository.setActivationStatus(
       user._id,
-      activationToken,
+      newActivationToken,
       false,
     );
 
@@ -80,21 +57,11 @@ export class UserService {
     return this.responseService.createSuccessResponse(HttpStatus.OK);
   }
 
-  private async updateUserById(
-    userId: Types.ObjectId,
-    dto: any,
-  ): Promise<UserInfo> {
-    const updatedUser = await this.userModel.findByIdAndUpdate(userId, dto, {
-      new: true,
-    });
-    return sanitizeUserData(updatedUser);
-  }
-
   async editProfile(
     userId: Types.ObjectId,
     dto: ProfileDto,
   ): Promise<ApiResponse<UserInfo>> {
-    const updatedUser = await this.updateUserById(userId, dto);
+    const updatedUser = await this.userRepository.updateUserById(userId, dto);
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
       updatedUser,
@@ -106,12 +73,16 @@ export class UserService {
     dto: EmailDto,
   ): Promise<ApiResponse<UserInfo>> {
     const { email } = dto;
+    await this.userRepository.findUser('email', email);
 
     const activationToken = v4();
     await this.sendgridService.sendConfirmEmailLetter(email, activationToken);
 
-    const emailDto = { email, activationToken, isActivated: false };
-    const updatedUser = await this.updateUserById(userId, emailDto);
+    const emailData = { email, activationToken, isActivated: false };
+    const updatedUser = await this.userRepository.updateUserById(
+      userId,
+      emailData,
+    );
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
@@ -119,28 +90,19 @@ export class UserService {
     );
   }
 
-  private isValidUser(user: UserDocument): void {
-    if (!user) {
-      throw new AppError(HttpStatus.NOT_FOUND, errorMessages.USER_NOT_FOUND);
-    }
-  }
-
   async requestResetPassword(dto: EmailDto): Promise<ApiResponse> {
     const { email } = dto;
-    const user = await this.userModel.findOne({ email });
-    this.isValidUser(user);
+    const user = await this.userRepository.findUser('email', email);
 
     const resetToken = v4();
-    await this.updateUserById(user._id, { resetToken });
+    await this.userRepository.updateUserById(user._id, { resetToken });
     await this.sendgridService.sendPasswordResetEmail(user.email, resetToken);
 
     return this.responseService.createSuccessResponse(HttpStatus.OK);
   }
 
   async verifyResetToken(resetToken: string): Promise<ApiResponse> {
-    const user = await this.userModel.findOne({ resetToken });
-    this.isValidUser(user);
-
+    await this.userRepository.findUser('resetToken', resetToken);
     return this.responseService.createSuccessResponse(HttpStatus.OK);
   }
 
@@ -148,14 +110,13 @@ export class UserService {
     dto: ResetPasswordDto,
     resetToken: string,
   ): Promise<ApiResponse> {
-    const user = await this.userModel.findOne({ resetToken });
-    this.isValidUser(user);
+    const user = await this.userRepository.findUser('resetToken', resetToken);
 
     const { password } = dto;
     const hashPassword = await this.passwordService.createPassword(password);
 
     const passwordDto = { password: hashPassword, resetToken: null };
-    await this.updateUserById(user._id, passwordDto);
+    await this.userRepository.updateUserById(user._id, passwordDto);
 
     await this.sendgridService.sendPasswordChangedSuccess(user.email);
 
@@ -166,237 +127,48 @@ export class UserService {
     dto: EditPasswordDto,
     userId: Types.ObjectId,
   ): Promise<ApiResponse> {
-    const user = await this.userModel.findById(userId);
-    const isValidPassword = await this.passwordService.checkPassword(
-      dto.password,
-      user.password,
-    );
-
-    if (!user || !isValidPassword) {
-      throw new AppError(
-        HttpStatus.UNAUTHORIZED,
-        errorMessages.USER_NOT_AUTHORIZED,
-      );
-    }
+    const user = await this.userRepository.findUser('_id', userId);
+    await this.passwordService.isValidPassword(dto.password, user.password);
 
     const hashPassword = await this.passwordService.createPassword(
       dto.newPassword,
     );
 
-    const passwordDto = { password: hashPassword };
-    await this.updateUserById(userId, passwordDto);
+    const passwordData = { password: hashPassword };
+    await this.userRepository.updateUserById(userId, passwordData);
     await this.sendgridService.sendPasswordChangedSuccess(user.email);
 
     return this.responseService.createSuccessResponse(HttpStatus.OK);
   }
 
-  async uploadAvatar(
-    file: Express.Multer.File,
-    userId: Types.ObjectId,
-  ): Promise<ApiResponse<UserInfo>> {
-    const updatedUser =
-      await this.cloudinaryService.uploadFileAndUpdateModel<UserDocument>(
-        file,
-        {
-          model: this.userModel,
-          modelId: userId,
-          folderPath: CloudinaryFolders.USER_AVATAR,
-          fieldToUpdate: 'avatars.resources',
-        },
-      );
-
-    const sanitizedUser = sanitizeUserData(updatedUser);
-    return this.responseService.createSuccessResponse(
-      HttpStatus.OK,
-      sanitizedUser,
-    );
-  }
-
-  async deleteAvatar(
-    avatarPublicId: string,
-    userId: Types.ObjectId,
-  ): Promise<ApiResponse<UserInfo>> {
-    const updatedUser =
-      await this.cloudinaryService.deleteFileAndUpdateModel<UserDocument>({
-        model: this.userModel,
-        publicId: avatarPublicId,
-        modelId: userId,
-        fieldToUpdate: 'avatars.resources',
-      });
-
-    const sanitizedUser = sanitizeUserData(updatedUser);
-    return this.responseService.createSuccessResponse(
-      HttpStatus.OK,
-      sanitizedUser,
-    );
-  }
-
-  async selectAvatar(
-    avatarPublicId: string,
-    userId: Types.ObjectId,
-  ): Promise<ApiResponse<UserInfo>> {
-    const updatedUser =
-      await this.cloudinaryService.changeSelectedFileAndUpdateModel<UserDocument>(
-        {
-          model: this.userModel,
-          publicId: avatarPublicId,
-          modelId: userId,
-          fieldToUpdate: 'avatars.selected',
-          resourcesPath: 'avatars.resources',
-        },
-      );
-
-    const sanitizedUser = sanitizeUserData(updatedUser);
-    return this.responseService.createSuccessResponse(
-      HttpStatus.OK,
-      sanitizedUser,
-    );
-  }
-
-  private async removedFilesAndFolder(filesArr: string[]) {
-    if (filesArr.length > 0) {
-      const folderPath = this.cloudinaryService.getFolderPath(filesArr[0]);
-      await this.cloudinaryService.deleteFilesAndFolder(folderPath);
-    } else {
-      throw new AppError(
-        HttpStatus.BAD_REQUEST,
-        errorMessages.NOT_FILES_TO_DELETE,
-      );
-    }
-  }
-
-  async deleteAllAvatars(
-    userId: Types.ObjectId,
-  ): Promise<ApiResponse<UserInfo>> {
-    const user = await this.userModel.findById(userId);
-    this.isValidUser(user);
-
-    const allAvatars = user.avatars.resources;
-    await this.removedFilesAndFolder(allAvatars);
-
-    const dto = {
-      $set: {
-        'avatars.resources': [],
-        'avatars.selected': defaultImages.USER_AVATAR,
-      },
-    };
-
-    const updatedUser = await this.updateUserById(userId, dto);
-
-    return this.responseService.createSuccessResponse(
-      HttpStatus.OK,
-      updatedUser,
-    );
-  }
-
-  async uploadPoster(
-    file: Express.Multer.File,
-    userId: Types.ObjectId,
-  ): Promise<ApiResponse<UserInfo>> {
-    const updatedUser =
-      await this.cloudinaryService.uploadFileAndUpdateModel<UserDocument>(
-        file,
-        {
-          model: this.userModel,
-          modelId: userId,
-          folderPath: CloudinaryFolders.USER_POSTER,
-          fieldToUpdate: 'posters.resources',
-        },
-      );
-
-    const sanitizedUser = sanitizeUserData(updatedUser);
-    return this.responseService.createSuccessResponse(
-      HttpStatus.OK,
-      sanitizedUser,
-    );
-  }
-
-  async deletePoster(
-    posterPublicId: string,
-    userId: Types.ObjectId,
-  ): Promise<ApiResponse<UserInfo>> {
-    const updatedUser =
-      await this.cloudinaryService.deleteFileAndUpdateModel<UserDocument>({
-        model: this.userModel,
-        publicId: posterPublicId,
-        modelId: userId,
-        fieldToUpdate: 'posters.resources',
-      });
-
-    const sanitizedUser = sanitizeUserData(updatedUser);
-    return this.responseService.createSuccessResponse(
-      HttpStatus.OK,
-      sanitizedUser,
-    );
-  }
-
-  async selectPoster(
-    posterPublicId: string,
-    userId: Types.ObjectId,
-  ): Promise<ApiResponse<UserInfo>> {
-    const updatedUser =
-      await this.cloudinaryService.changeSelectedFileAndUpdateModel<UserDocument>(
-        {
-          model: this.userModel,
-          publicId: posterPublicId,
-          modelId: userId,
-          fieldToUpdate: 'posters.selected',
-          resourcesPath: 'posters.resources',
-        },
-      );
-
-    const sanitizedUser = sanitizeUserData(updatedUser);
-    return this.responseService.createSuccessResponse(
-      HttpStatus.OK,
-      sanitizedUser,
-    );
-  }
-
-  async deleteAllPosters(
-    userId: Types.ObjectId,
-  ): Promise<ApiResponse<UserInfo>> {
-    const user = await this.userModel.findById(userId);
-    this.isValidUser(user);
-
-    const allPosters = user.posters.resources;
-    await this.removedFilesAndFolder(allPosters);
-
-    const dto = {
-      $set: {
-        'posters.resources': [],
-        'posters.selected': defaultImages.USER_POSTER,
-      },
-    };
-
-    const updatedUser = await this.updateUserById(userId, dto);
-
-    return this.responseService.createSuccessResponse(
-      HttpStatus.OK,
-      updatedUser,
-    );
-  }
-
   async getCurrentUser(userId: Types.ObjectId): Promise<ApiResponse<UserInfo>> {
-    const user = await this.userModel.findById(userId);
-    this.isValidUser(user);
-    const sanitizedUser = sanitizeUserData(user);
+    const user = await this.userRepository.findUser('_id', userId);
+    const safeData = getSafeUserData(user);
 
-    return this.responseService.createSuccessResponse(
-      HttpStatus.OK,
-      sanitizedUser,
-    );
+    return this.responseService.createSuccessResponse(HttpStatus.OK, safeData);
   }
 
-  async deleteProfile(userId: Types.ObjectId): Promise<ApiResponse> {
-    const user = await this.userModel.findById(userId);
-    this.isValidUser(user);
+  async removeProfile(userId: Types.ObjectId): Promise<ApiResponse<UserInfo>> {
+    const session = await this.userModel.db.startSession();
+    session.startTransaction();
 
-    await this.removedFilesAndFolder(user.avatars.resources);
-    await this.removedFilesAndFolder(user.posters.resources);
+    try {
+      await this.userRepository.findUser('_id', userId);
+      const deletedUser = await this.userModel.findByIdAndDelete(userId);
+      await this.tokenService.deleteTokensByDb(new Types.ObjectId(userId));
 
-    await this.userModel.findByIdAndDelete(userId);
-    await this.tokenService.deleteTokensByDb(new Types.ObjectId(userId));
+      await session.commitTransaction();
+      session.endSession();
 
-    return this.responseService.createSuccessResponse(HttpStatus.OK);
+      const safeData = getSafeUserData(deletedUser);
+      return this.responseService.createSuccessResponse(
+        HttpStatus.OK,
+        safeData,
+      );
+    } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
+      throw error;
+    }
   }
 }

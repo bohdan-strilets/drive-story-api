@@ -2,7 +2,7 @@ import { HttpStatus } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { AppError } from 'src/error/app-error';
-import { errorMessages } from 'src/error/helpers/error-messages';
+import { errorMessages } from 'src/error/helpers/error-messages.helper';
 import { getSafeUserData } from './helpers/get-safe-data';
 import { User, UserDocument } from './schemes/user.schema';
 import { UserInfo } from './types/user-info';

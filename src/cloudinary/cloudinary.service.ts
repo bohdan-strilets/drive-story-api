@@ -1,24 +1,19 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { UploadApiResponse, v2 } from 'cloudinary';
-import * as fs from 'fs';
-import { Document, Types } from 'mongoose';
 import { AppError } from 'src/error/app-error';
-import { errorMessages } from 'src/error/helpers/error-messages';
-import { ResponseService } from 'src/response/response.service';
+import { errorMessages } from 'src/error/helpers/error-messages.helper';
 import { FileType } from './enums/file-type.enum';
-import { DeleteOptions } from './types/delete-options.type';
-import { SelectFileOptions } from './types/select-options.type';
-import { UploadOptions } from './types/upload-options.type';
 
 @Injectable()
 export class CloudinaryService {
-  private cloudinary = v2;
+  private readonly cloudinary = v2;
 
-  constructor(private readonly responseService: ResponseService) {
+  constructor(private readonly configService: ConfigService) {
     this.cloudinary.config({
-      cloud_name: process.env.CLOUD_NAME,
-      api_key: process.env.CLOUD_API_KEY,
-      api_secret: process.env.CLOUD_API_SECRET,
+      cloud_name: this.configService.get<string>('CLOUD_NAME'),
+      api_key: this.configService.get<string>('CLOUD_API_KEY'),
+      api_secret: this.configService.get<string>('CLOUD_API_SECRET'),
     });
   }
 
@@ -26,243 +21,115 @@ export class CloudinaryService {
     file: Express.Multer.File,
     fileType: FileType,
     folderPath: string,
-  ): Promise<string | null> {
-    const uploadOptions = { folder: folderPath, resource_type: fileType };
-
+  ): Promise<string> {
     try {
-      const uploadResult = await this.cloudinary.uploader.upload(
+      const options = { folder: folderPath, resource_type: fileType };
+      const response = await this.cloudinary.uploader.upload(
         file.path,
-        uploadOptions,
+        options,
       );
 
-      return uploadResult.secure_url;
+      return response.secure_url;
     } catch (error) {
-      console.error('Error uploading file to Cloudinary:', error);
-      return null;
+      const code = (error.httpStatus as number) || HttpStatus.BAD_REQUEST;
+      const message = error.message || errorMessages.FILE_UPLOAD_ERROR;
+      throw new AppError(code, message);
     }
   }
 
   getFolderPath(url: string): string {
     if (!url || typeof url !== 'string') {
-      throw new AppError(HttpStatus.BAD_REQUEST, 'Invalid URL provided');
+      throw new AppError(HttpStatus.BAD_REQUEST, errorMessages.INVALID_URL);
     }
 
-    const segments = url.split('/');
+    try {
+      const parsedUrl = new URL(url);
+      const segments = parsedUrl.pathname.split('/').filter(Boolean);
 
-    if (segments.length < 8) {
+      if (segments.length < 2) {
+        throw new AppError(
+          HttpStatus.BAD_REQUEST,
+          errorMessages.INSUFFICIENT_URL_SEGMENTS,
+        );
+      }
+
+      segments.pop();
+      return segments.slice(4, segments.length).join('/');
+    } catch (error) {
       throw new AppError(
         HttpStatus.BAD_REQUEST,
-        'URL does not contain enough segments to extract folder path',
+        error.message || errorMessages.INVALID_URL,
       );
     }
-
-    const folderSegments = segments.slice(7, segments.length - 1);
-    return folderSegments.join('/');
   }
 
   async deleteFile(publicId: string, fileType: FileType): Promise<void> {
-    const deleteOptions = { resource_type: fileType, invalidate: true };
-
     try {
-      await this.cloudinary.uploader.destroy(publicId, deleteOptions);
-      console.log(
-        `File with publicId "${publicId}" has been successfully deleted.`,
-      );
+      const options = { resource_type: fileType, invalidate: true };
+      await this.cloudinary.uploader.destroy(publicId, options);
     } catch (error) {
-      throw new AppError(
-        HttpStatus.NOT_FOUND,
-        `Failed to delete file. PublicId: "${publicId}". Error: ${error}`,
-      );
+      const code = (error.httpStatus as number) || HttpStatus.NOT_FOUND;
+      const message = error.message || errorMessages.FILE_DELETE_ERROR;
+      throw new AppError(code, message);
     }
   }
 
   async deleteFolder(folderPath: string): Promise<void> {
     try {
       await this.cloudinary.api.delete_folder(folderPath);
-      console.log(`Folder "${folderPath}" has been successfully deleted.`);
     } catch (error) {
-      throw new AppError(
-        HttpStatus.NOT_FOUND,
-        `Failed to delete folder. Folder path: "${folderPath}". Error: ${error}`,
-      );
+      const code = (error.httpStatus as number) || HttpStatus.NOT_FOUND;
+      const message = error.message || errorMessages.FOLDER_DELETE_ERROR;
+      throw new AppError(code, message);
     }
+  }
+
+  async deleteAllFiles(files: string[]): Promise<void> {
+    await Promise.all(
+      files.map(async (publicId: string) => {
+        try {
+          await this.deleteFile(publicId, FileType.IMAGE);
+        } catch (error) {
+          const code =
+            (error.httpStatus as number) || HttpStatus.INTERNAL_SERVER_ERROR;
+          const message = error.message || errorMessages.FILE_DELETE_ERROR;
+          throw new AppError(code, message);
+        }
+      }),
+    );
   }
 
   async deleteFilesAndFolder(folderPath: string): Promise<void> {
     if (!folderPath) {
-      throw new AppError(HttpStatus.BAD_REQUEST, 'Folder path is required.');
+      throw new AppError(
+        HttpStatus.BAD_REQUEST,
+        errorMessages.FOLDER_PATH_REQUIRED,
+      );
     }
 
     try {
-      const folderResult = await this.cloudinary.api.resources({
+      const folderByCloudinary = await this.cloudinary.api.resources({
         type: 'upload',
         prefix: folderPath,
       });
 
-      const publicIds = folderResult.resources.map(
+      const publicIds: string[] = folderByCloudinary.resources.map(
         (file: UploadApiResponse) => file.public_id,
       );
 
       if (publicIds.length === 0) {
-        console.log(`No files found in folder "${folderPath}".`);
-      } else {
-        await Promise.all(
-          publicIds.map(async (publicId: string) => {
-            try {
-              await this.deleteFile(publicId, FileType.IMAGE);
-              console.log(
-                `File with publicId "${publicId}" has been successfully deleted.`,
-              );
-            } catch (error) {
-              console.error(
-                `Failed to delete file with publicId "${publicId}":`,
-                error,
-              );
-            }
-          }),
+        throw new AppError(
+          HttpStatus.NOT_FOUND,
+          errorMessages.NO_FILES_IN_FOLDER,
         );
       }
 
+      await this.deleteAllFiles(publicIds);
       await this.deleteFolder(folderPath);
-      console.log(`Folder "${folderPath}" has been successfully deleted.`);
     } catch (error) {
-      throw new AppError(
-        HttpStatus.BAD_REQUEST,
-        `Error deleting files and folder at path "${folderPath}". Error: ${error}`,
-      );
+      const code = (error.httpStatus as number) || HttpStatus.BAD_REQUEST;
+      const message = error.message || errorMessages.FILE_FOLDER_DELETE_ERROR;
+      throw new AppError(code, message);
     }
-  }
-
-  getNestedProperty(obj: any, path: string): string[] {
-    return path.split('.').reduce((current, key) => current?.[key], obj);
-  }
-
-  private isValidEntity(entity: any): void {
-    if (!entity) {
-      throw new AppError(HttpStatus.NOT_FOUND, errorMessages.ENTITY_NOT_FOUND);
-    }
-  }
-
-  private cleanupFile(filePath: string) {
-    try {
-      fs.unlinkSync(filePath);
-    } catch (unlinkError) {
-      console.error('Error removing file:', unlinkError);
-    }
-  }
-
-  private async updateEntity(
-    model: any,
-    modelId: Types.ObjectId,
-    fieldToUpdate: string,
-    dto: string[] | string,
-  ) {
-    try {
-      return await model.findByIdAndUpdate(
-        modelId,
-        { $set: { [fieldToUpdate]: dto } },
-        { new: true },
-      );
-    } catch (updateError) {
-      console.error('Error updating entity:', updateError);
-      throw new AppError(
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessages.ENTITY_UPDATE_FAILED,
-      );
-    }
-  }
-
-  private removeByPublicId(arr: string[], publicId: string): string[] {
-    return arr.filter((item: string) => !item.includes(publicId));
-  }
-
-  async uploadFileAndUpdateModel<T extends Document>(
-    file: Express.Multer.File,
-    options: UploadOptions<T>,
-  ): Promise<T> {
-    const { model, modelId, folderPath, fieldToUpdate } = options;
-    const entity = await model.findById(modelId);
-    this.isValidEntity(entity);
-
-    const filePath = `${folderPath}${modelId}`;
-    let uploadedImage: string | null = null;
-
-    try {
-      uploadedImage = await this.uploadFile(file, FileType.IMAGE, filePath);
-    } catch (uploadError) {
-      console.error('Error uploading file:', uploadError);
-      throw new AppError(
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessages.FILE_UPLOAD_FAILED,
-      );
-    }
-
-    const images: string[] = this.getNestedProperty(entity, fieldToUpdate);
-
-    this.cleanupFile(file.path);
-    if (uploadedImage) images.push(uploadedImage);
-
-    return await this.updateEntity(model, modelId, fieldToUpdate, images);
-  }
-
-  async deleteFileAndUpdateModel<T extends Document>(
-    options: DeleteOptions<T>,
-  ): Promise<T> {
-    const { model, modelId, publicId, fieldToUpdate } = options;
-    const entity = await model.findById(modelId);
-    this.isValidEntity(entity);
-
-    try {
-      await this.deleteFile(publicId, FileType.IMAGE);
-    } catch (error) {
-      console.error('Error deleting file from storage:', error);
-      throw new AppError(
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessages.FILE_DELETE_FAILED,
-      );
-    }
-
-    const images: string[] = this.getNestedProperty(entity, fieldToUpdate);
-    const filteredImages = this.removeByPublicId(images, publicId);
-
-    return await this.updateEntity(
-      model,
-      modelId,
-      fieldToUpdate,
-      filteredImages,
-    );
-  }
-
-  private findFileByResources(arr: string[], publicId: string): string {
-    return arr.find((item) => item.includes(publicId));
-  }
-
-  private isValidSelectedFile(selectedAvatar: string): void {
-    if (!selectedAvatar) {
-      throw new AppError(
-        HttpStatus.BAD_REQUEST,
-        errorMessages.FILE_NON_EXISTENT,
-      );
-    }
-  }
-
-  async changeSelectedFileAndUpdateModel<T extends Document>(
-    options: SelectFileOptions<T>,
-  ): Promise<T> {
-    const { model, publicId, modelId, fieldToUpdate, resourcesPath } = options;
-    const entity = await model.findById(modelId);
-    this.isValidEntity(entity);
-
-    const images: string[] = this.getNestedProperty(entity, resourcesPath);
-
-    const selectedPoster = this.findFileByResources(images, publicId);
-    this.isValidSelectedFile(selectedPoster);
-
-    return await this.updateEntity(
-      model,
-      modelId,
-      fieldToUpdate,
-      selectedPoster,
-    );
   }
 }

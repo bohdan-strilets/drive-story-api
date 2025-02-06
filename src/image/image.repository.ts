@@ -6,7 +6,7 @@ import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { FileType } from 'src/cloudinary/enums/file-type.enum';
 import { defaultImages } from 'src/cloudinary/helpers/default-images';
 import { AppError } from 'src/error/app-error';
-import { errorMessages } from 'src/error/helpers/error-messages';
+import { errorMessages } from 'src/error/helpers/error-messages.helper';
 import { MaintenanceRepository } from 'src/maintenance/maintenance.repository';
 import { UserRepository } from 'src/user/user.repository';
 import { EntityType } from './enums/entity-type.enum';
@@ -115,10 +115,7 @@ export class ImageRepository {
         break;
 
       default:
-        throw new AppError(
-          HttpStatus.BAD_REQUEST,
-          errorMessages.ENTITY_NOT_FOUND,
-        );
+        throw new AppError(HttpStatus.BAD_REQUEST, errorMessages.NOT_FOUND);
     }
   }
 
@@ -151,10 +148,7 @@ export class ImageRepository {
     const imageUrl = imageUrls.find((item) => item.includes(publicId));
 
     if (!imageUrl) {
-      throw new AppError(
-        HttpStatus.BAD_REQUEST,
-        errorMessages.FILE_NON_EXISTENT,
-      );
+      throw new AppError(HttpStatus.BAD_REQUEST, errorMessages.FILE_NOT_EXIST);
     }
 
     return imageUrl;
@@ -175,7 +169,7 @@ export class ImageRepository {
     } else {
       throw new AppError(
         HttpStatus.BAD_REQUEST,
-        errorMessages.NOT_FILES_TO_DELETE,
+        errorMessages.NO_FILES_TO_DELETE,
       );
     }
   }

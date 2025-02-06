@@ -2,7 +2,7 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { AppError } from 'src/error/app-error';
-import { errorMessages } from 'src/error/helpers/error-messages';
+import { errorMessages } from 'src/error/helpers/error-messages.helper';
 import { Car, CarDocument } from './schemas/car.schema';
 
 @Injectable()
@@ -23,10 +23,7 @@ export class CarRepository {
 
   checkAccessRights(firstId: Types.ObjectId, secondId: Types.ObjectId): void {
     if (!firstId.equals(secondId)) {
-      throw new AppError(
-        HttpStatus.FORBIDDEN,
-        errorMessages.DO_NOT_HAVE_ACCESS_RIGHT,
-      );
+      throw new AppError(HttpStatus.FORBIDDEN, errorMessages.NO_ACCESS);
     }
   }
 

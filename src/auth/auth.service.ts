@@ -4,7 +4,7 @@ import { OAuth2Client, TokenPayload } from 'google-auth-library';
 import { Model } from 'mongoose';
 import { defaultImages } from 'src/cloudinary/helpers/default-images';
 import { AppError } from 'src/error/app-error';
-import { errorMessages } from 'src/error/helpers/error-messages';
+import { errorMessages } from 'src/error/helpers/error-messages.helper';
 import { PasswordService } from 'src/password/password.service';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
@@ -73,7 +73,7 @@ export class AuthService {
     const userExists = await this.userModel.findOne({ email });
 
     if (userExists) {
-      throw new AppError(HttpStatus.CONFLICT, errorMessages.EMAIL_IN_USE_ERROR);
+      throw new AppError(HttpStatus.CONFLICT, errorMessages.EMAIL_EXISTS);
     }
 
     const createdUser = await this.createUser(email, password);
@@ -98,14 +98,14 @@ export class AuthService {
     if (!isPasswordValid) {
       throw new AppError(
         HttpStatus.BAD_REQUEST,
-        errorMessages.INVALID_PASSWORD_ERROR,
+        errorMessages.INVALID_PASSWORD,
       );
     }
 
     if (!user.isActivated) {
       throw new AppError(
         HttpStatus.BAD_REQUEST,
-        errorMessages.INVALID_PASSWORD_ERROR,
+        errorMessages.EMAIL_NOT_ACTIVATED,
       );
     }
   }
@@ -115,10 +115,7 @@ export class AuthService {
     const user = await this.userModel.findOne({ email });
 
     if (!user) {
-      throw new AppError(
-        HttpStatus.BAD_REQUEST,
-        errorMessages.INVALID_EMAIL_ERROR,
-      );
+      throw new AppError(HttpStatus.BAD_REQUEST, errorMessages.INVALID_EMAIL);
     }
 
     await this.userValidation(user, password);
@@ -141,7 +138,7 @@ export class AuthService {
     if (!payload || !tokenFromDb) {
       throw new AppError(
         HttpStatus.UNAUTHORIZED,
-        errorMessages.USER_NOT_AUTHORIZED,
+        errorMessages.UNAUTHORIZED_USER,
       );
     }
 
@@ -152,7 +149,7 @@ export class AuthService {
     if (!refreshToken) {
       throw new AppError(
         HttpStatus.UNAUTHORIZED,
-        errorMessages.USER_NOT_AUTHORIZED,
+        errorMessages.UNAUTHORIZED_USER,
       );
     }
 
@@ -168,7 +165,7 @@ export class AuthService {
     if (!refreshToken) {
       throw new AppError(
         HttpStatus.UNAUTHORIZED,
-        errorMessages.USER_NOT_AUTHORIZED,
+        errorMessages.UNAUTHORIZED_USER,
       );
     }
 

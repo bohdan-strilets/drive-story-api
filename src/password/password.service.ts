@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { compare, hash } from 'bcryptjs';
 import { AppError } from 'src/error/app-error';
-import { errorMessages } from 'src/error/helpers/error-messages';
+import { errorMessages } from 'src/error/helpers/error-messages.helper';
 
 @Injectable()
 export class PasswordService {
@@ -27,7 +27,7 @@ export class PasswordService {
     if (!isValidPassword) {
       throw new AppError(
         HttpStatus.UNAUTHORIZED,
-        errorMessages.USER_NOT_AUTHORIZED,
+        errorMessages.UNAUTHORIZED_USER,
       );
     }
   }

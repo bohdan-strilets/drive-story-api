@@ -4,7 +4,9 @@ import { CarModule } from 'src/car/car.module';
 import { CloudinaryModule } from 'src/cloudinary/cloudinary.module';
 import { MaintenanceModule } from 'src/maintenance/maintenance.module';
 import { ResponseModule } from 'src/response/response.module';
+import { UserModule } from 'src/user/user.module';
 import { ImageController } from './image.controller';
+import { ImageRepository } from './image.repository';
 import { ImageService } from './image.service';
 import { Image, ImageSchema } from './schemas/image.schema';
 
@@ -15,8 +17,9 @@ import { Image, ImageSchema } from './schemas/image.schema';
     ResponseModule,
     MaintenanceModule,
     CarModule,
+    UserModule,
   ],
   controllers: [ImageController],
-  providers: [ImageService],
+  providers: [ImageService, ImageRepository],
 })
 export class ImageModule {}

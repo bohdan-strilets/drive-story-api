@@ -1,8 +1,6 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
-import { CloudinaryFolders } from 'src/cloudinary/helpers/cloudinary-folders';
 import { defaultImages } from 'src/cloudinary/helpers/default-images';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
@@ -15,7 +13,6 @@ export class CarService {
   constructor(
     @InjectModel(Car.name) private carModel: Model<CarDocument>,
     private readonly responseService: ResponseService,
-    private readonly cloudinaryService: CloudinaryService,
     private readonly carRepository: CarRepository,
   ) {}
 
@@ -88,62 +85,5 @@ export class CarService {
       .limit(limit);
 
     return this.responseService.createSuccessResponse(HttpStatus.OK, cars);
-  }
-
-  async uploadImage(
-    file: Express.Multer.File,
-    carId: Types.ObjectId,
-  ): Promise<ApiResponse<CarDocument>> {
-    const updatedCar =
-      await this.cloudinaryService.uploadFileAndUpdateModel<CarDocument>(file, {
-        model: this.carModel,
-        modelId: carId,
-        folderPath: CloudinaryFolders.CAR_PHOTO,
-        fieldToUpdate: 'images.resources',
-      });
-
-    return this.responseService.createSuccessResponse(
-      HttpStatus.OK,
-      updatedCar,
-    );
-  }
-
-  async deleteImage(
-    photoPublicId: string,
-    carId: Types.ObjectId,
-  ): Promise<ApiResponse<CarDocument>> {
-    const updatedCar =
-      await this.cloudinaryService.deleteFileAndUpdateModel<CarDocument>({
-        model: this.carModel,
-        publicId: photoPublicId,
-        modelId: carId,
-        fieldToUpdate: 'images.resources',
-      });
-
-    return this.responseService.createSuccessResponse(
-      HttpStatus.OK,
-      updatedCar,
-    );
-  }
-
-  async selectImage(
-    photoPublicId: string,
-    carId: Types.ObjectId,
-  ): Promise<ApiResponse<CarDocument>> {
-    const updatedCar =
-      await this.cloudinaryService.changeSelectedFileAndUpdateModel<CarDocument>(
-        {
-          model: this.carModel,
-          publicId: photoPublicId,
-          modelId: carId,
-          fieldToUpdate: 'images.selected',
-          resourcesPath: 'images.resources',
-        },
-      );
-
-    return this.responseService.createSuccessResponse(
-      HttpStatus.OK,
-      updatedCar,
-    );
   }
 }

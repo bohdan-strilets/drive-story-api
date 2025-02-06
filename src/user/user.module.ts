@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { CloudinaryModule } from 'src/cloudinary/cloudinary.module';
 import { PasswordModule } from 'src/password/password.module';
 import { ResponseModule } from 'src/response/response.module';
 import { SendgridModule } from 'src/sendgrid/sendgrid.module';
@@ -15,7 +14,6 @@ import { UserService } from './user.service';
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
     SendgridModule,
     PasswordModule,
-    CloudinaryModule,
     ResponseModule,
     TokenModule,
   ],

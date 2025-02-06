@@ -3,20 +3,13 @@ import {
   Controller,
   Delete,
   Get,
-  HttpCode,
-  HttpStatus,
   Param,
   Patch,
   Post,
   Query,
-  UploadedFile,
-  UseInterceptors,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
 import { Types } from 'mongoose';
 import { Auth } from 'src/auth/decorators/auth.decorator';
-import { DEFAULT_FOLDER_FOR_FILES } from 'src/cloudinary/helpers/default-file-folder';
-import { imageValidator } from 'src/cloudinary/pipes/image-validator.pipe';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { User } from 'src/user/decorators/user.decorator';
 import { CarService } from './car.service';
@@ -69,32 +62,5 @@ export class CarController {
     @Query('limit') limit: number = 10,
   ): Promise<ApiResponse<CarDocument[]>> {
     return this.carService.all(userId, page, limit);
-  }
-
-  @HttpCode(HttpStatus.OK)
-  @Post('upload-image/:carId')
-  @UseInterceptors(FileInterceptor('photo', { dest: DEFAULT_FOLDER_FOR_FILES }))
-  async uploadImage(
-    @UploadedFile(imageValidator)
-    file: Express.Multer.File,
-    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
-  ): Promise<ApiResponse<CarDocument>> {
-    return this.carService.uploadImage(file, carId);
-  }
-
-  @Delete('delete-image/:carId')
-  async deleteImage(
-    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
-    @Query('photoPublicId') photoPublicId: string,
-  ): Promise<ApiResponse<CarDocument>> {
-    return this.carService.deleteImage(photoPublicId, carId);
-  }
-
-  @Patch('select-image/:carId')
-  async selectImage(
-    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
-    @Query('photoPublicId') photoPublicId: string,
-  ): Promise<ApiResponse<CarDocument>> {
-    return this.carService.selectImage(photoPublicId, carId);
   }
 }

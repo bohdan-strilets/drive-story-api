@@ -64,14 +64,14 @@ export class MaintenanceRepository {
     );
   }
 
-  async updateImage(
+  async bindImage(
     maintenanceId: Types.ObjectId,
     data: Types.ObjectId | null,
   ): Promise<MaintenanceDocument> {
     await this.findMaintenance(maintenanceId);
     return await this.maintenanceModel.findByIdAndUpdate(
       maintenanceId,
-      { $set: { photos: data } },
+      { photos: data },
       { new: true },
     );
   }

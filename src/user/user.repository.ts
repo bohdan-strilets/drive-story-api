@@ -45,4 +45,17 @@ export class UserRepository {
     });
     return getSafeUserData(updatedUser);
   }
+
+  async bindImage(
+    userId: Types.ObjectId,
+    data: Types.ObjectId | null,
+    fieldName: 'avatars' | 'posters',
+  ): Promise<UserDocument> {
+    await this.findUser('_id', userId);
+    return await this.userModel.findByIdAndUpdate(
+      userId,
+      { [fieldName]: data },
+      { new: true },
+    );
+  }
 }

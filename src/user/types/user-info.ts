@@ -1,14 +1,13 @@
 import { Types } from 'mongoose';
 import { Gender } from '../enums/gender.enum';
-import { ImagesDocument } from '../schemes/images.schema';
 import { LocationDocument } from '../schemes/location.schema';
 
 export type UserInfo = {
   _id: Types.ObjectId;
   email: string;
   gender: Gender;
-  avatars: ImagesDocument;
-  posters: ImagesDocument;
+  avatars: Types.ObjectId | null;
+  posters: Types.ObjectId | null;
   createdAt: Date;
   updatedAt: Date;
   firstName?: string | null;

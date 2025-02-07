@@ -1,7 +1,24 @@
-import { Controller } from '@nestjs/common';
+import { Body, Controller, Param, Post } from '@nestjs/common';
+import { Types } from 'mongoose';
+import { Auth } from 'src/auth/decorators/auth.decorator';
+import { ParseObjectIdPipe } from 'src/car/pipes/parse-objectid.pipe';
+import { ApiResponse } from 'src/response/types/api-response.type';
+import { User } from 'src/user/decorators/user.decorator';
 import { AccessoryService } from './accessory.service';
+import { AccessoryDto } from './dto/accessory.dto';
+import { AccessoryDocument } from './schemas/accessory.schema';
 
-@Controller('accessory')
+@Auth()
+@Controller('v1/accessory')
 export class AccessoryController {
   constructor(private readonly accessoryService: AccessoryService) {}
+
+  @Post('add/:carId')
+  async add(
+    @Body() dto: AccessoryDto,
+    @User('_id') userId: Types.ObjectId,
+    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
+  ): Promise<ApiResponse<AccessoryDocument>> {
+    return this.accessoryService.add(userId, carId, dto);
+  }
 }

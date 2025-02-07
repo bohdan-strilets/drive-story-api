@@ -11,12 +11,12 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { cookieKeys, cookieOptions } from 'src/helpers/cookie-options';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { AuthService } from './auth.service';
 import { Auth } from './decorators/auth.decorator';
 import { AuthDto } from './dto/auth.dto';
 import { GoogleService } from './google.service';
+import { cookieKeys, cookieOptions } from './options/cookie.option';
 import { AuthResponse } from './types/auth-response.type';
 
 @Controller('v1/auth')

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { AuthModule } from 'src/auth/auth.module';
 import { PasswordModule } from 'src/password/password.module';
 import { ResponseModule } from 'src/response/response.module';
 import { SendgridModule } from 'src/sendgrid/sendgrid.module';
@@ -16,6 +17,7 @@ import { UserService } from './user.service';
     PasswordModule,
     ResponseModule,
     TokenModule,
+    AuthModule,
   ],
   controllers: [UserController],
   providers: [UserService, UserRepository],

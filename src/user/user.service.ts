@@ -1,8 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { AppError } from 'src/error/app-error';
-import { errorMessages } from 'src/error/helpers/error-messages.helper';
+import { AuthRepository } from 'src/auth/auth.repository';
 import { PasswordService } from 'src/password/password.service';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
@@ -27,6 +26,7 @@ export class UserService {
     private readonly responseService: ResponseService,
     private readonly tokenService: TokenService,
     private readonly userRepository: UserRepository,
+    private readonly authRepository: AuthRepository,
   ) {}
 
   async activationEmail(activationToken: string): Promise<ApiResponse> {
@@ -75,11 +75,7 @@ export class UserService {
     dto: EmailDto,
   ): Promise<ApiResponse<UserInfo>> {
     const { email } = dto;
-    const user = await this.userModel.findOne({ email });
-
-    if (user) {
-      throw new AppError(HttpStatus.CONFLICT, errorMessages.EMAIL_EXISTS);
-    }
+    await this.authRepository.validateUniqueEmail(email);
 
     const activationToken = v4();
     await this.sendgridService.sendConfirmEmailLetter(email, activationToken);

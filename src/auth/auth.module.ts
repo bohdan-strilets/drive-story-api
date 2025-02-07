@@ -6,7 +6,9 @@ import { SendgridModule } from 'src/sendgrid/sendgrid.module';
 import { TokenModule } from 'src/token/token.module';
 import { User, UserSchema } from 'src/user/schemes/user.schema';
 import { AuthController } from './auth.controller';
+import { AuthRepository } from './auth.repository';
 import { AuthService } from './auth.service';
+import { GoogleService } from './google.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 
 @Module({
@@ -18,6 +20,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     ResponseModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, GoogleService, AuthRepository],
+  exports: [AuthRepository],
 })
 export class AuthModule {}

@@ -1,9 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { UserDocument } from 'src/user/schemes/user.schema.js';
-import TokenName from './enums/token-name.enum.js';
+import { AppError } from 'src/error/app-error';
+import { errorMessages } from 'src/error/helpers/error-messages.helper';
+import { UserDocument } from 'src/user/schemes/user.schema';
+import TokenName from './enums/token-name.enum';
 import { Token, TokenDocument } from './schemas/token.schema';
 import { Payload } from './types/payload.type';
 import { TokenPair } from './types/token-pair.type';
@@ -89,5 +91,26 @@ export class TokenService {
 
   async deleteTokensByDb(userId: Types.ObjectId): Promise<void> {
     await this.tokenModel.findOneAndDelete({ owner: userId });
+  }
+
+  async validateRefreshToken(refreshToken: string): Promise<Payload> {
+    if (!refreshToken) {
+      throw new AppError(
+        HttpStatus.UNAUTHORIZED,
+        errorMessages.UNAUTHORIZED_USER,
+      );
+    }
+
+    const payload = this.checkToken(refreshToken, TokenName.REFRESH);
+    const tokenFromDb = await this.findTokenFromDb(payload._id);
+
+    if (!payload || !tokenFromDb) {
+      throw new AppError(
+        HttpStatus.UNAUTHORIZED,
+        errorMessages.UNAUTHORIZED_USER,
+      );
+    }
+
+    return payload;
   }
 }

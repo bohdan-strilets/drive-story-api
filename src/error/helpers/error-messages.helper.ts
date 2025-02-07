@@ -27,4 +27,5 @@ export const errorMessages = {
   NO_FILES_IN_FOLDER: 'No files found in the folder.',
   FOLDER_DELETE_ERROR: 'Failed to delete folder.',
   FILE_FOLDER_DELETE_ERROR: 'Failed to delete the files and folder.',
+  MISSING_GOOGLE_CREDENTIALS: 'Missing Google OAuth credentials.',
 };

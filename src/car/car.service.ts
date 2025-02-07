@@ -1,7 +1,6 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { defaultImages } from 'src/cloudinary/helpers/default-images';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { CarRepository } from './car.repository';
@@ -20,16 +19,9 @@ export class CarService {
     userId: Types.ObjectId,
     dto: CarDto,
   ): Promise<ApiResponse<CarDocument>> {
-    const data = {
-      owner: userId,
-      images: {
-        default: defaultImages.CAR_POSTER,
-        selected: defaultImages.CAR_POSTER,
-      },
-      ...dto,
-    };
-
+    const data = { owner: userId, ...dto };
     const newCar = await this.carModel.create(data);
+
     return this.responseService.createSuccessResponse(
       HttpStatus.CREATED,
       newCar,

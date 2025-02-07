@@ -2,7 +2,6 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { OAuth2Client, TokenPayload } from 'google-auth-library';
 import { Model } from 'mongoose';
-import { defaultImages } from 'src/cloudinary/helpers/default-images';
 import { AppError } from 'src/error/app-error';
 import { errorMessages } from 'src/error/helpers/error-messages.helper';
 import { PasswordService } from 'src/password/password.service';
@@ -39,14 +38,6 @@ export class AuthService {
       email,
       activationToken,
       password: hashPassword,
-      avatars: {
-        default: defaultImages.USER_AVATAR,
-        selected: defaultImages.USER_AVATAR,
-      },
-      posters: {
-        default: defaultImages.USER_POSTER,
-        selected: defaultImages.USER_POSTER,
-      },
     });
   }
 
@@ -208,14 +199,6 @@ export class AuthService {
     const userDto = {
       email: googlePayload.email,
       isActivated: googlePayload.email_verified,
-      avatars: {
-        default: defaultImages.USER_AVATAR,
-        selected: defaultImages.USER_AVATAR,
-      },
-      posters: {
-        default: defaultImages.USER_POSTER,
-        selected: defaultImages.USER_POSTER,
-      },
     };
 
     return this.userModel.create({ ...userDto });

@@ -1,36 +1,42 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { InjectModel } from '@nestjs/mongoose';
 import { PassportStrategy } from '@nestjs/passport';
-import { Model, Types } from 'mongoose';
+import { Types } from 'mongoose';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { User, UserDocument } from 'src/user/schemes/user.schema';
+import { AppError } from 'src/error/app-error';
+import { errorMessages } from 'src/error/helpers/error-messages.helper';
+import { Payload } from 'src/token/types/payload.type';
+import { UserDocument } from 'src/user/schemes/user.schema';
+import { UserRepository } from 'src/user/user.repository';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
     private readonly configService: ConfigService,
+    private readonly userRepository: UserRepository,
   ) {
+    const accessSecretKey = configService.get<string>('ACCESS_TOKEN_KEY');
+
+    if (!accessSecretKey) {
+      throw new AppError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        errorMessages.INVALID_TOKEN,
+      );
+    }
+
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: configService.get('ACCESS_TOKEN_KEY'),
+      secretOrKey: accessSecretKey,
     });
   }
 
-  async validate(payload: Pick<UserDocument, '_id'>) {
+  async validate(payload: Payload): Promise<UserDocument> {
+    if (!payload) {
+      throw new AppError(HttpStatus.UNAUTHORIZED, errorMessages.INVALID_TOKEN);
+    }
+
     const { _id } = payload;
-
-    if (!payload || !_id) {
-      throw new UnauthorizedException('Invalid token');
-    }
-
-    const user = await this.userModel.findById(new Types.ObjectId(_id));
-
-    if (!user) {
-      throw new UnauthorizedException('User not found');
-    }
-
+    const user = await this.userRepository.findById(new Types.ObjectId(_id));
     return user;
   }
 }

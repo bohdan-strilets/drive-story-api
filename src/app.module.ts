@@ -15,6 +15,7 @@ import { SendgridModule } from './sendgrid/sendgrid.module';
 import { TokenModule } from './token/token.module';
 import { UserModule } from './user/user.module';
 import { FuelingModule } from './fueling/fueling.module';
+import { AccessoryModule } from './accessory/accessory.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { FuelingModule } from './fueling/fueling.module';
     MaintenanceModule,
     ImageModule,
     FuelingModule,
+    AccessoryModule,
   ],
   providers: [
     ResponseService,

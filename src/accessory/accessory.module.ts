@@ -3,6 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { CarModule } from 'src/car/car.module';
 import { ResponseModule } from 'src/response/response.module';
 import { AccessoryController } from './accessory.controller';
+import { AccessoryRepository } from './accessory.repository';
 import { AccessoryService } from './accessory.service';
 import { Accessory, AccessorySchema } from './schemas/accessory.schema';
 
@@ -15,6 +16,7 @@ import { Accessory, AccessorySchema } from './schemas/accessory.schema';
     CarModule,
   ],
   controllers: [AccessoryController],
-  providers: [AccessoryService],
+  providers: [AccessoryService, AccessoryRepository],
+  exports: [AccessoryRepository],
 })
 export class AccessoryModule {}

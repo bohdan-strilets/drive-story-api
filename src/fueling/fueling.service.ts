@@ -40,17 +40,14 @@ export class FuelingService {
     userId: Types.ObjectId,
     dto: FuelingDto,
   ): Promise<ApiResponse<FuelingDocument>> {
-    const updatedMaintenance = await this.fuelingRepository.updateFueling(
+    const fueling = await this.fuelingRepository.updateFueling(
       fuelingId,
       carId,
       userId,
       dto,
     );
 
-    return this.responseService.createSuccessResponse(
-      HttpStatus.OK,
-      updatedMaintenance,
-    );
+    return this.responseService.createSuccessResponse(HttpStatus.OK, fueling);
   }
 
   async delete(
@@ -64,13 +61,13 @@ export class FuelingService {
       userId,
     );
 
-    const deletedMaintenance = await this.fuelingModel
+    const deletedFueling = await this.fuelingModel
       .findByIdAndDelete(fuelingId)
       .populate('photos');
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
-      deletedMaintenance,
+      deletedFueling,
     );
   }
 
@@ -79,17 +76,14 @@ export class FuelingService {
     carId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<FuelingDocument>> {
-    const maintenance =
+    const fueling =
       await this.fuelingRepository.findFuelingAndCheckAccessRights(
         fuelingId,
         carId,
         userId,
       );
 
-    return this.responseService.createSuccessResponse(
-      HttpStatus.OK,
-      maintenance,
-    );
+    return this.responseService.createSuccessResponse(HttpStatus.OK, fueling);
   }
 
   async all(
@@ -100,7 +94,7 @@ export class FuelingService {
   ): Promise<ApiResponse<FuelingDocument[]>> {
     const skip = (page - 1) * limit;
 
-    const maintenances = await this.fuelingModel
+    const fueling = await this.fuelingModel
       .find({
         carId,
         owner: userId,
@@ -109,9 +103,6 @@ export class FuelingService {
       .limit(limit)
       .populate('photos');
 
-    return this.responseService.createSuccessResponse(
-      HttpStatus.OK,
-      maintenances,
-    );
+    return this.responseService.createSuccessResponse(HttpStatus.OK, fueling);
   }
 }

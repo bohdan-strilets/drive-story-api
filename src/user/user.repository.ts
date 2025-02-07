@@ -10,25 +10,32 @@ import { UserInfo } from './types/user-info';
 export class UserRepository {
   constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
 
-  async findUser(
-    field: keyof UserDocument,
-    value: string | Types.ObjectId,
-  ): Promise<UserDocument> {
-    const query: Record<string, any> = {};
-    query[field] =
-      field === '_id' && typeof value === 'string'
-        ? new Types.ObjectId(value)
-        : value;
-
-    const user = await this.userModel
-      .findOne(query)
-      .populate('avatars')
-      .populate('posters');
-
+  validateUser(user: UserDocument): void {
     if (!user) {
       throw new AppError(HttpStatus.NOT_FOUND, errorMessages.USER_NOT_FOUND);
     }
+  }
 
+  async findByField(
+    field: keyof UserDocument,
+    value: string | Types.ObjectId,
+  ): Promise<UserDocument> {
+    const user = await this.userModel
+      .findOne({ [field]: value })
+      .populate('avatars')
+      .populate('posters');
+
+    this.validateUser(user);
+    return user;
+  }
+
+  async findById(userId: Types.ObjectId): Promise<UserDocument> {
+    const user = await this.userModel
+      .findById(userId)
+      .populate('avatars')
+      .populate('posters');
+
+    this.validateUser(user);
     return user;
   }
 
@@ -58,7 +65,7 @@ export class UserRepository {
     data: Types.ObjectId | null,
     fieldName: 'avatars' | 'posters',
   ): Promise<UserDocument> {
-    await this.findUser('_id', userId);
+    await this.findById(userId);
     return await this.userModel.findByIdAndUpdate(
       userId,
       { [fieldName]: data },

@@ -30,7 +30,7 @@ export class UserService {
   ) {}
 
   async activationEmail(activationToken: string): Promise<ApiResponse> {
-    const user = await this.userRepository.findUser(
+    const user = await this.userRepository.findByField(
       'activationToken',
       activationToken,
     );
@@ -42,7 +42,7 @@ export class UserService {
   async requestActivationEmailResend(dto: EmailDto): Promise<ApiResponse> {
     const { email } = dto;
 
-    const user = await this.userRepository.findUser('email', email);
+    const user = await this.userRepository.findByField('email', email);
     const newActivationToken = v4();
 
     const updatedUser = await this.userRepository.setActivationStatus(
@@ -94,7 +94,7 @@ export class UserService {
 
   async requestResetPassword(dto: EmailDto): Promise<ApiResponse> {
     const { email } = dto;
-    const user = await this.userRepository.findUser('email', email);
+    const user = await this.userRepository.findByField('email', email);
 
     const resetToken = v4();
     await this.userRepository.updateUserById(user._id, { resetToken });
@@ -104,7 +104,7 @@ export class UserService {
   }
 
   async verifyResetToken(resetToken: string): Promise<ApiResponse> {
-    await this.userRepository.findUser('resetToken', resetToken);
+    await this.userRepository.findByField('resetToken', resetToken);
     return this.responseService.createSuccessResponse(HttpStatus.OK);
   }
 
@@ -112,7 +112,10 @@ export class UserService {
     dto: ResetPasswordDto,
     resetToken: string,
   ): Promise<ApiResponse> {
-    const user = await this.userRepository.findUser('resetToken', resetToken);
+    const user = await this.userRepository.findByField(
+      'resetToken',
+      resetToken,
+    );
 
     const { password } = dto;
     const hashPassword = await this.passwordService.createPassword(password);
@@ -129,7 +132,7 @@ export class UserService {
     dto: EditPasswordDto,
     userId: Types.ObjectId,
   ): Promise<ApiResponse> {
-    const user = await this.userRepository.findUser('_id', userId);
+    const user = await this.userRepository.findById(userId);
     await this.passwordService.isValidPassword(dto.password, user.password);
 
     const hashPassword = await this.passwordService.createPassword(
@@ -144,7 +147,7 @@ export class UserService {
   }
 
   async getCurrentUser(userId: Types.ObjectId): Promise<ApiResponse<UserInfo>> {
-    const user = await this.userRepository.findUser('_id', userId);
+    const user = await this.userRepository.findById(userId);
     const safeData = getSafeUserData(user);
 
     return this.responseService.createSuccessResponse(HttpStatus.OK, safeData);
@@ -155,7 +158,7 @@ export class UserService {
     session.startTransaction();
 
     try {
-      await this.userRepository.findUser('_id', userId);
+      await this.userRepository.findById(userId);
       const deletedUser = await this.userModel
         .findByIdAndDelete(userId)
         .populate('avatars')

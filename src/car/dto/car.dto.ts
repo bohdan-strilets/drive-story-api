@@ -6,23 +6,23 @@ import { RegistrationDto } from './registration.dto';
 import { SpecificationsDto } from './specifications.dto';
 
 export class CarDto {
-  @ValidateNested()
+  @ValidateNested({ message: 'Basic information must be valid' })
   @Type(() => BasicInfoDto)
   basicInfo: BasicInfoDto;
 
-  @ValidateNested()
+  @ValidateNested({ message: 'Specifications must be valid' })
   @Type(() => SpecificationsDto)
   specifications: SpecificationsDto;
 
-  @ValidateNested()
+  @ValidateNested({ message: 'Registration details must be valid' })
   @Type(() => RegistrationDto)
   registration: RegistrationDto;
 
-  @ValidateNested()
+  @ValidateNested({ message: 'Ownership details must be valid' })
   @Type(() => OwnerShipDto)
   ownership: OwnerShipDto;
 
   @IsOptional()
-  @IsString()
+  @IsString({ message: 'Description must be a string' })
   description: string | null;
 }

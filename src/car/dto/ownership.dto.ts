@@ -8,8 +8,8 @@ export class OwnerShipDto {
   purchaseDate?: Date | null;
 
   @IsOptional()
-  @IsDate({ message: 'Sale date must be a valid date' })
   @Type(() => Date)
+  @IsDate({ message: 'Sale date must be a valid date' })
   @ValidateIf((o) => o.purchaseDate !== null, {
     message: 'Sale date cannot be before purchase date',
   })

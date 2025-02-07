@@ -1,36 +1,32 @@
 import { IsInt, IsOptional, IsString, Length, Max, Min } from 'class-validator';
-import {
-  MAX_CAR_LENGTH,
-  MAX_YEAR_PRODUCTION,
-  MIN_CAR_LENGTH,
-  MIN_YEAR_PRODUCTION,
-} from 'src/helpers/validation-rules';
 
 export class BasicInfoDto {
-  @IsString()
-  @Length(MIN_CAR_LENGTH, MAX_CAR_LENGTH)
+  @IsString({ message: 'Make must be a string' })
+  @Length(2, 50, { message: 'Make must be between 2 and 50 characters long' })
   make: string;
 
-  @IsString()
-  @Length(MIN_CAR_LENGTH, MAX_CAR_LENGTH)
+  @IsString({ message: 'Model must be a string' })
+  @Length(2, 50, { message: 'Model must be between 2 and 50 characters long' })
   model: string;
 
-  @IsInt()
-  @Min(MIN_YEAR_PRODUCTION, {
-    message: `The year must not be earlier than ${MIN_YEAR_PRODUCTION}`,
-  })
-  @Max(MAX_YEAR_PRODUCTION, {
-    message: `The year cannot be greater than the ${MAX_YEAR_PRODUCTION}`,
+  @IsInt({ message: 'Year must be an integer' })
+  @Min(1886, { message: 'Year cannot be before 1886' })
+  @Max(new Date().getFullYear() + 1, {
+    message: `Year cannot be later than ${new Date().getFullYear() + 1}`,
   })
   year: number;
 
   @IsOptional()
-  @IsString()
-  @Length(MIN_CAR_LENGTH, MAX_CAR_LENGTH)
+  @IsString({ message: 'Short name must be a string' })
+  @Length(2, 50, {
+    message: 'Short name must be between 2 and 50 characters long',
+  })
   shortName?: string | null;
 
   @IsOptional()
-  @IsString()
-  @Length(MIN_CAR_LENGTH, MAX_CAR_LENGTH)
+  @IsString({ message: 'Generation must be a string' })
+  @Length(2, 50, {
+    message: 'Generation must be between 2 and 50 characters long',
+  })
   generation?: string | null;
 }

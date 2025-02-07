@@ -1,17 +1,24 @@
-import { IsString, MaxLength, MinLength } from 'class-validator';
-import {
-  MAX_PASSWORD_LENGTH,
-  MIN_PASSWORD_LENGTH,
-} from 'src/helpers/validation-rules';
+import { IsNotEmpty, IsString, Length, Matches } from 'class-validator';
+import { passwordRegex } from 'src/password/regex/password.regex';
 
 export class EditPasswordDto {
-  @IsString()
-  @MinLength(MIN_PASSWORD_LENGTH)
-  @MaxLength(MAX_PASSWORD_LENGTH)
+  @IsNotEmpty({ message: 'Password must not be empty' })
+  @IsString({ message: 'Password must be a string' })
+  @Length(2, 12, {
+    message: 'Password must be between 2 and 12 characters long',
+  })
+  @Matches(passwordRegex, {
+    message: 'Password must contain at least one letter and one number',
+  })
   password: string;
 
-  @IsString()
-  @MinLength(MIN_PASSWORD_LENGTH)
-  @MaxLength(MAX_PASSWORD_LENGTH)
+  @IsNotEmpty({ message: 'New password must not be empty' })
+  @IsString({ message: 'New password must be a string' })
+  @Length(2, 12, {
+    message: 'New password must be between 2 and 12 characters long',
+  })
+  @Matches(passwordRegex, {
+    message: 'New password must contain at least one letter and one number',
+  })
   newPassword: string;
 }

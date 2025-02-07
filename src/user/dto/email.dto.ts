@@ -1,8 +1,8 @@
 import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 
 export class EmailDto {
-  @IsString()
-  @IsEmail()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Email must not be empty' })
+  @IsString({ message: 'Email must be a string' })
+  @IsEmail({}, { message: 'Invalid email format' })
   email: string;
 }

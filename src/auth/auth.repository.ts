@@ -6,7 +6,7 @@ import { errorMessages } from 'src/error/helpers/error-messages.helper';
 import { PasswordService } from 'src/password/password.service';
 import { SendgridService } from 'src/sendgrid/sendgrid.service';
 import { TokenService } from 'src/token/token.service';
-import { getSafeUserData } from 'src/user/helpers/get-safe-data';
+import { getSafeUserData } from 'src/user/helpers/get-safe-data.helpers';
 import { User, UserDocument } from 'src/user/schemes/user.schema';
 import { v4 } from 'uuid';
 import { AuthResponse } from './types/auth-response.type';

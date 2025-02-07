@@ -1,30 +1,24 @@
-import {
-  IsOptional,
-  IsPostalCode,
-  IsString,
-  MaxLength,
-  MinLength,
-} from 'class-validator';
-import {
-  MAX_LOCATION_LENGTH,
-  MIN_LOCATION_LENGTH,
-} from 'src/helpers/validation-rules';
+import { IsOptional, IsPostalCode, IsString, Length } from 'class-validator';
 
 export class LocationDto {
-  @IsString()
   @IsOptional()
-  @MaxLength(MAX_LOCATION_LENGTH)
-  @MinLength(MIN_LOCATION_LENGTH)
+  @IsString({ message: 'Country must be a string' })
+  @Length(2, 100, {
+    message: 'Country must be between 2 and 100 characters long',
+  })
   country: string;
 
-  @IsString()
   @IsOptional()
-  @MaxLength(MAX_LOCATION_LENGTH)
-  @MinLength(MIN_LOCATION_LENGTH)
+  @IsString({ message: 'City must be a string' })
+  @Length(2, 100, {
+    message: 'City must be between 2 and 100 characters long',
+  })
   city: string;
 
-  @IsString()
   @IsOptional()
-  @IsPostalCode('PL')
+  @IsString({ message: 'Postal code must be a string' })
+  @IsPostalCode('PL', {
+    message: 'Postal code must be a valid postal code for Poland (PL)',
+  })
   postalCode: string;
 }

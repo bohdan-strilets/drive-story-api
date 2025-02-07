@@ -1,28 +1,24 @@
 import { Type } from 'class-transformer';
-import { IsDate, IsOptional, IsString, Length } from 'class-validator';
-import {
-  MAX_REG_NUMBER,
-  MIN_REG_NUMBER,
-  VIN_LENGTH,
-} from 'src/helpers/validation-rules';
+import { IsDate, IsOptional, IsString, Length, MaxDate } from 'class-validator';
 
 export class RegistrationDto {
   @IsOptional()
-  @IsString()
-  @Length(VIN_LENGTH, VIN_LENGTH, {
-    message: 'VIN must be exactly 17 characters long',
-  })
+  @IsString({ message: 'VIN must be a string' })
+  @Length(17, 17, { message: 'VIN must be exactly 17 characters long' })
   vin?: string | null;
 
   @IsOptional()
-  @IsString()
-  @Length(MIN_REG_NUMBER, MAX_REG_NUMBER, {
-    message: `Registration number must be between ${MIN_REG_NUMBER} and ${MAX_REG_NUMBER} characters long`,
+  @IsString({ message: 'Registration number must be a string' })
+  @Length(1, 15, {
+    message: 'Registration number must be between 1 and 15 characters long',
   })
   regNumber?: string | null;
 
   @IsOptional()
   @Type(() => Date)
   @IsDate({ message: 'First registration date must be a valid date' })
+  @MaxDate(new Date(), {
+    message: 'First registration date cannot be in the future',
+  })
   firstRegDate?: Date | null;
 }

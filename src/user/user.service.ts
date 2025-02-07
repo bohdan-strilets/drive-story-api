@@ -7,7 +7,7 @@ import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { SendgridService } from 'src/sendgrid/sendgrid.service';
 import { TokenService } from 'src/token/token.service';
-import { getSafeUserData } from 'src/user/helpers/get-safe-data';
+import { getSafeUserData } from 'src/user/helpers/get-safe-data.helpers';
 import { v4 } from 'uuid';
 import { EditPasswordDto } from './dto/edit-password.dto';
 import { EmailDto } from './dto/email.dto';

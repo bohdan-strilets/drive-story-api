@@ -1,19 +1,13 @@
 import { IsInt, IsNumber, Max, Min } from 'class-validator';
-import {
-  MAX_POWER,
-  MAX_VOLUME,
-  MIN_POWER,
-  MIN_VOLUME,
-} from 'src/helpers/validation-rules';
 
 export class EngineDto {
   @IsNumber()
-  @Min(MIN_VOLUME, { message: `Engine volume must be at least ${MIN_VOLUME}L` })
-  @Max(MAX_VOLUME, { message: `Engine volume cannot exceed ${MAX_VOLUME}L` })
+  @Min(0.5, { message: 'Engine volume must be at least 0.5L' })
+  @Max(10, { message: 'Engine volume cannot exceed 10L' })
   volume: number;
 
   @IsInt()
-  @Min(MIN_POWER, { message: `Engine power must be at least ${MIN_POWER} HP` })
-  @Max(MAX_POWER, { message: `Engine power cannot exceed ${MAX_POWER} HP` })
+  @Min(20, { message: 'Engine power must be at least 20 HP' })
+  @Max(2000, { message: 'Engine power cannot exceed 2000 HP' })
   power: number;
 }

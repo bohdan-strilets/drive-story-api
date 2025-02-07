@@ -1,6 +1,8 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import { AppError } from 'src/error/app-error';
+import { errorMessages } from 'src/error/helpers/error-messages.helper';
 import { PasswordService } from 'src/password/password.service';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
@@ -73,7 +75,11 @@ export class UserService {
     dto: EmailDto,
   ): Promise<ApiResponse<UserInfo>> {
     const { email } = dto;
-    await this.userRepository.findUser('email', email);
+    const user = await this.userModel.findOne({ email });
+
+    if (user) {
+      throw new AppError(HttpStatus.CONFLICT, errorMessages.EMAIL_EXISTS);
+    }
 
     const activationToken = v4();
     await this.sendgridService.sendConfirmEmailLetter(email, activationToken);

@@ -15,5 +15,6 @@ import { Fueling, FuelingSchema } from './schemas/fueling.schema';
   ],
   controllers: [FuelingController],
   providers: [FuelingService, FuelingRepository],
+  exports: [FuelingRepository],
 })
 export class FuelingModule {}

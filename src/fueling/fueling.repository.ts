@@ -50,4 +50,16 @@ export class FuelingRepository {
       .findByIdAndUpdate(fuelingId, dto, { new: true })
       .populate('photos');
   }
+
+  async bindImage(
+    fuelingId: Types.ObjectId,
+    data: Types.ObjectId | null,
+  ): Promise<FuelingDocument> {
+    await this.findFueling(fuelingId);
+    return await this.fuelingModel.findByIdAndUpdate(
+      fuelingId,
+      { photos: data },
+      { new: true },
+    );
+  }
 }

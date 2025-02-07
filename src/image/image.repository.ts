@@ -7,6 +7,7 @@ import { FileType } from 'src/cloudinary/enums/file-type.enum';
 import { defaultImages } from 'src/cloudinary/helpers/default-images';
 import { AppError } from 'src/error/app-error';
 import { errorMessages } from 'src/error/helpers/error-messages.helper';
+import { FuelingRepository } from 'src/fueling/fueling.repository';
 import { MaintenanceRepository } from 'src/maintenance/maintenance.repository';
 import { UserRepository } from 'src/user/user.repository';
 import { EntityType } from './enums/entity-type.enum';
@@ -20,6 +21,7 @@ export class ImageRepository {
     private readonly maintenanceRepository: MaintenanceRepository,
     private readonly carRepository: CarRepository,
     private readonly userRepository: UserRepository,
+    private readonly fuelingRepository: FuelingRepository,
   ) {}
 
   async uploadFile(
@@ -112,6 +114,10 @@ export class ImageRepository {
 
       case EntityType.MAINTENANCE:
         await this.maintenanceRepository.bindImage(entityId, data);
+        break;
+
+      case EntityType.FUELING:
+        await this.fuelingRepository.bindImage(entityId, data);
         break;
 
       default:

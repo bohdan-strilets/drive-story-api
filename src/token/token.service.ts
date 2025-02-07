@@ -1,4 +1,5 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -12,9 +13,12 @@ import { TokenPair } from './types/token-pair.type';
 
 @Injectable()
 export class TokenService {
+  private readonly logger = new Logger(TokenService.name);
+
   constructor(
     @InjectModel(Token.name) private tokenModel: Model<TokenDocument>,
     private jwtService: JwtService,
+    private configService: ConfigService,
   ) {}
 
   createPayload(user: UserDocument): Payload {
@@ -27,15 +31,15 @@ export class TokenService {
 
   async createAccessToken(payload: Payload): Promise<string> {
     return this.jwtService.sign(payload, {
-      secret: process.env.ACCESS_TOKEN_KEY,
-      expiresIn: process.env.ACCESS_TOKEN_TIME,
+      secret: this.configService.get('ACCESS_TOKEN_KEY'),
+      expiresIn: this.configService.get('ACCESS_TOKEN_TIME'),
     });
   }
 
   async createRefreshToken(payload: Payload): Promise<string> {
     return this.jwtService.sign(payload, {
-      secret: process.env.REFRESH_TOKEN_KEY,
-      expiresIn: process.env.REFRESH_TOKEN_TIME,
+      secret: this.configService.get('REFRESH_TOKEN_KEY'),
+      expiresIn: this.configService.get('REFRESH_TOKEN_TIME'),
     });
   }
 
@@ -44,36 +48,29 @@ export class TokenService {
     const refreshToken = await this.createRefreshToken(payload);
 
     const owner = payload._id;
-    const tokensFromDb = await this.tokenModel.findOne({ owner });
 
-    if (!tokensFromDb) {
-      await this.tokenModel.create({ refreshToken, owner });
-    }
-    if (tokensFromDb) {
-      await this.tokenModel.findByIdAndUpdate(tokensFromDb._id, {
-        refreshToken,
-      });
-    }
+    await this.tokenModel.findOneAndUpdate(
+      { owner },
+      { refreshToken },
+      { upsert: true, new: true },
+    );
 
     return { accessToken, refreshToken };
   }
 
   checkToken(token: string, type: TokenName): Payload | null {
-    let payload: Payload;
-
-    if (type === TokenName.ACCESS) {
-      payload = this.jwtService.verify(token, {
-        secret: process.env.ACCESS_TOKEN_KEY,
-      });
-    } else if (type === TokenName.REFRESH) {
-      payload = this.jwtService.verify(token, {
-        secret: process.env.REFRESH_TOKEN_KEY,
-      });
-    }
-
-    if (payload) {
-      return payload;
-    } else {
+    try {
+      if (type === TokenName.ACCESS) {
+        return this.jwtService.verify(token, {
+          secret: process.env.ACCESS_TOKEN_KEY,
+        });
+      } else if (type === TokenName.REFRESH) {
+        return this.jwtService.verify(token, {
+          secret: process.env.REFRESH_TOKEN_KEY,
+        });
+      }
+    } catch (error) {
+      this.logger.error(error);
       return null;
     }
   }

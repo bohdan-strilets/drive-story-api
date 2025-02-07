@@ -56,7 +56,10 @@ export class CarService {
     const car = await this.carRepository.findCar(carId);
     this.carRepository.checkAccessRights(car.owner, userId);
 
-    const deletedCar = await this.carModel.findByIdAndDelete(carId);
+    const deletedCar = await this.carModel
+      .findByIdAndDelete(carId)
+      .populate('images');
+
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
       deletedCar,
@@ -82,7 +85,8 @@ export class CarService {
     const cars = await this.carModel
       .find({ owner: userId })
       .skip(skip)
-      .limit(limit);
+      .limit(limit)
+      .populate('images');
 
     return this.responseService.createSuccessResponse(HttpStatus.OK, cars);
   }

@@ -20,7 +20,11 @@ export class UserRepository {
         ? new Types.ObjectId(value)
         : value;
 
-    const user = await this.userModel.findOne(query);
+    const user = await this.userModel
+      .findOne(query)
+      .populate('avatars')
+      .populate('posters');
+
     if (!user) {
       throw new AppError(HttpStatus.NOT_FOUND, errorMessages.USER_NOT_FOUND);
     }
@@ -40,9 +44,12 @@ export class UserRepository {
   }
 
   async updateUserById(userId: Types.ObjectId, dto: any): Promise<UserInfo> {
-    const updatedUser = await this.userModel.findByIdAndUpdate(userId, dto, {
-      new: true,
-    });
+    const options = { new: true };
+    const updatedUser = await this.userModel
+      .findByIdAndUpdate(userId, dto, options)
+      .populate('avatars')
+      .populate('posters');
+
     return getSafeUserData(updatedUser);
   }
 

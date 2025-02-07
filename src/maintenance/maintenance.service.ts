@@ -70,8 +70,9 @@ export class MaintenanceService {
       userId,
     );
 
-    const deletedMaintenance =
-      await this.maintenanceModel.findByIdAndDelete(maintenanceId);
+    const deletedMaintenance = await this.maintenanceModel
+      .findByIdAndDelete(maintenanceId)
+      .populate('photos');
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
@@ -109,7 +110,8 @@ export class MaintenanceService {
         owner: userId,
       })
       .skip(skip)
-      .limit(limit);
+      .limit(limit)
+      .populate('photos');
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,

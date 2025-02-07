@@ -19,10 +19,7 @@ export class MaintenanceRepository {
   ): Promise<MaintenanceDocument> {
     const maintenance = await this.maintenanceModel
       .findById(maintenanceId)
-      .populate({
-        path: 'photos',
-        model: 'Image',
-      });
+      .populate('photos');
 
     if (!maintenance) {
       throw new AppError(
@@ -56,12 +53,9 @@ export class MaintenanceRepository {
       userId,
     );
 
-    const params = { new: true };
-    return await this.maintenanceModel.findByIdAndUpdate(
-      maintenanceId,
-      dto,
-      params,
-    );
+    return await this.maintenanceModel
+      .findByIdAndUpdate(maintenanceId, dto, { new: true })
+      .populate('photos');
   }
 
   async bindImage(

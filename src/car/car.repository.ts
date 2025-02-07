@@ -18,7 +18,9 @@ export class CarRepository {
     this.checkAccessRights(car.owner, userId);
     const params = { new: true };
 
-    return await this.carModel.findByIdAndUpdate(carId, dto, params);
+    return await this.carModel
+      .findByIdAndUpdate(carId, dto, params)
+      .populate('images');
   }
 
   checkAccessRights(firstId: Types.ObjectId, secondId: Types.ObjectId): void {
@@ -28,7 +30,7 @@ export class CarRepository {
   }
 
   async findCar(carId: Types.ObjectId): Promise<CarDocument> {
-    const car = await this.carModel.findById(carId);
+    const car = await this.carModel.findById(carId).populate('images');
 
     if (!car) {
       throw new AppError(HttpStatus.NOT_FOUND, errorMessages.CAR_NOT_FOUND);

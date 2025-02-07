@@ -154,7 +154,11 @@ export class UserService {
 
     try {
       await this.userRepository.findUser('_id', userId);
-      const deletedUser = await this.userModel.findByIdAndDelete(userId);
+      const deletedUser = await this.userModel
+        .findByIdAndDelete(userId)
+        .populate('avatars')
+        .populate('posters');
+
       await this.tokenService.deleteTokensByDb(new Types.ObjectId(userId));
 
       await session.commitTransaction();

@@ -1,34 +1,46 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { compare, hash } from 'bcryptjs';
 import { AppError } from 'src/error/app-error';
 import { errorMessages } from 'src/error/helpers/error-messages.helper';
+import { passwordRegex } from './regex/password.regex';
 
 @Injectable()
 export class PasswordService {
-  private SALT = 10;
+  private readonly saltRounds: number;
 
-  async checkPassword(
-    newPassword: string,
-    oldPassword: string,
-  ): Promise<boolean> {
-    return await compare(newPassword, oldPassword);
+  constructor(private configService: ConfigService) {
+    this.saltRounds = Number(this.configService.get<number>('SALT'));
   }
 
   async createPassword(password: string): Promise<string> {
-    return await hash(password, this.SALT);
-  }
+    if (password.length < 6 || password.length > 12) {
+      throw new AppError(HttpStatus.BAD_REQUEST, errorMessages.PASSWORD_LENGTH);
+    }
 
-  async isValidPassword(
-    newPassword: string,
-    oldPassword: string,
-  ): Promise<void> {
-    const isValidPassword = await this.checkPassword(newPassword, oldPassword);
-
-    if (!isValidPassword) {
+    if (!passwordRegex.test(password)) {
       throw new AppError(
-        HttpStatus.UNAUTHORIZED,
-        errorMessages.UNAUTHORIZED_USER,
+        HttpStatus.BAD_REQUEST,
+        errorMessages.PASSWORD_RULES_ERROR,
       );
     }
+
+    return await hash(password, this.saltRounds);
+  }
+
+  async validatePassword(
+    plainPassword: string,
+    hashedPassword: string,
+  ): Promise<boolean> {
+    const validPassword = await compare(plainPassword, hashedPassword);
+
+    if (!validPassword) {
+      throw new AppError(
+        HttpStatus.BAD_REQUEST,
+        errorMessages.INVALID_PASSWORD,
+      );
+    }
+
+    return validPassword;
   }
 }

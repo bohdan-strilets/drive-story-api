@@ -133,7 +133,7 @@ export class UserService {
     userId: Types.ObjectId,
   ): Promise<ApiResponse> {
     const user = await this.userRepository.findById(userId);
-    await this.passwordService.isValidPassword(dto.password, user.password);
+    await this.passwordService.validatePassword(dto.password, user.password);
 
     const hashPassword = await this.passwordService.createPassword(
       dto.newPassword,

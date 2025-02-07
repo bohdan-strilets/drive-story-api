@@ -29,4 +29,6 @@ export const errorMessages = {
   FILE_FOLDER_DELETE_ERROR: 'Failed to delete the files and folder.',
   MISSING_GOOGLE_CREDENTIALS: 'Missing Google OAuth credentials.',
   INVALID_TOKEN: 'The secret key for the token is missing or invalid.',
+  PASSWORD_LENGTH: 'Password must be between 6 and 12 characters.',
+  PASSWORD_RULES_ERROR: 'The password does not meet the rules.',
 };

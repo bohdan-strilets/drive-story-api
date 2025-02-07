@@ -50,17 +50,7 @@ export class AuthRepository {
       throw new AppError(HttpStatus.BAD_REQUEST, errorMessages.INVALID_EMAIL);
     }
 
-    const isPasswordValid = await this.passwordService.checkPassword(
-      password,
-      user.password,
-    );
-
-    if (!isPasswordValid) {
-      throw new AppError(
-        HttpStatus.BAD_REQUEST,
-        errorMessages.INVALID_PASSWORD,
-      );
-    }
+    await this.passwordService.validatePassword(password, user.password);
 
     if (!user.isActivated) {
       throw new AppError(

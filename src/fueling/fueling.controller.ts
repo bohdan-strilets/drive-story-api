@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { Types } from 'mongoose';
 import { Auth } from 'src/auth/decorators/auth.decorator';
@@ -56,5 +57,15 @@ export class FuelingController {
     @User('_id') userId: Types.ObjectId,
   ): Promise<ApiResponse<FuelingDocument>> {
     return this.fuelingService.byId(fuelingId, carId, userId);
+  }
+
+  @Get('all/:carId')
+  async all(
+    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
+    @User('_id') userId: Types.ObjectId,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+  ): Promise<ApiResponse<FuelingDocument[]>> {
+    return this.fuelingService.all(carId, userId, page, limit);
   }
 }

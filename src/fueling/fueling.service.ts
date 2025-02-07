@@ -91,4 +91,27 @@ export class FuelingService {
       maintenance,
     );
   }
+
+  async all(
+    carId: Types.ObjectId,
+    userId: Types.ObjectId,
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<ApiResponse<FuelingDocument[]>> {
+    const skip = (page - 1) * limit;
+
+    const maintenances = await this.fuelingModel
+      .find({
+        carId,
+        owner: userId,
+      })
+      .skip(skip)
+      .limit(limit)
+      .populate('photos');
+
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      maintenances,
+    );
+  }
 }

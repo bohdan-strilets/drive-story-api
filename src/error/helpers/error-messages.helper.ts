@@ -31,4 +31,5 @@ export const errorMessages = {
   INVALID_TOKEN: 'The secret key for the token is missing or invalid.',
   PASSWORD_LENGTH: 'Password must be between 6 and 12 characters.',
   PASSWORD_RULES_ERROR: 'The password does not meet the rules.',
+  FUELING_NOT_FOUND: 'Refueling information not found.',
 };

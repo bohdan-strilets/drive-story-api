@@ -3,6 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { CarModule } from 'src/car/car.module';
 import { ResponseModule } from 'src/response/response.module';
 import { FuelingController } from './fueling.controller';
+import { FuelingRepository } from './fueling.repository';
 import { FuelingService } from './fueling.service';
 import { Fueling, FuelingSchema } from './schemas/fueling.schema';
 
@@ -13,6 +14,6 @@ import { Fueling, FuelingSchema } from './schemas/fueling.schema';
     CarModule,
   ],
   controllers: [FuelingController],
-  providers: [FuelingService],
+  providers: [FuelingService, FuelingRepository],
 })
 export class FuelingModule {}

@@ -5,6 +5,7 @@ import { CarRepository } from 'src/car/car.repository';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { FuelingDto } from './dto/fueling.dto';
+import { FuelingRepository } from './fueling.repository';
 import { Fueling, FuelingDocument } from './schemas/fueling.schema';
 
 @Injectable()
@@ -13,6 +14,7 @@ export class FuelingService {
     @InjectModel(Fueling.name) private fuelingModel: Model<FuelingDocument>,
     private readonly responseService: ResponseService,
     private readonly carRepository: CarRepository,
+    private readonly fuelingRepository: FuelingRepository,
   ) {}
 
   async add(
@@ -29,6 +31,25 @@ export class FuelingService {
     return this.responseService.createSuccessResponse(
       HttpStatus.CREATED,
       fueling,
+    );
+  }
+
+  async update(
+    fuelingId: Types.ObjectId,
+    carId: Types.ObjectId,
+    userId: Types.ObjectId,
+    dto: FuelingDto,
+  ): Promise<ApiResponse<FuelingDocument>> {
+    const updatedMaintenance = await this.fuelingRepository.updateFueling(
+      fuelingId,
+      carId,
+      userId,
+      dto,
+    );
+
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      updatedMaintenance,
     );
   }
 }

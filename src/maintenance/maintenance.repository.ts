@@ -35,10 +35,11 @@ export class MaintenanceRepository {
     maintenanceId: Types.ObjectId,
     carId: Types.ObjectId,
     userId: Types.ObjectId,
-  ): Promise<void> {
+  ): Promise<MaintenanceDocument> {
     const maintenance = await this.findMaintenance(maintenanceId);
     this.carRepository.checkAccessRights(maintenance.carId, carId);
     this.carRepository.checkAccessRights(maintenance.owner, userId);
+    return maintenance;
   }
 
   async updateMaintenance(

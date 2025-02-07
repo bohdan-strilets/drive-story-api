@@ -86,9 +86,11 @@ export class MaintenanceService {
     userId: Types.ObjectId,
   ): Promise<ApiResponse<MaintenanceDocument>> {
     const maintenance =
-      await this.maintenanceRepository.findMaintenance(maintenanceId);
-    this.carRepository.checkAccessRights(maintenance.carId, carId);
-    this.carRepository.checkAccessRights(maintenance.owner, userId);
+      await this.maintenanceRepository.findMaintenanceAndCheckAccessRights(
+        maintenanceId,
+        carId,
+        userId,
+      );
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,

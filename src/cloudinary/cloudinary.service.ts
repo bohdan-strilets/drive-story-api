@@ -11,9 +11,9 @@ export class CloudinaryService {
 
   constructor(private readonly configService: ConfigService) {
     this.cloudinary.config({
-      cloud_name: this.configService.get<string>('CLOUD_NAME'),
-      api_key: this.configService.get<string>('CLOUD_API_KEY'),
-      api_secret: this.configService.get<string>('CLOUD_API_SECRET'),
+      cloud_name: this.configService.get('CLOUD_NAME'),
+      api_key: this.configService.get('CLOUD_API_KEY'),
+      api_secret: this.configService.get('CLOUD_API_SECRET'),
     });
   }
 

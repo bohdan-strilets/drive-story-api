@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Param, Patch, Post } from '@nestjs/common';
 import { Types } from 'mongoose';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { ParseObjectIdPipe } from 'src/car/pipes/parse-objectid.pipe';
@@ -30,5 +30,14 @@ export class FuelingController {
     @User('_id') userId: Types.ObjectId,
   ): Promise<ApiResponse<FuelingDocument>> {
     return this.fuelingService.update(fuelingId, carId, userId, dto);
+  }
+
+  @Delete('delete/:carId/:fuelingId')
+  async delete(
+    @Param('fuelingId', ParseObjectIdPipe) fuelingId: Types.ObjectId,
+    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
+    @User('_id') userId: Types.ObjectId,
+  ): Promise<ApiResponse<FuelingDocument>> {
+    return this.fuelingService.delete(fuelingId, carId, userId);
   }
 }

@@ -52,4 +52,25 @@ export class FuelingService {
       updatedMaintenance,
     );
   }
+
+  async delete(
+    fuelingId: Types.ObjectId,
+    carId: Types.ObjectId,
+    userId: Types.ObjectId,
+  ): Promise<ApiResponse<FuelingDocument>> {
+    await this.fuelingRepository.findFuelingAndCheckAccessRights(
+      fuelingId,
+      carId,
+      userId,
+    );
+
+    const deletedMaintenance = await this.fuelingModel
+      .findByIdAndDelete(fuelingId)
+      .populate('photos');
+
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      deletedMaintenance,
+    );
+  }
 }

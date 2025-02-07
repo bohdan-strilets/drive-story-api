@@ -31,10 +31,11 @@ export class FuelingRepository {
     fuelingId: Types.ObjectId,
     carId: Types.ObjectId,
     userId: Types.ObjectId,
-  ): Promise<void> {
+  ): Promise<FuelingDocument> {
     const fueling = await this.findFueling(fuelingId);
     this.carRepository.checkAccessRights(fueling.carId, carId);
     this.carRepository.checkAccessRights(fueling.owner, userId);
+    return fueling;
   }
 
   async updateFueling(

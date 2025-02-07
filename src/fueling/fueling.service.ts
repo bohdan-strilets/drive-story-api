@@ -73,4 +73,22 @@ export class FuelingService {
       deletedMaintenance,
     );
   }
+
+  async byId(
+    fuelingId: Types.ObjectId,
+    carId: Types.ObjectId,
+    userId: Types.ObjectId,
+  ): Promise<ApiResponse<FuelingDocument>> {
+    const maintenance =
+      await this.fuelingRepository.findFuelingAndCheckAccessRights(
+        fuelingId,
+        carId,
+        userId,
+      );
+
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      maintenance,
+    );
+  }
 }

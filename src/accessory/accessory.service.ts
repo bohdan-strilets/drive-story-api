@@ -71,4 +71,39 @@ export class AccessoryService {
       deletedAccessory,
     );
   }
+
+  async byId(
+    accessoryId: Types.ObjectId,
+    carId: Types.ObjectId,
+    userId: Types.ObjectId,
+  ): Promise<ApiResponse<AccessoryDocument>> {
+    const accessory =
+      await this.accessoryRepository.findAccessoryAndCheckAccessRights(
+        accessoryId,
+        carId,
+        userId,
+      );
+
+    return this.responseService.createSuccessResponse(HttpStatus.OK, accessory);
+  }
+
+  async all(
+    carId: Types.ObjectId,
+    userId: Types.ObjectId,
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<ApiResponse<AccessoryDocument[]>> {
+    const skip = (page - 1) * limit;
+
+    const accessory = await this.accessoryModel
+      .find({
+        carId,
+        owner: userId,
+      })
+      .skip(skip)
+      .limit(limit)
+      .populate('photos');
+
+    return this.responseService.createSuccessResponse(HttpStatus.OK, accessory);
+  }
 }

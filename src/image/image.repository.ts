@@ -1,6 +1,7 @@
 import { HttpStatus } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import { AccessoryRepository } from 'src/accessory/accessory.repository';
 import { CarRepository } from 'src/car/car.repository';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { FileType } from 'src/cloudinary/enums/file-type.enum';
@@ -22,6 +23,7 @@ export class ImageRepository {
     private readonly carRepository: CarRepository,
     private readonly userRepository: UserRepository,
     private readonly fuelingRepository: FuelingRepository,
+    private readonly accessoryRepository: AccessoryRepository,
   ) {}
 
   async uploadFile(
@@ -118,6 +120,10 @@ export class ImageRepository {
 
       case EntityType.FUELING:
         await this.fuelingRepository.bindImage(entityId, data);
+        break;
+
+      case EntityType.ACCESSORY:
+        await this.accessoryRepository.bindImage(entityId, data);
         break;
 
       default:

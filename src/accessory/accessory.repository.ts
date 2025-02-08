@@ -51,4 +51,16 @@ export class AccessoryRepository {
       .findByIdAndUpdate(accessoryId, dto, { new: true })
       .populate('photos');
   }
+
+  async bindImage(
+    accessoryId: Types.ObjectId,
+    data: Types.ObjectId | null,
+  ): Promise<AccessoryDocument> {
+    await this.findAccessory(accessoryId);
+    return await this.accessoryModel.findByIdAndUpdate(
+      accessoryId,
+      { photos: data },
+      { new: true },
+    );
+  }
 }

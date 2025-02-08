@@ -4,4 +4,5 @@ export enum EntityType {
   CARS = 'cars',
   MAINTENANCE = 'maintenance',
   FUELING = 'fueling',
+  ACCESSORY = 'accessory',
 }

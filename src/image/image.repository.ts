@@ -6,6 +6,7 @@ import { CarRepository } from 'src/car/car.repository';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { FileType } from 'src/cloudinary/enums/file-type.enum';
 import { defaultImages } from 'src/cloudinary/helpers/default-images';
+import { ContactRepository } from 'src/contact/contact.repository';
 import { AppError } from 'src/error/app-error';
 import { errorMessages } from 'src/error/helpers/error-messages.helper';
 import { FuelingRepository } from 'src/fueling/fueling.repository';
@@ -24,6 +25,7 @@ export class ImageRepository {
     private readonly userRepository: UserRepository,
     private readonly fuelingRepository: FuelingRepository,
     private readonly accessoryRepository: AccessoryRepository,
+    private readonly contactRepository: ContactRepository,
   ) {}
 
   async uploadFile(
@@ -124,6 +126,10 @@ export class ImageRepository {
 
       case EntityType.ACCESSORY:
         await this.accessoryRepository.bindImage(entityId, data);
+        break;
+
+      case EntityType.CONTACTS:
+        await this.contactRepository.bindImage(entityId, data);
         break;
 
       default:

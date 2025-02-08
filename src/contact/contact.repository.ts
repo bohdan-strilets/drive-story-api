@@ -70,4 +70,12 @@ export class ContactRepository {
       throw new AppError(HttpStatus.CONFLICT, errorMessages.CONTACT_ALREADY);
     }
   }
+
+  async bindImage(
+    contactId: Types.ObjectId,
+    data: Types.ObjectId | null,
+  ): Promise<ContactDocument> {
+    await this.findContactById(contactId);
+    return await this.updateContact(contactId, { photos: data });
+  }
 }

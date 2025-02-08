@@ -1,10 +1,9 @@
 import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { AppError } from 'src/error/app-error';
-import { errorMessages } from 'src/error/helpers/error-messages.helper';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
+import { ContactRepository } from './contact.repository';
 import { ContactDto } from './dto/contact.dto';
 import { Contact, ContactDocument } from './schemas/contact.schema';
 
@@ -16,21 +15,14 @@ export class ContactService {
     @InjectModel(Contact.name)
     private contactModel: Model<ContactDocument>,
     private readonly responseService: ResponseService,
+    private readonly contactRepository: ContactRepository,
   ) {}
 
   async add(
     userId: Types.ObjectId,
     dto: ContactDto,
   ): Promise<ApiResponse<ContactDocument>> {
-    const contact = await this.contactModel.findOne({
-      name: dto.name,
-      phone: dto.phone,
-    });
-
-    if (contact) {
-      this.logger.error(errorMessages.CONTACT_ALREADY);
-      throw new AppError(HttpStatus.CONFLICT, errorMessages.CONTACT_ALREADY);
-    }
+    await this.contactRepository.ensureContactDoesNotExist(dto);
 
     const data = { owner: userId, ...dto };
     const newContact = await this.contactModel.create(data);
@@ -46,26 +38,15 @@ export class ContactService {
     userId: Types.ObjectId,
     dto: ContactDto,
   ): Promise<ApiResponse<ContactDocument>> {
-    const contact = await this.contactModel.findById(contactId);
+    const contact = await this.contactRepository.findContactById(contactId);
 
-    if (contact.name === dto.name || contact.phone === dto.phone) {
-      this.logger.error(errorMessages.CONTACT_ALREADY);
-      throw new AppError(HttpStatus.CONFLICT, errorMessages.CONTACT_ALREADY);
-    }
+    this.contactRepository.validateContactDetailsUniqueness(contact, dto);
+    this.contactRepository.checkAccessRights(contact.owner, userId);
 
-    if (!contact) {
-      this.logger.error(errorMessages.CONTACT_NOT_FOUND);
-      throw new AppError(HttpStatus.NOT_FOUND, errorMessages.CONTACT_NOT_FOUND);
-    }
-
-    if (!contact.owner.equals(userId)) {
-      this.logger.error(errorMessages.NO_ACCESS);
-      throw new AppError(HttpStatus.FORBIDDEN, errorMessages.NO_ACCESS);
-    }
-
-    const updatedContact = await this.contactModel
-      .findByIdAndUpdate(contactId, dto, { new: true })
-      .populate('photos');
+    const updatedContact = await this.contactRepository.updateContact(
+      contactId,
+      dto,
+    );
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
@@ -77,17 +58,8 @@ export class ContactService {
     contactId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<ContactDocument>> {
-    const contact = await this.contactModel.findById(contactId);
-
-    if (!contact) {
-      this.logger.error(errorMessages.CONTACT_NOT_FOUND);
-      throw new AppError(HttpStatus.NOT_FOUND, errorMessages.CONTACT_NOT_FOUND);
-    }
-
-    if (!contact.owner.equals(userId)) {
-      this.logger.error(errorMessages.NO_ACCESS);
-      throw new AppError(HttpStatus.FORBIDDEN, errorMessages.NO_ACCESS);
-    }
+    const contact = await this.contactRepository.findContactById(contactId);
+    this.contactRepository.checkAccessRights(contact.owner, userId);
 
     const deletedContact = await this.contactModel
       .findByIdAndDelete(contactId)
@@ -103,20 +75,8 @@ export class ContactService {
     contactId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<ContactDocument>> {
-    const contact = await this.contactModel
-      .findById(contactId)
-      .populate('photos');
-
-    if (!contact) {
-      this.logger.error(errorMessages.CONTACT_NOT_FOUND);
-      throw new AppError(HttpStatus.NOT_FOUND, errorMessages.CONTACT_NOT_FOUND);
-    }
-
-    if (!contact.owner.equals(userId)) {
-      this.logger.error(errorMessages.NO_ACCESS);
-      throw new AppError(HttpStatus.FORBIDDEN, errorMessages.NO_ACCESS);
-    }
-
+    const contact = await this.contactRepository.findContactById(contactId);
+    this.contactRepository.checkAccessRights(contact.owner, userId);
     return this.responseService.createSuccessResponse(HttpStatus.OK, contact);
   }
 

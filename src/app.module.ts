@@ -16,6 +16,7 @@ import { TokenModule } from './token/token.module';
 import { UserModule } from './user/user.module';
 import { FuelingModule } from './fueling/fueling.module';
 import { AccessoryModule } from './accessory/accessory.module';
+import { ContactModule } from './contact/contact.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { AccessoryModule } from './accessory/accessory.module';
     ImageModule,
     FuelingModule,
     AccessoryModule,
+    ContactModule,
   ],
   providers: [
     ResponseService,

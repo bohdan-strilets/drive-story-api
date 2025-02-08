@@ -50,4 +50,25 @@ export class AccessoryService {
 
     return this.responseService.createSuccessResponse(HttpStatus.OK, accessory);
   }
+
+  async delete(
+    accessoryId: Types.ObjectId,
+    carId: Types.ObjectId,
+    userId: Types.ObjectId,
+  ): Promise<ApiResponse<AccessoryDocument>> {
+    await this.accessoryRepository.findAccessoryAndCheckAccessRights(
+      accessoryId,
+      carId,
+      userId,
+    );
+
+    const deletedAccessory = await this.accessoryModel
+      .findByIdAndDelete(accessoryId)
+      .populate('photos');
+
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      deletedAccessory,
+    );
+  }
 }

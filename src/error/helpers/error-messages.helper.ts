@@ -32,4 +32,6 @@ export const errorMessages = {
   PASSWORD_LENGTH: 'Password must be between 6 and 12 characters.',
   PASSWORD_RULES_ERROR: 'The password does not meet the rules.',
   FUELING_NOT_FOUND: 'Refueling information not found.',
+  CONTACT_ALREADY: 'Such contact already exists.',
+  CONTACT_NOT_FOUND: 'Contact not found.',
 };

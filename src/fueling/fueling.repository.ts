@@ -17,7 +17,8 @@ export class FuelingRepository {
   async findFueling(fuelingId: Types.ObjectId): Promise<FuelingDocument> {
     const fueling = await this.fuelingModel
       .findById(fuelingId)
-      .populate('photos');
+      .populate('photos')
+      .populate('contactId');
 
     if (!fueling) {
       this.logger.error(errorMessages.FUELING_NOT_FOUND);
@@ -48,7 +49,8 @@ export class FuelingRepository {
 
     return await this.fuelingModel
       .findByIdAndUpdate(fuelingId, dto, { new: true })
-      .populate('photos');
+      .populate('photos')
+      .populate('contactId');
   }
 
   async bindImage(

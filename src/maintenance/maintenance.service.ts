@@ -72,7 +72,8 @@ export class MaintenanceService {
 
     const deletedMaintenance = await this.maintenanceModel
       .findByIdAndDelete(maintenanceId)
-      .populate('photos');
+      .populate('photos')
+      .populate('contactId');
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
@@ -113,7 +114,8 @@ export class MaintenanceService {
       })
       .skip(skip)
       .limit(limit)
-      .populate('photos');
+      .populate('photos')
+      .populate('contactId');
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,

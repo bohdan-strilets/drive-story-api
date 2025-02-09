@@ -63,7 +63,8 @@ export class FuelingService {
 
     const deletedFueling = await this.fuelingModel
       .findByIdAndDelete(fuelingId)
-      .populate('photos');
+      .populate('photos')
+      .populate('contactId');
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
@@ -101,7 +102,8 @@ export class FuelingService {
       })
       .skip(skip)
       .limit(limit)
-      .populate('photos');
+      .populate('photos')
+      .populate('contactId');
 
     return this.responseService.createSuccessResponse(HttpStatus.OK, fueling);
   }

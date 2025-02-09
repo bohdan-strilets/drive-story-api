@@ -18,7 +18,8 @@ export class AccessoryRepository {
   async findAccessory(accessoryId: Types.ObjectId): Promise<AccessoryDocument> {
     const accessory = await this.accessoryModel
       .findById(accessoryId)
-      .populate('photos');
+      .populate('photos')
+      .populate('contactId');
 
     if (!accessory) {
       this.logger.error(errorMessages.FUELING_NOT_FOUND);
@@ -49,7 +50,8 @@ export class AccessoryRepository {
 
     return await this.accessoryModel
       .findByIdAndUpdate(accessoryId, dto, { new: true })
-      .populate('photos');
+      .populate('photos')
+      .populate('contactId');
   }
 
   async bindImage(

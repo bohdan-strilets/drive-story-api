@@ -66,7 +66,8 @@ export class AccessoryService {
 
     const deletedAccessory = await this.accessoryModel
       .findByIdAndDelete(accessoryId)
-      .populate('photos');
+      .populate('photos')
+      .populate('contactId');
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
@@ -104,7 +105,8 @@ export class AccessoryService {
       })
       .skip(skip)
       .limit(limit)
-      .populate('photos');
+      .populate('photos')
+      .populate('contactId');
 
     return this.responseService.createSuccessResponse(HttpStatus.OK, accessory);
   }

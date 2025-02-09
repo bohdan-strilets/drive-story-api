@@ -68,4 +68,19 @@ export class MaintenanceController {
   ): Promise<ApiResponse<MaintenanceDocument[]>> {
     return this.maintenanceService.all(carId, userId, page, limit);
   }
+
+  @Get('bind-contact/:carId/:maintenanceId')
+  async bindContact(
+    @Param('maintenanceId', ParseObjectIdPipe) maintenanceId: Types.ObjectId,
+    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
+    @Query('contactId', ParseObjectIdPipe) contactId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
+  ): Promise<ApiResponse<MaintenanceDocument>> {
+    return this.maintenanceService.bindContact(
+      maintenanceId,
+      carId,
+      contactId,
+      userId,
+    );
+  }
 }

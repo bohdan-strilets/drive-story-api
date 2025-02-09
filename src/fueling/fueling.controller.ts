@@ -68,4 +68,14 @@ export class FuelingController {
   ): Promise<ApiResponse<FuelingDocument[]>> {
     return this.fuelingService.all(carId, userId, page, limit);
   }
+
+  @Get('bind-contact/:carId/:fuelingId')
+  async bindContact(
+    @Param('fuelingId', ParseObjectIdPipe) fuelingId: Types.ObjectId,
+    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
+    @Query('contactId', ParseObjectIdPipe) contactId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
+  ): Promise<ApiResponse<FuelingDocument>> {
+    return this.fuelingService.bindContact(fuelingId, carId, contactId, userId);
+  }
 }

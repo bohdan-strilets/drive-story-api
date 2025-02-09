@@ -120,4 +120,23 @@ export class MaintenanceService {
       maintenances,
     );
   }
+
+  async bindContact(
+    maintenanceId: Types.ObjectId,
+    carId: Types.ObjectId,
+    contactId: Types.ObjectId,
+    userId: Types.ObjectId,
+  ): Promise<ApiResponse<MaintenanceDocument>> {
+    const updatedAccessory = await this.maintenanceRepository.updateMaintenance(
+      maintenanceId,
+      carId,
+      userId,
+      { contactId },
+    );
+
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      updatedAccessory,
+    );
+  }
 }

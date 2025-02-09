@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CarModule } from 'src/car/car.module';
-import { ContactModule } from 'src/contact/contact.module';
 import { ResponseModule } from 'src/response/response.module';
 import { AccessoryController } from './accessory.controller';
 import { AccessoryRepository } from './accessory.repository';
@@ -15,7 +14,6 @@ import { Accessory, AccessorySchema } from './schemas/accessory.schema';
     ]),
     ResponseModule,
     CarModule,
-    ContactModule,
   ],
   controllers: [AccessoryController],
   providers: [AccessoryService, AccessoryRepository],

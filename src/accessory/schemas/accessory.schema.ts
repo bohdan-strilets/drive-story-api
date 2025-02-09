@@ -14,8 +14,8 @@ export class Accessory {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   owner: Types.ObjectId;
 
-  // @Prop({ type: Types.ObjectId, ref: 'Contact', required: true })
-  // contactId: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: 'Contact', default: null })
+  contactId?: Types.ObjectId | null;
 
   @Prop({ type: Types.ObjectId, ref: 'Car', required: true })
   carId: Types.ObjectId;

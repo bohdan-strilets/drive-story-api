@@ -1,7 +1,8 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CarRepository } from 'src/car/car.repository';
+import { ContactRepository } from 'src/contact/contact.repository';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { AccessoryRepository } from './accessory.repository';
@@ -10,12 +11,15 @@ import { Accessory, AccessoryDocument } from './schemas/accessory.schema';
 
 @Injectable()
 export class AccessoryService {
+  private readonly logger = new Logger(AccessoryService.name);
+
   constructor(
     @InjectModel(Accessory.name)
     private accessoryModel: Model<AccessoryDocument>,
     private readonly responseService: ResponseService,
     private readonly carRepository: CarRepository,
     private readonly accessoryRepository: AccessoryRepository,
+    private readonly contactRepository: ContactRepository,
   ) {}
 
   async add(
@@ -105,5 +109,27 @@ export class AccessoryService {
       .populate('photos');
 
     return this.responseService.createSuccessResponse(HttpStatus.OK, accessory);
+  }
+
+  async bindContact(
+    accessoryId: Types.ObjectId,
+    carId: Types.ObjectId,
+    contactId: Types.ObjectId,
+    userId: Types.ObjectId,
+  ): Promise<ApiResponse<AccessoryDocument>> {
+    const contact = await this.contactRepository.findContactById(contactId);
+    this.contactRepository.checkAccessRights(contact.owner, userId);
+
+    const updatedAccessory = await this.accessoryRepository.updateAccessory(
+      accessoryId,
+      carId,
+      userId,
+      { contactId: contact._id },
+    );
+
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      updatedAccessory,
+    );
   }
 }

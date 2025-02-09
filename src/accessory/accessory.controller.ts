@@ -68,4 +68,19 @@ export class AccessoryController {
   ): Promise<ApiResponse<AccessoryDocument[]>> {
     return this.accessoryService.all(carId, userId, page, limit);
   }
+
+  @Get('bind-contact/:carId/:accessoryId')
+  async bindContact(
+    @Param('accessoryId', ParseObjectIdPipe) accessoryId: Types.ObjectId,
+    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
+    @Query('contactId', ParseObjectIdPipe) contactId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
+  ): Promise<ApiResponse<AccessoryDocument>> {
+    return this.accessoryService.bindContact(
+      accessoryId,
+      carId,
+      contactId,
+      userId,
+    );
+  }
 }

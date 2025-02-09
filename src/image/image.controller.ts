@@ -31,7 +31,7 @@ export class ImageController {
   @Post('upload/:entityId')
   @UseInterceptors(FileInterceptor('image', { dest: DEFAULT_FOLDER_FOR_FILES }))
   async upload(
-    @User('_id') userId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
     @Param('entityId', ParseObjectIdPipe) entityId: Types.ObjectId,
     @Query('entityType') entityType: EntityType,
     @UploadedFile(imageValidator)
@@ -42,7 +42,7 @@ export class ImageController {
 
   @Delete('delete/:entityId')
   async delete(
-    @User('_id') userId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
     @Param('entityId', ParseObjectIdPipe) entityId: Types.ObjectId,
     @Query('entityType') entityType: EntityType,
     @Query('publicId') publicId: string,
@@ -52,7 +52,7 @@ export class ImageController {
 
   @Patch('select/:entityId')
   async select(
-    @User('_id') userId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
     @Param('entityId', ParseObjectIdPipe) entityId: Types.ObjectId,
     @Query('entityType') entityType: EntityType,
     @Query('publicId') publicId: string,
@@ -62,7 +62,7 @@ export class ImageController {
 
   @Delete('delete-all/:entityId')
   async deleteAll(
-    @User('_id') userId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
     @Param('entityId', ParseObjectIdPipe) entityId: Types.ObjectId,
     @Query('entityType') entityType: EntityType,
   ): Promise<ApiResponse<ImageDocument>> {

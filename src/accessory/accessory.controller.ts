@@ -25,7 +25,7 @@ export class AccessoryController {
   @Post('add/:carId')
   async add(
     @Body() dto: AccessoryDto,
-    @User('_id') userId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
   ): Promise<ApiResponse<AccessoryDocument>> {
     return this.accessoryService.add(userId, carId, dto);
@@ -36,7 +36,7 @@ export class AccessoryController {
     @Body() dto: AccessoryDto,
     @Param('accessoryId', ParseObjectIdPipe) accessoryId: Types.ObjectId,
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
-    @User('_id') userId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<AccessoryDocument>> {
     return this.accessoryService.update(accessoryId, carId, userId, dto);
   }
@@ -45,7 +45,7 @@ export class AccessoryController {
   async delete(
     @Param('accessoryId', ParseObjectIdPipe) accessoryId: Types.ObjectId,
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
-    @User('_id') userId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<AccessoryDocument>> {
     return this.accessoryService.delete(accessoryId, carId, userId);
   }
@@ -54,7 +54,7 @@ export class AccessoryController {
   async byId(
     @Param('accessoryId', ParseObjectIdPipe) accessoryId: Types.ObjectId,
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
-    @User('_id') userId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<AccessoryDocument>> {
     return this.accessoryService.byId(accessoryId, carId, userId);
   }
@@ -62,7 +62,7 @@ export class AccessoryController {
   @Get('all/:carId')
   async all(
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
-    @User('_id') userId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
   ): Promise<ApiResponse<AccessoryDocument[]>> {

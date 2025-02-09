@@ -14,6 +14,7 @@ import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
 import { Types } from 'mongoose';
 import { Auth } from 'src/auth/decorators/auth.decorator';
+import { ParseObjectIdPipe } from 'src/car/pipes/parse-objectid.pipe';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { User } from './decorators/user.decorator';
 import { EditPasswordDto } from './dto/edit-password.dto';
@@ -53,7 +54,7 @@ export class UserController {
   @Patch('edit-profile')
   async editProfile(
     @Body() dto: ProfileDto,
-    @User('_id') userId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<UserInfo>> {
     return this.userService.editProfile(userId, dto);
   }
@@ -62,7 +63,7 @@ export class UserController {
   @Patch('edit-email')
   async editEmail(
     @Body() dto: EmailDto,
-    @User('_id') userId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<UserInfo>> {
     return this.userService.editEmail(userId, dto);
   }
@@ -103,7 +104,7 @@ export class UserController {
   @Patch('edit-password')
   async editPassword(
     @Body() dto: EditPasswordDto,
-    @User('_id') userId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse> {
     return this.userService.editPassword(dto, userId);
   }
@@ -111,7 +112,7 @@ export class UserController {
   @Auth()
   @Get('current-user')
   async getCurrentUser(
-    @User('_id') userId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<UserInfo>> {
     return this.userService.getCurrentUser(userId);
   }
@@ -119,7 +120,7 @@ export class UserController {
   @Auth()
   @Delete('remove-profile')
   async removeProfile(
-    @User('_id') userId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<UserInfo>> {
     return this.userService.removeProfile(userId);
   }

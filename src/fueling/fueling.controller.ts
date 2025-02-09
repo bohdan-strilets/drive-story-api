@@ -25,7 +25,7 @@ export class FuelingController {
   @Post('add/:carId')
   async add(
     @Body() dto: FuelingDto,
-    @User('_id') userId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
   ): Promise<ApiResponse<FuelingDocument>> {
     return this.fuelingService.add(userId, carId, dto);
@@ -36,7 +36,7 @@ export class FuelingController {
     @Body() dto: FuelingDto,
     @Param('fuelingId', ParseObjectIdPipe) fuelingId: Types.ObjectId,
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
-    @User('_id') userId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<FuelingDocument>> {
     return this.fuelingService.update(fuelingId, carId, userId, dto);
   }
@@ -45,7 +45,7 @@ export class FuelingController {
   async delete(
     @Param('fuelingId', ParseObjectIdPipe) fuelingId: Types.ObjectId,
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
-    @User('_id') userId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe, ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<FuelingDocument>> {
     return this.fuelingService.delete(fuelingId, carId, userId);
   }
@@ -54,7 +54,7 @@ export class FuelingController {
   async byId(
     @Param('fuelingId', ParseObjectIdPipe) fuelingId: Types.ObjectId,
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
-    @User('_id') userId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<FuelingDocument>> {
     return this.fuelingService.byId(fuelingId, carId, userId);
   }
@@ -62,7 +62,7 @@ export class FuelingController {
   @Get('all/:carId')
   async all(
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
-    @User('_id') userId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
   ): Promise<ApiResponse<FuelingDocument[]>> {

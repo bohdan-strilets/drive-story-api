@@ -25,7 +25,7 @@ export class CarController {
   @Post('add')
   async add(
     @Body() dto: CarDto,
-    @User('_id') userId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<CarDocument>> {
     return this.carService.add(userId, dto);
   }
@@ -34,7 +34,7 @@ export class CarController {
   async update(
     @Body() dto: CarDto,
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
-    @User('_id') userId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<CarDocument>> {
     return this.carService.update(carId, userId, dto);
   }
@@ -42,7 +42,7 @@ export class CarController {
   @Delete('delete/:carId')
   async delete(
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
-    @User('_id') userId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<CarDocument>> {
     return this.carService.delete(carId, userId);
   }
@@ -50,14 +50,14 @@ export class CarController {
   @Get('by-id/:carId')
   async byId(
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
-    @User('_id') userId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<CarDocument>> {
     return this.carService.byId(carId, userId);
   }
 
   @Get('all')
   async all(
-    @User('_id') userId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
   ): Promise<ApiResponse<CarDocument[]>> {

@@ -25,7 +25,7 @@ export class MaintenanceController {
   @Post('add/:carId')
   async add(
     @Body() dto: MaintenanceDto,
-    @User('_id') userId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
   ): Promise<ApiResponse<MaintenanceDocument>> {
     return this.maintenanceService.add(userId, carId, dto);
@@ -36,7 +36,7 @@ export class MaintenanceController {
     @Body() dto: MaintenanceDto,
     @Param('maintenanceId', ParseObjectIdPipe) maintenanceId: Types.ObjectId,
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
-    @User('_id') userId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<MaintenanceDocument>> {
     return this.maintenanceService.update(maintenanceId, carId, userId, dto);
   }
@@ -45,7 +45,7 @@ export class MaintenanceController {
   async delete(
     @Param('maintenanceId', ParseObjectIdPipe) maintenanceId: Types.ObjectId,
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
-    @User('_id') userId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<MaintenanceDocument>> {
     return this.maintenanceService.delete(maintenanceId, carId, userId);
   }
@@ -54,7 +54,7 @@ export class MaintenanceController {
   async byId(
     @Param('maintenanceId', ParseObjectIdPipe) maintenanceId: Types.ObjectId,
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
-    @User('_id') userId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<MaintenanceDocument>> {
     return this.maintenanceService.byId(maintenanceId, carId, userId);
   }
@@ -62,7 +62,7 @@ export class MaintenanceController {
   @Get('all/:carId')
   async all(
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
-    @User('_id') userId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
   ): Promise<ApiResponse<MaintenanceDocument[]>> {

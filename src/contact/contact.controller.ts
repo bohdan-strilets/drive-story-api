@@ -25,7 +25,7 @@ export class ContactController {
   @Post('add')
   async add(
     @Body() dto: ContactDto,
-    @User('_id') userId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<ContactDocument>> {
     return this.contactService.add(userId, dto);
   }
@@ -34,7 +34,7 @@ export class ContactController {
   async update(
     @Body() dto: ContactDto,
     @Param('contactId', ParseObjectIdPipe) contactId: Types.ObjectId,
-    @User('_id') userId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<ContactDocument>> {
     return this.contactService.update(contactId, userId, dto);
   }
@@ -42,7 +42,7 @@ export class ContactController {
   @Delete('delete/:contactId')
   async delete(
     @Param('contactId', ParseObjectIdPipe) contactId: Types.ObjectId,
-    @User('_id') userId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<ContactDocument>> {
     return this.contactService.delete(contactId, userId);
   }
@@ -50,14 +50,14 @@ export class ContactController {
   @Get('by-id/:contactId')
   async byId(
     @Param('contactId', ParseObjectIdPipe) contactId: Types.ObjectId,
-    @User('_id') userId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<ContactDocument>> {
     return this.contactService.byId(contactId, userId);
   }
 
   @Get('all')
   async all(
-    @User('_id') userId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
   ): Promise<ApiResponse<ContactDocument[]>> {
@@ -66,7 +66,7 @@ export class ContactController {
 
   @Get('filter')
   async filterContactsByNameOrPhone(
-    @User('_id') userId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
     @Query('searchQuery') searchQuery: string = '',
   ): Promise<ApiResponse<ContactDocument[]>> {
     return this.contactService.filterContactsByNameOrPhone(userId, searchQuery);

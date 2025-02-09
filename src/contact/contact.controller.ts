@@ -63,4 +63,12 @@ export class ContactController {
   ): Promise<ApiResponse<ContactDocument[]>> {
     return this.contactService.all(userId, page, limit);
   }
+
+  @Get('filter')
+  async filterContactsByNameOrPhone(
+    @User('_id') userId: Types.ObjectId,
+    @Query('searchQuery') searchQuery: string = '',
+  ): Promise<ApiResponse<ContactDocument[]>> {
+    return this.contactService.filterContactsByNameOrPhone(userId, searchQuery);
+  }
 }

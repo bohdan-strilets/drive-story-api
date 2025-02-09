@@ -78,4 +78,13 @@ export class ContactRepository {
     await this.findContactById(contactId);
     return await this.updateContact(contactId, { photos: data });
   }
+
+  async filterByNameOrPhone(userId: Types.ObjectId, regex: RegExp) {
+    return await this.contactModel
+      .find({
+        owner: userId,
+        $or: [{ name: { $regex: regex } }, { phone: { $regex: regex } }],
+      })
+      .exec();
+  }
 }

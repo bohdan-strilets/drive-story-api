@@ -95,4 +95,25 @@ export class ContactService {
 
     return this.responseService.createSuccessResponse(HttpStatus.OK, fueling);
   }
+
+  async filterContactsByNameOrPhone(
+    userId: Types.ObjectId,
+    searchQuery: string,
+  ): Promise<ApiResponse<ContactDocument[]>> {
+    if (!searchQuery) {
+      const contacts = await this.contactModel.find({ owner: userId }).exec();
+      return this.responseService.createSuccessResponse(
+        HttpStatus.OK,
+        contacts,
+      );
+    }
+
+    const regex = new RegExp(searchQuery, 'i');
+    const contacts = await this.contactRepository.filterByNameOrPhone(
+      userId,
+      regex,
+    );
+
+    return this.responseService.createSuccessResponse(HttpStatus.OK, contacts);
+  }
 }

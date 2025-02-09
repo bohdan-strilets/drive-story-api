@@ -17,6 +17,7 @@ import { UserModule } from './user/user.module';
 import { FuelingModule } from './fueling/fueling.module';
 import { AccessoryModule } from './accessory/accessory.module';
 import { ContactModule } from './contact/contact.module';
+import { CarInsuranceModule } from './car-insurance/car-insurance.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { ContactModule } from './contact/contact.module';
     FuelingModule,
     AccessoryModule,
     ContactModule,
+    CarInsuranceModule,
   ],
   providers: [
     ResponseService,

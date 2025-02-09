@@ -79,12 +79,21 @@ export class ContactRepository {
     return await this.updateContact(contactId, { photos: data });
   }
 
-  async filterByNameOrPhone(userId: Types.ObjectId, regex: RegExp) {
+  async filterByNameOrPhone(
+    userId: Types.ObjectId,
+    regex: RegExp,
+    page: number,
+    limit: number,
+  ) {
+    const skip = (page - 1) * limit;
+
     return await this.contactModel
       .find({
         owner: userId,
         $or: [{ name: { $regex: regex } }, { phone: { $regex: regex } }],
       })
+      .skip(skip)
+      .limit(limit)
       .exec();
   }
 }

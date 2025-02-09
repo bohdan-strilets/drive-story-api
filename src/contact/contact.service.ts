@@ -99,6 +99,8 @@ export class ContactService {
   async filterContactsByNameOrPhone(
     userId: Types.ObjectId,
     searchQuery: string,
+    page: number = 1,
+    limit: number = 10,
   ): Promise<ApiResponse<ContactDocument[]>> {
     if (!searchQuery) {
       const contacts = await this.contactModel.find({ owner: userId }).exec();
@@ -112,6 +114,8 @@ export class ContactService {
     const contacts = await this.contactRepository.filterByNameOrPhone(
       userId,
       regex,
+      page,
+      limit,
     );
 
     return this.responseService.createSuccessResponse(HttpStatus.OK, contacts);

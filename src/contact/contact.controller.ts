@@ -68,7 +68,14 @@ export class ContactController {
   async filterContactsByNameOrPhone(
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
     @Query('searchQuery') searchQuery: string = '',
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
   ): Promise<ApiResponse<ContactDocument[]>> {
-    return this.contactService.filterContactsByNameOrPhone(userId, searchQuery);
+    return this.contactService.filterContactsByNameOrPhone(
+      userId,
+      searchQuery,
+      page,
+      limit,
+    );
   }
 }

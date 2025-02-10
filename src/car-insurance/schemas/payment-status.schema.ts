@@ -1,5 +1,6 @@
 import { Prop, Schema } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
+import { InstallmentsCount } from '../enums/installments-count.enum';
 
 export type PaymentStatusDocument = HydratedDocument<PaymentStatus>;
 
@@ -8,11 +9,11 @@ export class PaymentStatus {
   @Prop({ default: () => new Types.ObjectId() })
   _id: Types.ObjectId;
 
-  @Prop({ default: 0 })
+  @Prop({ default: false })
   isPaid: boolean;
 
-  @Prop({ default: 0 })
-  installmentsCount?: number;
+  @Prop({ default: InstallmentsCount.ONE_TIME, enum: InstallmentsCount })
+  installmentsCount?: InstallmentsCount;
 
   @Prop({ default: 0 })
   installmentCost?: number;
@@ -20,7 +21,7 @@ export class PaymentStatus {
   @Prop({ default: 0 })
   totalInstallmentsSum?: number;
 
-  @Prop({ default: 0 })
+  @Prop({ default: [] })
   paymentDates?: Date[];
 
   @Prop()

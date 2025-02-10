@@ -32,7 +32,7 @@ export class CarInsurance {
   endDate: Date;
 
   @Prop({ default: InsuranceType.OC, enum: InsuranceType })
-  insuranceType: InsuranceType;
+  insuranceType?: InsuranceType;
 
   @Prop({ required: true })
   coverageAmount: number;

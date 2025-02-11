@@ -55,4 +55,62 @@ export class CarInsuranceService {
 
     return this.responseService.createSuccessResponse(HttpStatus.OK, accessory);
   }
+
+  async delete(
+    insuranceId: Types.ObjectId,
+    carId: Types.ObjectId,
+    userId: Types.ObjectId,
+  ): Promise<ApiResponse<CarInsuranceDocument>> {
+    await this.carInsuranceRepository.findInsuranceAndCheckAccessRights(
+      insuranceId,
+      carId,
+      userId,
+    );
+
+    const deletedAccessory = await this.carInsuranceModel
+      .findByIdAndDelete(insuranceId)
+      .populate('photos')
+      .populate('contactId');
+
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      deletedAccessory,
+    );
+  }
+
+  async byId(
+    insuranceId: Types.ObjectId,
+    carId: Types.ObjectId,
+    userId: Types.ObjectId,
+  ): Promise<ApiResponse<CarInsuranceDocument>> {
+    const accessory =
+      await this.carInsuranceRepository.findInsuranceAndCheckAccessRights(
+        insuranceId,
+        carId,
+        userId,
+      );
+
+    return this.responseService.createSuccessResponse(HttpStatus.OK, accessory);
+  }
+
+  async all(
+    carId: Types.ObjectId,
+    userId: Types.ObjectId,
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<ApiResponse<CarInsuranceDocument[]>> {
+    const skip = (page - 1) * limit;
+
+    const accessory = await this.carInsuranceModel
+      .find({
+        carId,
+        owner: userId,
+      })
+      .skip(skip)
+      .limit(limit)
+      .populate('photos')
+      .populate('contactId');
+
+    return this.responseService.createSuccessResponse(HttpStatus.OK, accessory);
+  }
 }

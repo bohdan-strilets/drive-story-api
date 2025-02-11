@@ -1,4 +1,13 @@
-import { Body, Controller, Param, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { Types } from 'mongoose';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { ParseObjectIdPipe } from 'src/car/pipes/parse-objectid.pipe';
@@ -30,5 +39,33 @@ export class CarInsuranceController {
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<CarInsuranceDocument>> {
     return this.carInsuranceService.update(insuranceId, carId, userId, dto);
+  }
+
+  @Delete('delete/:carId/:insuranceId')
+  async delete(
+    @Param('insuranceId', ParseObjectIdPipe) insuranceId: Types.ObjectId,
+    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
+  ): Promise<ApiResponse<CarInsuranceDocument>> {
+    return this.carInsuranceService.delete(insuranceId, carId, userId);
+  }
+
+  @Get('by-id/:carId/:insuranceId')
+  async byId(
+    @Param('insuranceId', ParseObjectIdPipe) insuranceId: Types.ObjectId,
+    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
+  ): Promise<ApiResponse<CarInsuranceDocument>> {
+    return this.carInsuranceService.byId(insuranceId, carId, userId);
+  }
+
+  @Get('all/:carId')
+  async all(
+    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+  ): Promise<ApiResponse<CarInsuranceDocument[]>> {
+    return this.carInsuranceService.all(carId, userId, page, limit);
   }
 }

@@ -3,10 +3,10 @@ import { HydratedDocument, Types } from 'mongoose';
 import { InsuranceType } from '../enums/insurance-type.enum';
 import { PaymentStatus } from './payment-status.schema';
 
-export type CarInsuranceDocument = HydratedDocument<CarInsurance>;
+export type InsuranceDocument = HydratedDocument<Insurance>;
 
 @Schema({ versionKey: false, timestamps: true })
-export class CarInsurance {
+export class Insurance {
   @Prop({ default: () => new Types.ObjectId() })
   _id: Types.ObjectId;
 
@@ -50,4 +50,4 @@ export class CarInsurance {
   updatedAt: Date;
 }
 
-export const CarInsuranceSchema = SchemaFactory.createForClass(CarInsurance);
+export const InsuranceSchema = SchemaFactory.createForClass(Insurance);

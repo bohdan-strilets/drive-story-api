@@ -1,42 +1,37 @@
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CarRepository } from 'src/car/car.repository';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
-import { CarInsuranceRepository } from './car-insurance.repository';
-import { CarInsuranceDto } from './dto/car-insurance.dto';
-import {
-  CarInsurance,
-  CarInsuranceDocument,
-} from './schemas/car-insurance.schema';
+import { InsuranceDto } from './dto/insurance.dto';
+import { InsuranceRepository } from './insurance.repository';
+import { Insurance, InsuranceDocument } from './schemas/insurance.schema';
 
 @Injectable()
-export class CarInsuranceService {
-  private readonly logger = new Logger(CarInsuranceService.name);
-
+export class InsuranceService {
   constructor(
-    @InjectModel(CarInsurance.name)
-    private carInsuranceModel: Model<CarInsuranceDocument>,
+    @InjectModel(Insurance.name)
+    private insuranceModel: Model<InsuranceDocument>,
     private readonly responseService: ResponseService,
     private readonly carRepository: CarRepository,
-    private readonly carInsuranceRepository: CarInsuranceRepository,
+    private readonly insuranceRepository: InsuranceRepository,
   ) {}
 
   async add(
     userId: Types.ObjectId,
     carId: Types.ObjectId,
-    dto: CarInsuranceDto,
-  ): Promise<ApiResponse<CarInsuranceDocument>> {
+    dto: InsuranceDto,
+  ): Promise<ApiResponse<InsuranceDocument>> {
     const car = await this.carRepository.findCar(carId);
     this.carRepository.checkAccessRights(car.owner, userId);
 
     const data = { carId, owner: userId, ...dto };
-    const carInsurance = await this.carInsuranceModel.create(data);
+    const insurance = await this.insuranceModel.create(data);
 
     return this.responseService.createSuccessResponse(
       HttpStatus.CREATED,
-      carInsurance,
+      insurance,
     );
   }
 
@@ -44,37 +39,37 @@ export class CarInsuranceService {
     insuranceId: Types.ObjectId,
     carId: Types.ObjectId,
     userId: Types.ObjectId,
-    dto: CarInsuranceDto,
-  ): Promise<ApiResponse<CarInsuranceDocument>> {
-    const accessory = await this.carInsuranceRepository.updateInsurance(
+    dto: InsuranceDto,
+  ): Promise<ApiResponse<InsuranceDocument>> {
+    const insurance = await this.insuranceRepository.updateInsurance(
       insuranceId,
       carId,
       userId,
       dto,
     );
 
-    return this.responseService.createSuccessResponse(HttpStatus.OK, accessory);
+    return this.responseService.createSuccessResponse(HttpStatus.OK, insurance);
   }
 
   async delete(
     insuranceId: Types.ObjectId,
     carId: Types.ObjectId,
     userId: Types.ObjectId,
-  ): Promise<ApiResponse<CarInsuranceDocument>> {
-    await this.carInsuranceRepository.findInsuranceAndCheckAccessRights(
+  ): Promise<ApiResponse<InsuranceDocument>> {
+    await this.insuranceRepository.findInsuranceAndCheckAccessRights(
       insuranceId,
       carId,
       userId,
     );
 
-    const deletedAccessory = await this.carInsuranceModel
+    const deletedInsurance = await this.insuranceModel
       .findByIdAndDelete(insuranceId)
       .populate('photos')
       .populate('contactId');
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
-      deletedAccessory,
+      deletedInsurance,
     );
   }
 
@@ -82,15 +77,15 @@ export class CarInsuranceService {
     insuranceId: Types.ObjectId,
     carId: Types.ObjectId,
     userId: Types.ObjectId,
-  ): Promise<ApiResponse<CarInsuranceDocument>> {
-    const accessory =
-      await this.carInsuranceRepository.findInsuranceAndCheckAccessRights(
+  ): Promise<ApiResponse<InsuranceDocument>> {
+    const insurance =
+      await this.insuranceRepository.findInsuranceAndCheckAccessRights(
         insuranceId,
         carId,
         userId,
       );
 
-    return this.responseService.createSuccessResponse(HttpStatus.OK, accessory);
+    return this.responseService.createSuccessResponse(HttpStatus.OK, insurance);
   }
 
   async all(
@@ -98,10 +93,10 @@ export class CarInsuranceService {
     userId: Types.ObjectId,
     page: number = 1,
     limit: number = 10,
-  ): Promise<ApiResponse<CarInsuranceDocument[]>> {
+  ): Promise<ApiResponse<InsuranceDocument[]>> {
     const skip = (page - 1) * limit;
 
-    const accessory = await this.carInsuranceModel
+    const insurances = await this.insuranceModel
       .find({
         carId,
         owner: userId,
@@ -111,7 +106,10 @@ export class CarInsuranceService {
       .populate('photos')
       .populate('contactId');
 
-    return this.responseService.createSuccessResponse(HttpStatus.OK, accessory);
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      insurances,
+    );
   }
 
   async bindContact(
@@ -119,8 +117,8 @@ export class CarInsuranceService {
     carId: Types.ObjectId,
     contactId: Types.ObjectId,
     userId: Types.ObjectId,
-  ): Promise<ApiResponse<CarInsuranceDocument>> {
-    const updatedAccessory = await this.carInsuranceRepository.updateInsurance(
+  ): Promise<ApiResponse<InsuranceDocument>> {
+    const updatedInsurance = await this.insuranceRepository.updateInsurance(
       insuranceId,
       carId,
       userId,
@@ -129,7 +127,7 @@ export class CarInsuranceService {
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
-      updatedAccessory,
+      updatedInsurance,
     );
   }
 }

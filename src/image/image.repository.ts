@@ -2,7 +2,6 @@ import { HttpStatus } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { AccessoryRepository } from 'src/accessory/accessory.repository';
-import { CarInsuranceRepository } from 'src/car-insurance/car-insurance.repository';
 import { CarRepository } from 'src/car/car.repository';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { FileType } from 'src/cloudinary/enums/file-type.enum';
@@ -11,6 +10,7 @@ import { ContactRepository } from 'src/contact/contact.repository';
 import { AppError } from 'src/error/app-error';
 import { errorMessages } from 'src/error/helpers/error-messages.helper';
 import { FuelingRepository } from 'src/fueling/fueling.repository';
+import { InsuranceRepository } from 'src/insurance/insurance.repository';
 import { MaintenanceRepository } from 'src/maintenance/maintenance.repository';
 import { UserRepository } from 'src/user/user.repository';
 import { EntityType } from './enums/entity-type.enum';
@@ -27,7 +27,7 @@ export class ImageRepository {
     private readonly fuelingRepository: FuelingRepository,
     private readonly accessoryRepository: AccessoryRepository,
     private readonly contactRepository: ContactRepository,
-    private readonly carInsuranceRepository: CarInsuranceRepository,
+    private readonly insuranceRepository: InsuranceRepository,
   ) {}
 
   async uploadFile(
@@ -135,7 +135,7 @@ export class ImageRepository {
         break;
 
       case EntityType.INSURANCE:
-        await this.carInsuranceRepository.bindImage(entityId, data);
+        await this.insuranceRepository.bindImage(entityId, data);
         break;
 
       default:

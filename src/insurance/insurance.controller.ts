@@ -13,32 +13,32 @@ import { Auth } from 'src/auth/decorators/auth.decorator';
 import { ParseObjectIdPipe } from 'src/car/pipes/parse-objectid.pipe';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { User } from 'src/user/decorators/user.decorator';
-import { CarInsuranceService } from './car-insurance.service';
-import { CarInsuranceDto } from './dto/car-insurance.dto';
-import { CarInsuranceDocument } from './schemas/car-insurance.schema';
+import { InsuranceDto } from './dto/insurance.dto';
+import { InsuranceService } from './insurance.service';
+import { InsuranceDocument } from './schemas/insurance.schema';
 
 @Auth()
-@Controller('v1/car-insurance')
-export class CarInsuranceController {
-  constructor(private readonly carInsuranceService: CarInsuranceService) {}
+@Controller('v1/insurance')
+export class InsuranceController {
+  constructor(private readonly insuranceService: InsuranceService) {}
 
   @Post('add/:carId')
   async add(
-    @Body() dto: CarInsuranceDto,
+    @Body() dto: InsuranceDto,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
-  ): Promise<ApiResponse<CarInsuranceDocument>> {
-    return this.carInsuranceService.add(userId, carId, dto);
+  ): Promise<ApiResponse<InsuranceDocument>> {
+    return this.insuranceService.add(userId, carId, dto);
   }
 
   @Patch('update/:carId/:insuranceId')
   async update(
-    @Body() dto: CarInsuranceDto,
+    @Body() dto: InsuranceDto,
     @Param('insuranceId', ParseObjectIdPipe) insuranceId: Types.ObjectId,
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
-  ): Promise<ApiResponse<CarInsuranceDocument>> {
-    return this.carInsuranceService.update(insuranceId, carId, userId, dto);
+  ): Promise<ApiResponse<InsuranceDocument>> {
+    return this.insuranceService.update(insuranceId, carId, userId, dto);
   }
 
   @Delete('delete/:carId/:insuranceId')
@@ -46,8 +46,8 @@ export class CarInsuranceController {
     @Param('insuranceId', ParseObjectIdPipe) insuranceId: Types.ObjectId,
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
-  ): Promise<ApiResponse<CarInsuranceDocument>> {
-    return this.carInsuranceService.delete(insuranceId, carId, userId);
+  ): Promise<ApiResponse<InsuranceDocument>> {
+    return this.insuranceService.delete(insuranceId, carId, userId);
   }
 
   @Get('by-id/:carId/:insuranceId')
@@ -55,8 +55,8 @@ export class CarInsuranceController {
     @Param('insuranceId', ParseObjectIdPipe) insuranceId: Types.ObjectId,
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
-  ): Promise<ApiResponse<CarInsuranceDocument>> {
-    return this.carInsuranceService.byId(insuranceId, carId, userId);
+  ): Promise<ApiResponse<InsuranceDocument>> {
+    return this.insuranceService.byId(insuranceId, carId, userId);
   }
 
   @Get('all/:carId')
@@ -65,8 +65,8 @@ export class CarInsuranceController {
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
-  ): Promise<ApiResponse<CarInsuranceDocument[]>> {
-    return this.carInsuranceService.all(carId, userId, page, limit);
+  ): Promise<ApiResponse<InsuranceDocument[]>> {
+    return this.insuranceService.all(carId, userId, page, limit);
   }
 
   @Get('bind-contact/:carId/:insuranceId')
@@ -75,8 +75,8 @@ export class CarInsuranceController {
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
     @Query('contactId', ParseObjectIdPipe) contactId: Types.ObjectId,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
-  ): Promise<ApiResponse<CarInsuranceDocument>> {
-    return this.carInsuranceService.bindContact(
+  ): Promise<ApiResponse<InsuranceDocument>> {
+    return this.insuranceService.bindContact(
       insuranceId,
       carId,
       contactId,

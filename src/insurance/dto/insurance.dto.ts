@@ -13,7 +13,7 @@ import {
 import { InsuranceType } from '../enums/insurance-type.enum';
 import { PaymentStatusDto } from './payment-status.dto';
 
-export class CarInsuranceDto {
+export class InsuranceDto {
   @IsNotEmpty({ message: 'Insurer name is required.' })
   @IsString({ message: 'Insurer name must be a string.' })
   @Length(2, 100, {

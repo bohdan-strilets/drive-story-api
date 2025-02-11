@@ -68,4 +68,19 @@ export class CarInsuranceController {
   ): Promise<ApiResponse<CarInsuranceDocument[]>> {
     return this.carInsuranceService.all(carId, userId, page, limit);
   }
+
+  @Get('bind-contact/:carId/:insuranceId')
+  async bindContact(
+    @Param('insuranceId', ParseObjectIdPipe) insuranceId: Types.ObjectId,
+    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
+    @Query('contactId', ParseObjectIdPipe) contactId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
+  ): Promise<ApiResponse<CarInsuranceDocument>> {
+    return this.carInsuranceService.bindContact(
+      insuranceId,
+      carId,
+      contactId,
+      userId,
+    );
+  }
 }

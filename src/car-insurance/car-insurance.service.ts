@@ -113,4 +113,23 @@ export class CarInsuranceService {
 
     return this.responseService.createSuccessResponse(HttpStatus.OK, accessory);
   }
+
+  async bindContact(
+    insuranceId: Types.ObjectId,
+    carId: Types.ObjectId,
+    contactId: Types.ObjectId,
+    userId: Types.ObjectId,
+  ): Promise<ApiResponse<CarInsuranceDocument>> {
+    const updatedAccessory = await this.carInsuranceRepository.updateInsurance(
+      insuranceId,
+      carId,
+      userId,
+      { contactId },
+    );
+
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      updatedAccessory,
+    );
+  }
 }

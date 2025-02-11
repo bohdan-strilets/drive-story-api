@@ -19,6 +19,7 @@ import { SendgridModule } from './sendgrid/sendgrid.module';
 import { TokenModule } from './token/token.module';
 import { UserModule } from './user/user.module';
 import { InspectionModule } from './inspection/inspection.module';
+import { ReminderModule } from './reminder/reminder.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { InspectionModule } from './inspection/inspection.module';
     ContactModule,
     InsuranceModule,
     InspectionModule,
+    ReminderModule,
   ],
   providers: [
     ResponseService,

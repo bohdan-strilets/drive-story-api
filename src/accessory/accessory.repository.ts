@@ -22,8 +22,8 @@ export class AccessoryRepository {
       .populate('contactId');
 
     if (!accessory) {
-      this.logger.error(errorMessages.FUELING_NOT_FOUND);
-      throw new AppError(HttpStatus.NOT_FOUND, errorMessages.FUELING_NOT_FOUND);
+      this.logger.error(errorMessages.SERVICE_NOT_FOUND);
+      throw new AppError(HttpStatus.NOT_FOUND, errorMessages.SERVICE_NOT_FOUND);
     }
 
     return accessory;

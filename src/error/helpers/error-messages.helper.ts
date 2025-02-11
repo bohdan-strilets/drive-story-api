@@ -34,4 +34,7 @@ export const errorMessages = {
   FUELING_NOT_FOUND: 'Refueling information not found.',
   CONTACT_ALREADY: 'Such contact already exists.',
   CONTACT_NOT_FOUND: 'Contact not found.',
+  INSURANCE_NOT_FOUND:
+    'The information about the insurance policy was not found.',
+  SERVICE_NOT_FOUND: 'The service was not found.',
 };

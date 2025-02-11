@@ -3,6 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { CarModule } from 'src/car/car.module';
 import { ResponseModule } from 'src/response/response.module';
 import { CarInsuranceController } from './car-insurance.controller';
+import { CarInsuranceRepository } from './car-insurance.repository';
 import { CarInsuranceService } from './car-insurance.service';
 import {
   CarInsurance,
@@ -18,6 +19,7 @@ import {
     CarModule,
   ],
   controllers: [CarInsuranceController],
-  providers: [CarInsuranceService],
+  providers: [CarInsuranceService, CarInsuranceRepository],
+  exports: [CarInsuranceRepository],
 })
 export class CarInsuranceModule {}

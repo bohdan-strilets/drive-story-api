@@ -4,6 +4,7 @@ import { Model, Types } from 'mongoose';
 import { CarRepository } from 'src/car/car.repository';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
+import { CarInsuranceRepository } from './car-insurance.repository';
 import { CarInsuranceDto } from './dto/car-insurance.dto';
 import {
   CarInsurance,
@@ -19,6 +20,7 @@ export class CarInsuranceService {
     private carInsuranceModel: Model<CarInsuranceDocument>,
     private readonly responseService: ResponseService,
     private readonly carRepository: CarRepository,
+    private readonly carInsuranceRepository: CarInsuranceRepository,
   ) {}
 
   async add(
@@ -36,5 +38,21 @@ export class CarInsuranceService {
       HttpStatus.CREATED,
       carInsurance,
     );
+  }
+
+  async update(
+    insuranceId: Types.ObjectId,
+    carId: Types.ObjectId,
+    userId: Types.ObjectId,
+    dto: CarInsuranceDto,
+  ): Promise<ApiResponse<CarInsuranceDocument>> {
+    const accessory = await this.carInsuranceRepository.updateInsurance(
+      insuranceId,
+      carId,
+      userId,
+      dto,
+    );
+
+    return this.responseService.createSuccessResponse(HttpStatus.OK, accessory);
   }
 }

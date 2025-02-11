@@ -39,4 +39,5 @@ export const errorMessages = {
   SERVICE_NOT_FOUND: 'The service was not found.',
   INSPECTION_NOT_FOUND:
     'The information about the vehicle inspection was not found.',
+  REMINDER_NOT_FOUND: 'Reminder not found.',
 };

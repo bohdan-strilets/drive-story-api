@@ -12,7 +12,7 @@ export class Reminder {
   owner: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, required: true })
-  eventId: Types.ObjectId;
+  entityId: Types.ObjectId;
 
   @Prop({ required: true })
   title: string;

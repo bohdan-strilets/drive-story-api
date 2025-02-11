@@ -2,6 +2,7 @@ import { HttpStatus } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { AccessoryRepository } from 'src/accessory/accessory.repository';
+import { CarInsuranceRepository } from 'src/car-insurance/car-insurance.repository';
 import { CarRepository } from 'src/car/car.repository';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { FileType } from 'src/cloudinary/enums/file-type.enum';
@@ -26,6 +27,7 @@ export class ImageRepository {
     private readonly fuelingRepository: FuelingRepository,
     private readonly accessoryRepository: AccessoryRepository,
     private readonly contactRepository: ContactRepository,
+    private readonly carInsuranceRepository: CarInsuranceRepository,
   ) {}
 
   async uploadFile(
@@ -130,6 +132,10 @@ export class ImageRepository {
 
       case EntityType.CONTACTS:
         await this.contactRepository.bindImage(entityId, data);
+        break;
+
+      case EntityType.INSURANCE:
+        await this.carInsuranceRepository.bindImage(entityId, data);
         break;
 
       default:

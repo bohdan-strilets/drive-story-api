@@ -61,4 +61,16 @@ export class CarInsuranceRepository {
       .populate('photos')
       .populate('contactId');
   }
+
+  async bindImage(
+    insuranceId: Types.ObjectId,
+    data: Types.ObjectId | null,
+  ): Promise<CarInsuranceDocument> {
+    await this.findInsurance(insuranceId);
+    return await this.carInsuranceModel.findByIdAndUpdate(
+      insuranceId,
+      { photos: data },
+      { new: true },
+    );
+  }
 }

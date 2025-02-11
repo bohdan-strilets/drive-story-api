@@ -18,6 +18,7 @@ import { ResponseService } from './response/response.service';
 import { SendgridModule } from './sendgrid/sendgrid.module';
 import { TokenModule } from './token/token.module';
 import { UserModule } from './user/user.module';
+import { InspectionModule } from './inspection/inspection.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { UserModule } from './user/user.module';
     AccessoryModule,
     ContactModule,
     InsuranceModule,
+    InspectionModule,
   ],
   providers: [
     ResponseService,

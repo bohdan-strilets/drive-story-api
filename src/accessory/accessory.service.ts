@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CarRepository } from 'src/car/car.repository';
@@ -10,8 +10,6 @@ import { Accessory, AccessoryDocument } from './schemas/accessory.schema';
 
 @Injectable()
 export class AccessoryService {
-  private readonly logger = new Logger(AccessoryService.name);
-
   constructor(
     @InjectModel(Accessory.name)
     private accessoryModel: Model<AccessoryDocument>,
@@ -29,11 +27,11 @@ export class AccessoryService {
     this.carRepository.checkAccessRights(car.owner, userId);
 
     const data = { carId, owner: userId, ...dto };
-    const fueling = await this.accessoryModel.create(data);
+    const accessory = await this.accessoryModel.create(data);
 
     return this.responseService.createSuccessResponse(
       HttpStatus.CREATED,
-      fueling,
+      accessory,
     );
   }
 

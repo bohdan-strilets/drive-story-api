@@ -50,7 +50,6 @@ export class InsuranceRepository {
     dto: any,
   ): Promise<InsuranceDocument> {
     await this.findInsuranceAndCheckAccessRights(insuranceId, carId, userId);
-
     return await this.insuranceModel
       .findByIdAndUpdate(insuranceId, dto, { new: true })
       .populate('photos')

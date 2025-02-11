@@ -10,6 +10,7 @@ import { ContactRepository } from 'src/contact/contact.repository';
 import { AppError } from 'src/error/app-error';
 import { errorMessages } from 'src/error/helpers/error-messages.helper';
 import { FuelingRepository } from 'src/fueling/fueling.repository';
+import { InspectionRepository } from 'src/inspection/inspection.repository';
 import { InsuranceRepository } from 'src/insurance/insurance.repository';
 import { MaintenanceRepository } from 'src/maintenance/maintenance.repository';
 import { UserRepository } from 'src/user/user.repository';
@@ -28,6 +29,7 @@ export class ImageRepository {
     private readonly accessoryRepository: AccessoryRepository,
     private readonly contactRepository: ContactRepository,
     private readonly insuranceRepository: InsuranceRepository,
+    private readonly inspectionRepository: InspectionRepository,
   ) {}
 
   async uploadFile(
@@ -136,6 +138,10 @@ export class ImageRepository {
 
       case EntityType.INSURANCE:
         await this.insuranceRepository.bindImage(entityId, data);
+        break;
+
+      case EntityType.INSPECTION:
+        await this.inspectionRepository.bindImage(entityId, data);
         break;
 
       default:

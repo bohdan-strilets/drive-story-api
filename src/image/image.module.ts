@@ -5,6 +5,7 @@ import { CarModule } from 'src/car/car.module';
 import { CloudinaryModule } from 'src/cloudinary/cloudinary.module';
 import { ContactModule } from 'src/contact/contact.module';
 import { FuelingModule } from 'src/fueling/fueling.module';
+import { InspectionModule } from 'src/inspection/inspection.module';
 import { InsuranceModule } from 'src/insurance/insurance.module';
 import { MaintenanceModule } from 'src/maintenance/maintenance.module';
 import { ResponseModule } from 'src/response/response.module';
@@ -26,6 +27,7 @@ import { Image, ImageSchema } from './schemas/image.schema';
     AccessoryModule,
     ContactModule,
     InsuranceModule,
+    InspectionModule,
   ],
   controllers: [ImageController],
   providers: [ImageService, ImageRepository],

@@ -114,7 +114,7 @@ export class FuelingService {
     contactId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<FuelingDocument>> {
-    const updatedAccessory = await this.fuelingRepository.updateFueling(
+    const updatedFueling = await this.fuelingRepository.updateFueling(
       fuelingId,
       carId,
       userId,
@@ -123,7 +123,7 @@ export class FuelingService {
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
-      updatedAccessory,
+      updatedFueling,
     );
   }
 }

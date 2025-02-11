@@ -32,10 +32,10 @@ export class MaintenanceService {
       ...dto,
     };
 
-    const newMaintenance = await this.maintenanceModel.create(data);
+    const maintenance = await this.maintenanceModel.create(data);
     return this.responseService.createSuccessResponse(
       HttpStatus.CREATED,
-      newMaintenance,
+      maintenance,
     );
   }
 

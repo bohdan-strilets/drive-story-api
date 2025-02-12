@@ -43,9 +43,10 @@ export class ReminderRepository {
 
   async findDueReminders(): Promise<ReminderDocument[]> {
     const now = new Date();
-    const offsetInMs = 24 * 60 * 60 * 1000;
 
+    const offsetInMs = 24 * 60 * 60 * 1000;
     const marginInMs = 60 * 1000;
+
     const startWindow = new Date(now.getTime() + offsetInMs - marginInMs);
     const endWindow = new Date(now.getTime() + offsetInMs + marginInMs);
 
@@ -68,11 +69,11 @@ export class ReminderRepository {
   }
 
   async sendNotification(
-    remindId: Types.ObjectId,
+    reminderId: Types.ObjectId,
     userId: Types.ObjectId,
     userEmail: string,
   ): Promise<void> {
-    const reminder = await this.findReminder(remindId);
+    const reminder = await this.findReminder(reminderId);
 
     try {
       const pushPayload = this.pushRepository.createPayload(reminder);
@@ -83,7 +84,7 @@ export class ReminderRepository {
 
       await this.pushRepository.sendNotification(pushSubscription, pushPayload);
     } catch (error) {
-      this.logger.error(error);
+      this.logger.error('Error while sending push notification', error.stack);
     }
 
     try {
@@ -95,7 +96,7 @@ export class ReminderRepository {
         reminder.eventUrl,
       );
     } catch (error) {
-      this.logger.error(error);
+      this.logger.error('Error while sending email notification', error.stack);
     }
 
     await this.markAsSent(reminder._id, userId);

@@ -11,6 +11,7 @@ import { HbsTemplate } from './types/hbs-template.type';
 export class SendgridService {
   private readonly sendgridOwner: string;
   private readonly apiUrl: string;
+  private readonly clientUrl: string;
   private readonly rootPath: string = join(
     __dirname,
     '..',
@@ -19,12 +20,14 @@ export class SendgridService {
     'sendgrid',
     'templates',
   );
+  private readonly currentYear = new Date().getFullYear().toString();
 
   constructor(private readonly configService: ConfigService) {
     sendgrid.setApiKey(this.configService.get('SENDGRID_API_KEY'));
 
     this.sendgridOwner = this.configService.get('SENDGRID_OWNER');
     this.apiUrl = this.configService.get('API_URL');
+    this.clientUrl = this.configService.get('CLIENT_URL');
   }
 
   private async renderTemplateAsync(
@@ -72,7 +75,7 @@ export class SendgridService {
         API_URL: this.apiUrl,
         activationToken,
         supportEmail: this.sendgridOwner,
-        year: new Date().getFullYear().toString(),
+        year: this.currentYear,
       },
     );
   }
@@ -89,7 +92,7 @@ export class SendgridService {
         API_URL: this.apiUrl,
         resetToken,
         supportEmail: this.sendgridOwner,
-        year: new Date().getFullYear().toString(),
+        year: this.currentYear,
       },
     );
   }
@@ -101,8 +104,26 @@ export class SendgridService {
       'password-changed-success.template.hbs',
       {
         supportEmail: this.sendgridOwner,
-        year: new Date().getFullYear().toString(),
+        year: this.currentYear,
       },
     );
+  }
+
+  async sendReminderEmail(
+    email: string,
+    title: string,
+    reminderDate: Date,
+    message: string,
+    eventUrl: string,
+  ): Promise<void> {
+    await this.sendTemplateEmail(email, title, 'reminder.template.hbs', {
+      title,
+      reminderDate: reminderDate.toDateString(),
+      message,
+      eventUrl,
+      clientUrl: this.clientUrl,
+      supportEmail: this.sendgridOwner,
+      year: this.currentYear,
+    });
   }
 }

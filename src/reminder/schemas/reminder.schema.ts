@@ -11,14 +11,14 @@ export class Reminder {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   owner: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, required: true })
-  entityId: Types.ObjectId;
-
   @Prop({ required: true })
   title: string;
 
   @Prop({ required: true })
   reminderDate: Date;
+
+  @Prop({ required: true })
+  eventUrl: string;
 
   @Prop({ default: false })
   isSent: boolean;

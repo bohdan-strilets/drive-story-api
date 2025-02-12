@@ -21,6 +21,13 @@ export class ReminderDto {
   )
   reminderDate: string;
 
+  @IsNotEmpty({ message: 'Event URL should not be empty' })
+  @IsString({ message: 'Event URL must be a string' })
+  @Length(1, 100, {
+    message: 'Event URL must be between 1 and 100 characters long',
+  })
+  eventUrl: string;
+
   @IsOptional()
   @IsString({ message: 'Message must be a string' })
   @Length(0, 500, { message: 'Message must be at most 500 characters long' })

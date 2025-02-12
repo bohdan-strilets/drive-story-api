@@ -19,30 +19,16 @@ export class ReminderService {
 
   async add(
     userId: Types.ObjectId,
-    entityId: Types.ObjectId,
+
     dto: ReminderDto,
   ): Promise<ApiResponse<ReminderDocument>> {
-    const data = { owner: userId, entityId, ...dto };
+    const data = { owner: userId, ...dto };
     const reminder = await this.reminderModel.create(data);
 
     return this.responseService.createSuccessResponse(
       HttpStatus.CREATED,
       reminder,
     );
-  }
-
-  async update(
-    reminderId: Types.ObjectId,
-    userId: Types.ObjectId,
-    dto: ReminderDto,
-  ): Promise<ApiResponse<ReminderDocument>> {
-    const reminder = await this.reminderRepository.updateReminder(
-      reminderId,
-      userId,
-      dto,
-    );
-
-    return this.responseService.createSuccessResponse(HttpStatus.OK, reminder);
   }
 
   async delete(
@@ -60,34 +46,6 @@ export class ReminderService {
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
       deletedReminder,
-    );
-  }
-
-  async byId(
-    reminderId: Types.ObjectId,
-    userId: Types.ObjectId,
-  ): Promise<ApiResponse<ReminderDocument>> {
-    const reminder =
-      await this.reminderRepository.findReminderAndCheckAccessRights(
-        reminderId,
-        userId,
-      );
-
-    return this.responseService.createSuccessResponse(HttpStatus.OK, reminder);
-  }
-
-  async all(
-    entityId: Types.ObjectId,
-    userId: Types.ObjectId,
-  ): Promise<ApiResponse<ReminderDocument[]>> {
-    const insurances = await this.reminderModel.find({
-      entityId,
-      owner: userId,
-    });
-
-    return this.responseService.createSuccessResponse(
-      HttpStatus.OK,
-      insurances,
     );
   }
 }

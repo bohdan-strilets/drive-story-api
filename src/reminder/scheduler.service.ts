@@ -14,15 +14,17 @@ export class SchedulerService {
   async handleCron() {
     const reminders = await this.reminderRepository.findDueReminders();
 
-    for (const reminder of reminders) {
-      const user = await this.userRepository.findById(reminder.owner);
-      const email = user.email;
+    await Promise.all(
+      reminders.map(async (reminder) => {
+        const user = await this.userRepository.findById(reminder.owner);
+        const email = user.email;
 
-      await this.reminderRepository.sendNotification(
-        reminder._id,
-        reminder.owner,
-        email,
-      );
-    }
+        await this.reminderRepository.sendNotification(
+          reminder._id,
+          reminder.owner,
+          email,
+        );
+      }),
+    );
   }
 }

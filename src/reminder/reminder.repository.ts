@@ -40,8 +40,15 @@ export class ReminderRepository {
   }
 
   async findDueReminders(): Promise<ReminderDocument[]> {
+    const now = new Date();
+    const offsetInMs = 24 * 60 * 60 * 1000;
+
+    const marginInMs = 60 * 1000;
+    const startWindow = new Date(now.getTime() + offsetInMs - marginInMs);
+    const endWindow = new Date(now.getTime() + offsetInMs + marginInMs);
+
     return this.reminderModel.find({
-      reminderDate: { $lte: new Date() },
+      reminderDate: { $gte: startWindow, $lt: endWindow },
       isSent: false,
     });
   }

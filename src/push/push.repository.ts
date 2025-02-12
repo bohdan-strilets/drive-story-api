@@ -68,13 +68,13 @@ export class PushRepository {
   async sendNotification(
     subscription: SubscriptionType,
     payload: string,
-  ): Promise<any> {
+  ): Promise<webPush.SendResult> {
     try {
       const response = await webPush.sendNotification(subscription, payload);
       this.logger.log(`Notification sent: ${JSON.stringify(response)}`);
       return response;
     } catch (error) {
-      this.logger.error('Error sending notification', error);
+      this.logger.error('Error sending notification', error.stack);
       throw error;
     }
   }

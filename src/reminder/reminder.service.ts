@@ -1,7 +1,6 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { CarRepository } from 'src/car/car.repository';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { ReminderDto } from './dto/reminder.dto';
@@ -14,7 +13,6 @@ export class ReminderService {
     @InjectModel(Reminder.name) private reminderModel: Model<ReminderDocument>,
     private readonly responseService: ResponseService,
     private readonly reminderRepository: ReminderRepository,
-    private readonly carRepository: CarRepository,
   ) {}
 
   async add(

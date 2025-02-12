@@ -21,6 +21,7 @@ import { ResponseService } from './response/response.service';
 import { SendgridModule } from './sendgrid/sendgrid.module';
 import { TokenModule } from './token/token.module';
 import { UserModule } from './user/user.module';
+import { PushModule } from './push/push.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { UserModule } from './user/user.module';
     InsuranceModule,
     InspectionModule,
     ReminderModule,
+    PushModule,
   ],
   providers: [
     ResponseService,

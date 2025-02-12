@@ -40,4 +40,6 @@ export const errorMessages = {
   INSPECTION_NOT_FOUND:
     'The information about the vehicle inspection was not found.',
   REMINDER_NOT_FOUND: 'Reminder not found.',
+  NOTIFICATIONS_NOT_ACCESS_RIGHTS:
+    'Access rights to notifications have not been granted.',
 };

@@ -4,6 +4,7 @@ import { Model, Types } from 'mongoose';
 import { CarRepository } from 'src/car/car.repository';
 import { AppError } from 'src/error/app-error';
 import { errorMessages } from 'src/error/helpers/error-messages.helper';
+import { PushRepository } from 'src/push/push.repository';
 import { SendgridService } from 'src/sendgrid/sendgrid.service';
 import { Reminder, ReminderDocument } from './schemas/reminder.schema';
 
@@ -14,6 +15,7 @@ export class ReminderRepository {
     @InjectModel(Reminder.name) private reminderModel: Model<ReminderDocument>,
     private readonly carRepository: CarRepository,
     private readonly sendgridService: SendgridService,
+    private readonly pushRepository: PushRepository,
   ) {}
 
   async findReminder(reminderId: Types.ObjectId): Promise<ReminderDocument> {
@@ -72,13 +74,29 @@ export class ReminderRepository {
   ): Promise<void> {
     const reminder = await this.findReminder(remindId);
 
-    await this.sendgridService.sendReminderEmail(
-      userEmail,
-      reminder.title,
-      reminder.reminderDate,
-      reminder.message,
-      reminder.eventUrl,
-    );
+    try {
+      const pushPayload = this.pushRepository.createPayload(reminder);
+      const subscriptionByBd =
+        await this.pushRepository.findSubscription(userId);
+      const pushSubscription =
+        this.pushRepository.getSubscription(subscriptionByBd);
+
+      await this.pushRepository.sendNotification(pushSubscription, pushPayload);
+    } catch (error) {
+      this.logger.error(error);
+    }
+
+    try {
+      await this.sendgridService.sendReminderEmail(
+        userEmail,
+        reminder.title,
+        reminder.reminderDate,
+        reminder.message,
+        reminder.eventUrl,
+      );
+    } catch (error) {
+      this.logger.error(error);
+    }
 
     await this.markAsSent(reminder._id, userId);
     this.logger.debug('Email notification was sent successfully.');

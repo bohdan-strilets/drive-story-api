@@ -20,7 +20,7 @@ import { Image, ImageSchema } from './schemas/image.schema';
     MongooseModule.forFeature([{ name: Image.name, schema: ImageSchema }]),
     CloudinaryModule,
     ResponseModule,
-    MaintenanceModule,
+    forwardRef(() => MaintenanceModule),
     CarModule,
     UserModule,
     FuelingModule,

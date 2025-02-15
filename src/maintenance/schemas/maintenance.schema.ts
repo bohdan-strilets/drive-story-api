@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
+import { ImageDocument } from 'src/image/schemas/image.schema';
 import { MaintenanceType } from '../enums/maintenance-type.enum';
 import { ProcessStatus } from '../enums/process-status.enum';
 import { Parts, PartsDocument } from './parts.schema';
@@ -45,7 +46,7 @@ export class Maintenance {
   endDate?: Date | null;
 
   @Prop({ type: Types.ObjectId, ref: 'Image', default: null })
-  photos: Types.ObjectId | null;
+  photos: Types.ObjectId | ImageDocument | null;
 
   @Prop()
   createdAt: Date;

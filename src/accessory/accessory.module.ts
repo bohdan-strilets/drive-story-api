@@ -1,6 +1,7 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CarModule } from 'src/car/car.module';
+import { ImageModule } from 'src/image/image.module';
 import { ResponseModule } from 'src/response/response.module';
 import { AccessoryController } from './accessory.controller';
 import { AccessoryRepository } from './accessory.repository';
@@ -14,6 +15,7 @@ import { Accessory, AccessorySchema } from './schemas/accessory.schema';
     ]),
     ResponseModule,
     CarModule,
+    forwardRef(() => ImageModule),
   ],
   controllers: [AccessoryController],
   providers: [AccessoryService, AccessoryRepository],

@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
+import { ImageDocument } from 'src/image/schemas/image.schema';
 import { InspectionStatus } from '../enums/inspection-status.enum';
 
 export type InspectionDocument = HydratedDocument<Inspection>;
@@ -34,7 +35,7 @@ export class Inspection {
   comments?: string[];
 
   @Prop({ type: Types.ObjectId, ref: 'Image', default: null })
-  photos: Types.ObjectId | null;
+  photos: Types.ObjectId | ImageDocument | null;
 
   @Prop()
   createdAt: Date;

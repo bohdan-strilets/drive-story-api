@@ -137,20 +137,14 @@ export class ImageService {
   }
 
   async deleteAll(
-    userId: Types.ObjectId,
     entityId: Types.ObjectId,
     entityType: EntityType,
+    imageId: Types.ObjectId,
   ): Promise<ApiResponse<ImageDocument>> {
-    const imageRecord = await this.imageRepository.findImage(
-      userId,
-      entityId,
+    const deletedImage = await this.imageRepository.removedAllFiles(
+      imageId,
       entityType,
-    );
-
-    await this.imageRepository.removedFilesAndFolder(imageRecord.resources);
-    await this.imageRepository.bindImage(entityType, entityId, null);
-    const deletedImage = await this.imageModel.findByIdAndDelete(
-      imageRecord._id,
+      entityId,
     );
 
     return this.responseService.createSuccessResponse(

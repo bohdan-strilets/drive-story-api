@@ -203,4 +203,23 @@ export class ImageRepository {
       );
     }
   }
+
+  async removedAllFiles(
+    imageId: Types.ObjectId,
+    entityType: EntityType,
+    entityId: Types.ObjectId,
+  ) {
+    const imageDoc = await this.imageModel.findById(imageId);
+
+    if (!imageId) {
+      throw new AppError(
+        HttpStatus.NOT_FOUND,
+        'У сущности нету изображений для удаления',
+      );
+    }
+
+    await this.removedFilesAndFolder(imageDoc.resources);
+    await this.bindImage(entityType, entityId, null);
+    return await this.imageModel.findByIdAndDelete(imageId);
+  }
 }

@@ -2,6 +2,8 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CarRepository } from 'src/car/car.repository';
+import { EntityType } from 'src/image/enums/entity-type.enum';
+import { ImageRepository } from 'src/image/image.repository';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { InspectionDto } from './dto/inspection.dto';
@@ -16,6 +18,7 @@ export class InspectionService {
     private readonly responseService: ResponseService,
     private readonly carRepository: CarRepository,
     private readonly inspectionRepository: InspectionRepository,
+    private readonly imageRepository: ImageRepository,
   ) {}
 
   async add(
@@ -59,11 +62,21 @@ export class InspectionService {
     carId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<InspectionDocument>> {
-    await this.inspectionRepository.findInspectionAndCheckAccessRights(
-      inspectionId,
-      carId,
-      userId,
-    );
+    const inspection =
+      await this.inspectionRepository.findInspectionAndCheckAccessRights(
+        inspectionId,
+        carId,
+        userId,
+      );
+
+    const photos = inspection.photos;
+    if (photos) {
+      await this.imageRepository.removedAllFiles(
+        photos._id,
+        EntityType.INSPECTION,
+        inspectionId,
+      );
+    }
 
     const deletedInspection = await this.inspectionModel
       .findByIdAndDelete(inspectionId)

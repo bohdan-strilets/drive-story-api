@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AccessoryModule } from 'src/accessory/accessory.module';
 import { CarModule } from 'src/car/car.module';
@@ -27,9 +27,10 @@ import { Image, ImageSchema } from './schemas/image.schema';
     AccessoryModule,
     ContactModule,
     InsuranceModule,
-    InspectionModule,
+    forwardRef(() => InspectionModule),
   ],
   controllers: [ImageController],
   providers: [ImageService, ImageRepository],
+  exports: [ImageRepository],
 })
 export class ImageModule {}

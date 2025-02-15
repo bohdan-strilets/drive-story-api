@@ -60,12 +60,12 @@ export class ImageController {
     return this.imageService.select(userId, entityId, entityType, publicId);
   }
 
-  @Delete('delete-all/:entityId')
+  @Delete('delete-all/:entityId/:imageId')
   async deleteAll(
-    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
     @Param('entityId', ParseObjectIdPipe) entityId: Types.ObjectId,
+    @Param('imageId', ParseObjectIdPipe) imageId: Types.ObjectId,
     @Query('entityType') entityType: EntityType,
   ): Promise<ApiResponse<ImageDocument>> {
-    return this.imageService.deleteAll(userId, entityId, entityType);
+    return this.imageService.deleteAll(entityId, entityType, imageId);
   }
 }

@@ -2,6 +2,8 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CarRepository } from 'src/car/car.repository';
+import { EntityType } from 'src/image/enums/entity-type.enum';
+import { ImageRepository } from 'src/image/image.repository';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { InsuranceDto } from './dto/insurance.dto';
@@ -16,6 +18,7 @@ export class InsuranceService {
     private readonly responseService: ResponseService,
     private readonly carRepository: CarRepository,
     private readonly insuranceRepository: InsuranceRepository,
+    private readonly imageRepository: ImageRepository,
   ) {}
 
   async add(
@@ -56,11 +59,21 @@ export class InsuranceService {
     carId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<InsuranceDocument>> {
-    await this.insuranceRepository.findInsuranceAndCheckAccessRights(
-      insuranceId,
-      carId,
-      userId,
-    );
+    const insurance =
+      await this.insuranceRepository.findInsuranceAndCheckAccessRights(
+        insuranceId,
+        carId,
+        userId,
+      );
+
+    const photos = insurance.photos;
+    if (photos) {
+      await this.imageRepository.removedAllFiles(
+        photos._id,
+        EntityType.INSURANCE,
+        insuranceId,
+      );
+    }
 
     const deletedInsurance = await this.insuranceModel
       .findByIdAndDelete(insuranceId)

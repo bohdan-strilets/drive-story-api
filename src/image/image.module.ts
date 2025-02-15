@@ -26,7 +26,7 @@ import { Image, ImageSchema } from './schemas/image.schema';
     FuelingModule,
     AccessoryModule,
     ContactModule,
-    InsuranceModule,
+    forwardRef(() => InsuranceModule),
     forwardRef(() => InspectionModule),
   ],
   controllers: [ImageController],

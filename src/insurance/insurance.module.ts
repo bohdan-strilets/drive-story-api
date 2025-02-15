@@ -1,6 +1,7 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CarModule } from 'src/car/car.module';
+import { ImageModule } from 'src/image/image.module';
 import { ResponseModule } from 'src/response/response.module';
 import { InsuranceController } from './insurance.controller';
 import { InsuranceRepository } from './insurance.repository';
@@ -14,6 +15,7 @@ import { Insurance, InsuranceSchema } from './schemas/insurance.schema';
     ]),
     ResponseModule,
     CarModule,
+    forwardRef(() => ImageModule),
   ],
   controllers: [InsuranceController],
   providers: [InsuranceService, InsuranceRepository],

@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
+import { ImageDocument } from 'src/image/schemas/image.schema';
 import { FuelType } from '../enums/fuel-type.enum';
 
 export type FuelingDocument = HydratedDocument<Fueling>;
@@ -34,7 +35,7 @@ export class Fueling {
   fuelingDate: Date;
 
   @Prop({ type: Types.ObjectId, ref: 'Image', default: null })
-  photos: Types.ObjectId | null;
+  photos: Types.ObjectId | ImageDocument | null;
 
   @Prop()
   createdAt: Date;

@@ -23,7 +23,7 @@ import { Image, ImageSchema } from './schemas/image.schema';
     forwardRef(() => MaintenanceModule),
     CarModule,
     UserModule,
-    FuelingModule,
+    forwardRef(() => FuelingModule),
     forwardRef(() => AccessoryModule),
     ContactModule,
     forwardRef(() => InsuranceModule),

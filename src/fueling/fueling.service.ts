@@ -2,6 +2,8 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CarRepository } from 'src/car/car.repository';
+import { EntityType } from 'src/image/enums/entity-type.enum';
+import { ImageRepository } from 'src/image/image.repository';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { FuelingDto } from './dto/fueling.dto';
@@ -15,6 +17,7 @@ export class FuelingService {
     private readonly responseService: ResponseService,
     private readonly carRepository: CarRepository,
     private readonly fuelingRepository: FuelingRepository,
+    private readonly imageRepository: ImageRepository,
   ) {}
 
   async add(
@@ -55,11 +58,21 @@ export class FuelingService {
     carId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<FuelingDocument>> {
-    await this.fuelingRepository.findFuelingAndCheckAccessRights(
-      fuelingId,
-      carId,
-      userId,
-    );
+    const fueling =
+      await this.fuelingRepository.findFuelingAndCheckAccessRights(
+        fuelingId,
+        carId,
+        userId,
+      );
+
+    const photos = fueling.photos;
+    if (photos) {
+      await this.imageRepository.removedAllFiles(
+        photos._id,
+        EntityType.FUELING,
+        fuelingId,
+      );
+    }
 
     const deletedFueling = await this.fuelingModel
       .findByIdAndDelete(fuelingId)

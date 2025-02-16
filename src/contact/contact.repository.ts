@@ -1,8 +1,10 @@
-import { HttpStatus, Logger } from '@nestjs/common';
+import { forwardRef, HttpStatus, Inject, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { AppError } from 'src/error/app-error';
 import { errorMessages } from 'src/error/helpers/error-messages.helper';
+import { EntityType } from 'src/image/enums/entity-type.enum';
+import { ImageRepository } from 'src/image/image.repository';
 import { ContactDto } from './dto/contact.dto';
 import { Contact, ContactDocument } from './schemas/contact.schema';
 
@@ -12,6 +14,8 @@ export class ContactRepository {
   constructor(
     @InjectModel(Contact.name)
     private contactModel: Model<ContactDocument>,
+    @Inject(forwardRef(() => ImageRepository))
+    private readonly imageRepository: ImageRepository,
   ) {}
 
   async findContactById(contactId: Types.ObjectId): Promise<ContactDocument> {
@@ -95,5 +99,17 @@ export class ContactRepository {
       .skip(skip)
       .limit(limit)
       .exec();
+  }
+
+  async deleteImages(contact: ContactDocument): Promise<void> {
+    const photos = contact.photos;
+
+    if (photos) {
+      await this.imageRepository.removedAllFiles(
+        photos._id,
+        EntityType.CONTACTS,
+        contact._id,
+      );
+    }
   }
 }

@@ -1,4 +1,4 @@
-import { HttpStatus } from '@nestjs/common';
+import { forwardRef, HttpStatus, Inject } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { AccessoryRepository } from 'src/accessory/accessory.repository';
@@ -27,6 +27,7 @@ export class ImageRepository {
     private readonly userRepository: UserRepository,
     private readonly fuelingRepository: FuelingRepository,
     private readonly accessoryRepository: AccessoryRepository,
+    @Inject(forwardRef(() => ContactRepository))
     private readonly contactRepository: ContactRepository,
     private readonly insuranceRepository: InsuranceRepository,
     private readonly inspectionRepository: InspectionRepository,

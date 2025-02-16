@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { ResponseService } from 'src/response/response.service';
@@ -9,8 +9,6 @@ import { Contact, ContactDocument } from './schemas/contact.schema';
 
 @Injectable()
 export class ContactService {
-  private readonly logger = new Logger(ContactService.name);
-
   constructor(
     @InjectModel(Contact.name)
     private contactModel: Model<ContactDocument>,
@@ -60,6 +58,8 @@ export class ContactService {
   ): Promise<ApiResponse<ContactDocument>> {
     const contact = await this.contactRepository.findContactById(contactId);
     this.contactRepository.checkAccessRights(contact.owner, userId);
+
+    await this.contactRepository.deleteImages(contact);
 
     const deletedContact = await this.contactModel
       .findByIdAndDelete(contactId)

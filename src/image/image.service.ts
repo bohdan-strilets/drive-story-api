@@ -1,18 +1,16 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { Types } from 'mongoose';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { FileType } from 'src/cloudinary/enums/file-type.enum';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { EntityType } from './enums/entity-type.enum';
 import { ImageRepository } from './image.repository';
-import { Image, ImageDocument } from './schemas/image.schema';
+import { ImageDocument } from './schemas/image.schema';
 
 @Injectable()
 export class ImageService {
   constructor(
-    @InjectModel(Image.name) private imageModel: Model<ImageDocument>,
     private readonly cloudinaryService: CloudinaryService,
     private readonly responseService: ResponseService,
     private readonly imageRepository: ImageRepository,

@@ -1,5 +1,6 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { ImageModule } from 'src/image/image.module';
 import { ResponseModule } from 'src/response/response.module';
 import { ContactController } from './contact.controller';
 import { ContactRepository } from './contact.repository';
@@ -10,6 +11,7 @@ import { Contact, ContactSchema } from './schemas/contact.schema';
   imports: [
     MongooseModule.forFeature([{ name: Contact.name, schema: ContactSchema }]),
     ResponseModule,
+    forwardRef(() => ImageModule),
   ],
   controllers: [ContactController],
   providers: [ContactService, ContactRepository],

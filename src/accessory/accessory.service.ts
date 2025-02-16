@@ -1,18 +1,15 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { Types } from 'mongoose';
 import { CarRepository } from 'src/car/car.repository';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { AccessoryRepository } from './accessory.repository';
 import { AccessoryDto } from './dto/accessory.dto';
-import { Accessory, AccessoryDocument } from './schemas/accessory.schema';
+import { AccessoryDocument } from './schemas/accessory.schema';
 
 @Injectable()
 export class AccessoryService {
   constructor(
-    @InjectModel(Accessory.name)
-    private accessoryModel: Model<AccessoryDocument>,
     private readonly responseService: ResponseService,
     private readonly carRepository: CarRepository,
     private readonly accessoryRepository: AccessoryRepository,
@@ -26,8 +23,8 @@ export class AccessoryService {
     const car = await this.carRepository.findCar(carId);
     this.carRepository.checkAccessRights(car.owner, userId);
 
-    const data = { carId, owner: userId, ...dto };
-    const accessory = await this.accessoryModel.create(data);
+    const payload = this.accessoryRepository.buildPayload(carId, userId, dto);
+    const accessory = await this.accessoryRepository.createAccessory(payload);
 
     return this.responseService.createSuccessResponse(
       HttpStatus.CREATED,
@@ -64,11 +61,8 @@ export class AccessoryService {
       );
 
     await this.accessoryRepository.deleteImages(accessory);
-
-    const deletedAccessory = await this.accessoryModel
-      .findByIdAndDelete(accessoryId)
-      .populate('photos')
-      .populate('contactId');
+    const deletedAccessory =
+      await this.accessoryRepository.deleteAccessory(accessoryId);
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
@@ -97,17 +91,12 @@ export class AccessoryService {
     page: number = 1,
     limit: number = 10,
   ): Promise<ApiResponse<AccessoryDocument[]>> {
-    const skip = (page - 1) * limit;
-
-    const accessory = await this.accessoryModel
-      .find({
-        carId,
-        owner: userId,
-      })
-      .skip(skip)
-      .limit(limit)
-      .populate('photos')
-      .populate('contactId');
+    const accessory = await this.accessoryRepository.listAccessories(
+      carId,
+      userId,
+      page,
+      limit,
+    );
 
     return this.responseService.createSuccessResponse(HttpStatus.OK, accessory);
   }

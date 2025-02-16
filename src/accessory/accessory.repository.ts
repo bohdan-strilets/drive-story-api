@@ -6,7 +6,9 @@ import { AppError } from 'src/error/app-error';
 import { errorMessages } from 'src/error/helpers/error-messages.helper';
 import { EntityType } from 'src/image/enums/entity-type.enum';
 import { ImageRepository } from 'src/image/image.repository';
+import { AccessoryDto } from './dto/accessory.dto';
 import { Accessory, AccessoryDocument } from './schemas/accessory.schema';
+import { Payload } from './types/payload.type';
 
 export class AccessoryRepository {
   private readonly logger = new Logger(AccessoryRepository.name);
@@ -80,5 +82,44 @@ export class AccessoryRepository {
         accessory._id,
       );
     }
+  }
+
+  async deleteAccessory(
+    accessoryId: Types.ObjectId,
+  ): Promise<AccessoryDocument> {
+    return await this.accessoryModel
+      .findByIdAndDelete(accessoryId)
+      .populate('photos')
+      .populate('contactId');
+  }
+
+  buildPayload(
+    carId: Types.ObjectId,
+    userId: Types.ObjectId,
+    dto: AccessoryDto,
+  ): Payload {
+    return { carId, owner: userId, ...dto };
+  }
+
+  async createAccessory(payload: Payload): Promise<AccessoryDocument> {
+    return this.accessoryModel.create(payload);
+  }
+
+  async listAccessories(
+    carId: Types.ObjectId,
+    userId: Types.ObjectId,
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<AccessoryDocument[]> {
+    const skip = (page - 1) * limit;
+    return await this.accessoryModel
+      .find({
+        carId,
+        owner: userId,
+      })
+      .skip(skip)
+      .limit(limit)
+      .populate('photos')
+      .populate('contactId');
   }
 }

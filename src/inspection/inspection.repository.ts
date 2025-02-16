@@ -1,9 +1,11 @@
-import { HttpStatus, Logger } from '@nestjs/common';
+import { forwardRef, HttpStatus, Inject, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CarRepository } from 'src/car/car.repository';
 import { AppError } from 'src/error/app-error';
 import { errorMessages } from 'src/error/helpers/error-messages.helper';
+import { EntityType } from 'src/image/enums/entity-type.enum';
+import { ImageRepository } from 'src/image/image.repository';
 import { Inspection, InspectionDocument } from './schemas/inspection.schema';
 
 export class InspectionRepository {
@@ -13,6 +15,8 @@ export class InspectionRepository {
     @InjectModel(Inspection.name)
     private inspectionModel: Model<InspectionDocument>,
     private readonly carRepository: CarRepository,
+    @Inject(forwardRef(() => ImageRepository))
+    private readonly imageRepository: ImageRepository,
   ) {}
 
   async findInspection(
@@ -69,5 +73,17 @@ export class InspectionRepository {
       { photos: data },
       { new: true },
     );
+  }
+
+  async deleteImages(inspection: InspectionDocument): Promise<void> {
+    const photos = inspection.photos;
+
+    if (photos) {
+      await this.imageRepository.removedAllFiles(
+        photos._id,
+        EntityType.INSPECTION,
+        inspection._id,
+      );
+    }
   }
 }

@@ -22,14 +22,19 @@ export class ImageRepository {
   constructor(
     @InjectModel(Image.name) private imageModel: Model<ImageDocument>,
     private readonly cloudinaryService: CloudinaryService,
+    @Inject(forwardRef(() => MaintenanceRepository))
     private readonly maintenanceRepository: MaintenanceRepository,
     private readonly carRepository: CarRepository,
     private readonly userRepository: UserRepository,
+    @Inject(forwardRef(() => FuelingRepository))
     private readonly fuelingRepository: FuelingRepository,
+    @Inject(forwardRef(() => AccessoryRepository))
     private readonly accessoryRepository: AccessoryRepository,
     @Inject(forwardRef(() => ContactRepository))
     private readonly contactRepository: ContactRepository,
+    @Inject(forwardRef(() => InsuranceRepository))
     private readonly insuranceRepository: InsuranceRepository,
+    @Inject(forwardRef(() => InspectionRepository))
     private readonly inspectionRepository: InspectionRepository,
   ) {}
 

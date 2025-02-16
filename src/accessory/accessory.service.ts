@@ -2,8 +2,6 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CarRepository } from 'src/car/car.repository';
-import { EntityType } from 'src/image/enums/entity-type.enum';
-import { ImageRepository } from 'src/image/image.repository';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { AccessoryRepository } from './accessory.repository';
@@ -18,7 +16,6 @@ export class AccessoryService {
     private readonly responseService: ResponseService,
     private readonly carRepository: CarRepository,
     private readonly accessoryRepository: AccessoryRepository,
-    private readonly imageRepository: ImageRepository,
   ) {}
 
   async add(
@@ -66,14 +63,7 @@ export class AccessoryService {
         userId,
       );
 
-    const photos = accessory.photos;
-    if (photos) {
-      await this.imageRepository.removedAllFiles(
-        photos._id,
-        EntityType.ACCESSORY,
-        accessoryId,
-      );
-    }
+    await this.accessoryRepository.deleteImages(accessory);
 
     const deletedAccessory = await this.accessoryModel
       .findByIdAndDelete(accessoryId)

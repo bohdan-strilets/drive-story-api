@@ -2,8 +2,6 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CarRepository } from 'src/car/car.repository';
-import { EntityType } from 'src/image/enums/entity-type.enum';
-import { ImageRepository } from 'src/image/image.repository';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { MaintenanceDto } from './dto/maintenance.dto';
@@ -18,7 +16,6 @@ export class MaintenanceService {
     private readonly responseService: ResponseService,
     private readonly carRepository: CarRepository,
     private readonly maintenanceRepository: MaintenanceRepository,
-    private readonly imageRepository: ImageRepository,
   ) {}
 
   async add(
@@ -74,14 +71,7 @@ export class MaintenanceService {
         userId,
       );
 
-    const photos = maintenance.photos;
-    if (photos) {
-      await this.imageRepository.removedAllFiles(
-        photos._id,
-        EntityType.MAINTENANCE,
-        maintenanceId,
-      );
-    }
+    await this.maintenanceRepository.deleteImages(maintenance);
 
     const deletedMaintenance = await this.maintenanceModel
       .findByIdAndDelete(maintenanceId)

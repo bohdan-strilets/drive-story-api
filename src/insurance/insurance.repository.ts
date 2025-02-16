@@ -1,9 +1,11 @@
-import { HttpStatus, Logger } from '@nestjs/common';
+import { forwardRef, HttpStatus, Inject, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CarRepository } from 'src/car/car.repository';
 import { AppError } from 'src/error/app-error';
 import { errorMessages } from 'src/error/helpers/error-messages.helper';
+import { EntityType } from 'src/image/enums/entity-type.enum';
+import { ImageRepository } from 'src/image/image.repository';
 import { Insurance, InsuranceDocument } from './schemas/insurance.schema';
 
 export class InsuranceRepository {
@@ -13,6 +15,8 @@ export class InsuranceRepository {
     @InjectModel(Insurance.name)
     private insuranceModel: Model<InsuranceDocument>,
     private readonly carRepository: CarRepository,
+    @Inject(forwardRef(() => ImageRepository))
+    private readonly imageRepository: ImageRepository,
   ) {}
 
   async findInsurance(insuranceId: Types.ObjectId): Promise<InsuranceDocument> {
@@ -66,5 +70,17 @@ export class InsuranceRepository {
       { photos: data },
       { new: true },
     );
+  }
+
+  async deleteImages(insurance: InsuranceDocument): Promise<void> {
+    const photos = insurance.photos;
+
+    if (photos) {
+      await this.imageRepository.removedAllFiles(
+        photos._id,
+        EntityType.INSURANCE,
+        insurance._id,
+      );
+    }
   }
 }

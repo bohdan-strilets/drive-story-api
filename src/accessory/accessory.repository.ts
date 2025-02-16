@@ -1,9 +1,11 @@
-import { HttpStatus, Logger } from '@nestjs/common';
+import { forwardRef, HttpStatus, Inject, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CarRepository } from 'src/car/car.repository';
 import { AppError } from 'src/error/app-error';
 import { errorMessages } from 'src/error/helpers/error-messages.helper';
+import { EntityType } from 'src/image/enums/entity-type.enum';
+import { ImageRepository } from 'src/image/image.repository';
 import { Accessory, AccessoryDocument } from './schemas/accessory.schema';
 
 export class AccessoryRepository {
@@ -13,6 +15,8 @@ export class AccessoryRepository {
     @InjectModel(Accessory.name)
     private accessoryModel: Model<AccessoryDocument>,
     private readonly carRepository: CarRepository,
+    @Inject(forwardRef(() => ImageRepository))
+    private readonly imageRepository: ImageRepository,
   ) {}
 
   async findAccessory(accessoryId: Types.ObjectId): Promise<AccessoryDocument> {
@@ -64,5 +68,17 @@ export class AccessoryRepository {
       { photos: data },
       { new: true },
     );
+  }
+
+  async deleteImages(accessory: AccessoryDocument): Promise<void> {
+    const photos = accessory.photos;
+
+    if (photos) {
+      await this.imageRepository.removedAllFiles(
+        photos._id,
+        EntityType.ACCESSORY,
+        accessory._id,
+      );
+    }
   }
 }

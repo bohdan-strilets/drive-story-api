@@ -1,9 +1,11 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { forwardRef, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CarRepository } from 'src/car/car.repository';
 import { AppError } from 'src/error/app-error';
 import { errorMessages } from 'src/error/helpers/error-messages.helper';
+import { EntityType } from 'src/image/enums/entity-type.enum';
+import { ImageRepository } from 'src/image/image.repository';
 import { Maintenance, MaintenanceDocument } from './schemas/maintenance.schema';
 
 @Injectable()
@@ -12,6 +14,8 @@ export class MaintenanceRepository {
     @InjectModel(Maintenance.name)
     private maintenanceModel: Model<MaintenanceDocument>,
     private readonly carRepository: CarRepository,
+    @Inject(forwardRef(() => ImageRepository))
+    private readonly imageRepository: ImageRepository,
   ) {}
 
   async findMaintenance(
@@ -71,5 +75,17 @@ export class MaintenanceRepository {
       { photos: data },
       { new: true },
     );
+  }
+
+  async deleteImages(maintenance: MaintenanceDocument): Promise<void> {
+    const photos = maintenance.photos;
+
+    if (photos) {
+      await this.imageRepository.removedAllFiles(
+        photos._id,
+        EntityType.MAINTENANCE,
+        maintenance._id,
+      );
+    }
   }
 }

@@ -116,6 +116,10 @@ export class ContactRepository {
       .exec();
   }
 
+  async getContactByUser(userId: Types.ObjectId): Promise<ContactDocument[]> {
+    return this.contactModel.find({ owner: userId });
+  }
+
   async deleteImages(contact: ContactDocument): Promise<void> {
     const photos = contact.photos;
 

@@ -1,18 +1,15 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { Types } from 'mongoose';
 import { checkAccessRights } from 'src/common/functions/check-access-rights.function';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { ContactRepository } from './contact.repository';
 import { ContactDto } from './dto/contact.dto';
-import { Contact, ContactDocument } from './schemas/contact.schema';
+import { ContactDocument } from './schemas/contact.schema';
 
 @Injectable()
 export class ContactService {
   constructor(
-    @InjectModel(Contact.name)
-    private contactModel: Model<ContactDocument>,
     private readonly responseService: ResponseService,
     private readonly contactRepository: ContactRepository,
   ) {}
@@ -98,7 +95,7 @@ export class ContactService {
     limit: number = 10,
   ): Promise<ApiResponse<ContactDocument[]>> {
     if (!searchQuery) {
-      const contacts = await this.contactModel.find({ owner: userId }).exec();
+      const contacts = await this.contactRepository.getContactByUser(userId);
       return this.responseService.createSuccessResponse(
         HttpStatus.OK,
         contacts,

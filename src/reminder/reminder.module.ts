@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { CarModule } from 'src/car/car.module';
 import { PushModule } from 'src/push/push.module';
 import { ResponseModule } from 'src/response/response.module';
 import { SendgridModule } from 'src/sendgrid/sendgrid.module';
@@ -20,7 +19,6 @@ import { Reminder, ReminderSchema } from './schemas/reminder.schema';
     SendgridModule,
     UserModule,
     PushModule,
-    CarModule,
   ],
   controllers: [ReminderController],
   providers: [ReminderService, ReminderRepository, SchedulerService],

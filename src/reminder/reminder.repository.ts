@@ -1,7 +1,7 @@
 import { HttpStatus, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { CarRepository } from 'src/car/car.repository';
+import { checkAccessRights } from 'src/common/functions/check-access-rights.function';
 import { AppError } from 'src/error/app-error';
 import { errorMessages } from 'src/error/helpers/error-messages.helper';
 import { PushRepository } from 'src/push/push.repository';
@@ -13,7 +13,6 @@ export class ReminderRepository {
 
   constructor(
     @InjectModel(Reminder.name) private reminderModel: Model<ReminderDocument>,
-    private readonly carRepository: CarRepository,
     private readonly sendgridService: SendgridService,
     private readonly pushRepository: PushRepository,
   ) {}
@@ -37,7 +36,7 @@ export class ReminderRepository {
     userId: Types.ObjectId,
   ): Promise<ReminderDocument> {
     const reminder = await this.findReminder(reminderId);
-    this.carRepository.checkAccessRights(reminder.owner, userId);
+    checkAccessRights(reminder.owner, userId);
     return reminder;
   }
 

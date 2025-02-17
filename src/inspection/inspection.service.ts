@@ -1,18 +1,17 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { Types } from 'mongoose';
 import { CarRepository } from 'src/car/car.repository';
+import { checkAccessRights } from 'src/common/functions/check-access-rights.function';
+import { EntityType } from 'src/image/enums/entity-type.enum';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { InspectionDto } from './dto/inspection.dto';
 import { InspectionRepository } from './inspection.repository';
-import { Inspection, InspectionDocument } from './schemas/inspection.schema';
+import { InspectionDocument } from './schemas/inspection.schema';
 
 @Injectable()
 export class InspectionService {
   constructor(
-    @InjectModel(Inspection.name)
-    private inspectionModel: Model<InspectionDocument>,
     private readonly responseService: ResponseService,
     private readonly carRepository: CarRepository,
     private readonly inspectionRepository: InspectionRepository,
@@ -24,10 +23,16 @@ export class InspectionService {
     dto: InspectionDto,
   ): Promise<ApiResponse<InspectionDocument>> {
     const car = await this.carRepository.findCar(carId);
-    this.carRepository.checkAccessRights(car.owner, userId);
+    checkAccessRights(car.owner, userId);
 
-    const data = { carId, owner: userId, ...dto };
-    const inspection = await this.inspectionModel.create(data);
+    const payload = this.inspectionRepository.buildPayload<InspectionDto>(
+      carId,
+      userId,
+      dto,
+    );
+
+    const inspection =
+      await this.inspectionRepository.create<InspectionDto>(payload);
 
     return this.responseService.createSuccessResponse(
       HttpStatus.CREATED,
@@ -41,16 +46,19 @@ export class InspectionService {
     userId: Types.ObjectId,
     dto: InspectionDto,
   ): Promise<ApiResponse<InspectionDocument>> {
-    const inspection = await this.inspectionRepository.updateInspection(
-      inspectionId,
-      carId,
-      userId,
-      dto,
-    );
+    const inspection = await this.inspectionRepository.findById(inspectionId);
+    checkAccessRights(inspection.owner, userId);
+    checkAccessRights(inspection.carId, carId);
+
+    const updatedInspection =
+      await this.inspectionRepository.updateById<InspectionDto>(
+        inspectionId,
+        dto,
+      );
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
-      inspection,
+      updatedInspection,
     );
   }
 
@@ -59,19 +67,18 @@ export class InspectionService {
     carId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<InspectionDocument>> {
-    const inspection =
-      await this.inspectionRepository.findInspectionAndCheckAccessRights(
-        inspectionId,
-        carId,
-        userId,
-      );
+    const inspection = await this.inspectionRepository.findById(inspectionId);
+    checkAccessRights(inspection.owner, userId);
+    checkAccessRights(inspection.carId, carId);
 
-    await this.inspectionRepository.deleteImages(inspection);
+    await this.inspectionRepository.deleteImages(
+      inspection,
+      EntityType.INSPECTION,
+      inspection._id,
+    );
 
-    const deletedInspection = await this.inspectionModel
-      .findByIdAndDelete(inspectionId)
-      .populate('photos')
-      .populate('contactId');
+    const deletedInspection =
+      await this.inspectionRepository.deleteById(inspectionId);
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
@@ -84,12 +91,9 @@ export class InspectionService {
     carId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<InspectionDocument>> {
-    const inspection =
-      await this.inspectionRepository.findInspectionAndCheckAccessRights(
-        inspectionId,
-        carId,
-        userId,
-      );
+    const inspection = await this.inspectionRepository.findById(inspectionId);
+    checkAccessRights(inspection.owner, userId);
+    checkAccessRights(inspection.carId, carId);
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
@@ -103,17 +107,12 @@ export class InspectionService {
     page: number = 1,
     limit: number = 10,
   ): Promise<ApiResponse<InspectionDocument[]>> {
-    const skip = (page - 1) * limit;
-
-    const inspection = await this.inspectionModel
-      .find({
-        carId,
-        owner: userId,
-      })
-      .skip(skip)
-      .limit(limit)
-      .populate('photos')
-      .populate('contactId');
+    const inspection = await this.inspectionRepository.getAll(
+      carId,
+      userId,
+      page,
+      limit,
+    );
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
@@ -127,10 +126,12 @@ export class InspectionService {
     contactId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<InspectionDocument>> {
-    const updatedInspection = await this.inspectionRepository.updateInspection(
+    const inspection = await this.inspectionRepository.findById(inspectionId);
+    checkAccessRights(inspection.owner, userId);
+    checkAccessRights(inspection.carId, carId);
+
+    const updatedInspection = await this.inspectionRepository.updateById(
       inspectionId,
-      carId,
-      userId,
       { contactId },
     );
 

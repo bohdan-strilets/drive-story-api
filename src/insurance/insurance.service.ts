@@ -1,18 +1,17 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { Types } from 'mongoose';
 import { CarRepository } from 'src/car/car.repository';
+import { checkAccessRights } from 'src/common/functions/check-access-rights.function';
+import { EntityType } from 'src/image/enums/entity-type.enum';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { InsuranceDto } from './dto/insurance.dto';
 import { InsuranceRepository } from './insurance.repository';
-import { Insurance, InsuranceDocument } from './schemas/insurance.schema';
+import { InsuranceDocument } from './schemas/insurance.schema';
 
 @Injectable()
 export class InsuranceService {
   constructor(
-    @InjectModel(Insurance.name)
-    private insuranceModel: Model<InsuranceDocument>,
     private readonly responseService: ResponseService,
     private readonly carRepository: CarRepository,
     private readonly insuranceRepository: InsuranceRepository,
@@ -24,10 +23,16 @@ export class InsuranceService {
     dto: InsuranceDto,
   ): Promise<ApiResponse<InsuranceDocument>> {
     const car = await this.carRepository.findCar(carId);
-    this.carRepository.checkAccessRights(car.owner, userId);
+    checkAccessRights(car.owner, userId);
 
-    const data = { carId, owner: userId, ...dto };
-    const insurance = await this.insuranceModel.create(data);
+    const payload = this.insuranceRepository.buildPayload<InsuranceDto>(
+      carId,
+      userId,
+      dto,
+    );
+
+    const insurance =
+      await this.insuranceRepository.create<InsuranceDto>(payload);
 
     return this.responseService.createSuccessResponse(
       HttpStatus.CREATED,
@@ -41,14 +46,17 @@ export class InsuranceService {
     userId: Types.ObjectId,
     dto: InsuranceDto,
   ): Promise<ApiResponse<InsuranceDocument>> {
-    const insurance = await this.insuranceRepository.updateInsurance(
-      insuranceId,
-      carId,
-      userId,
-      dto,
-    );
+    const insurance = await this.insuranceRepository.findById(insuranceId);
+    checkAccessRights(insurance.owner, userId);
+    checkAccessRights(insurance.carId, carId);
 
-    return this.responseService.createSuccessResponse(HttpStatus.OK, insurance);
+    const updatedInsurance =
+      await this.insuranceRepository.updateById<InsuranceDto>(insuranceId, dto);
+
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      updatedInsurance,
+    );
   }
 
   async delete(
@@ -56,19 +64,18 @@ export class InsuranceService {
     carId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<InsuranceDocument>> {
-    const insurance =
-      await this.insuranceRepository.findInsuranceAndCheckAccessRights(
-        insuranceId,
-        carId,
-        userId,
-      );
+    const insurance = await this.insuranceRepository.findById(insuranceId);
+    checkAccessRights(insurance.owner, userId);
+    checkAccessRights(insurance.carId, carId);
 
-    await this.insuranceRepository.deleteImages(insurance);
+    await this.insuranceRepository.deleteImages(
+      insurance,
+      EntityType.INSURANCE,
+      insurance._id,
+    );
 
-    const deletedInsurance = await this.insuranceModel
-      .findByIdAndDelete(insuranceId)
-      .populate('photos')
-      .populate('contactId');
+    const deletedInsurance =
+      await this.insuranceRepository.deleteById(insuranceId);
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
@@ -81,12 +88,9 @@ export class InsuranceService {
     carId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<InsuranceDocument>> {
-    const insurance =
-      await this.insuranceRepository.findInsuranceAndCheckAccessRights(
-        insuranceId,
-        carId,
-        userId,
-      );
+    const insurance = await this.insuranceRepository.findById(insuranceId);
+    checkAccessRights(insurance.owner, userId);
+    checkAccessRights(insurance.carId, carId);
 
     return this.responseService.createSuccessResponse(HttpStatus.OK, insurance);
   }
@@ -97,17 +101,12 @@ export class InsuranceService {
     page: number = 1,
     limit: number = 10,
   ): Promise<ApiResponse<InsuranceDocument[]>> {
-    const skip = (page - 1) * limit;
-
-    const insurances = await this.insuranceModel
-      .find({
-        carId,
-        owner: userId,
-      })
-      .skip(skip)
-      .limit(limit)
-      .populate('photos')
-      .populate('contactId');
+    const insurances = await this.insuranceRepository.getAll(
+      carId,
+      userId,
+      page,
+      limit,
+    );
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
@@ -121,10 +120,12 @@ export class InsuranceService {
     contactId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<InsuranceDocument>> {
-    const updatedInsurance = await this.insuranceRepository.updateInsurance(
+    const insurance = await this.insuranceRepository.findById(insuranceId);
+    checkAccessRights(insurance.owner, userId);
+    checkAccessRights(insurance.carId, carId);
+
+    const updatedInsurance = await this.insuranceRepository.updateById(
       insuranceId,
-      carId,
-      userId,
       { contactId },
     );
 

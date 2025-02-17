@@ -1,6 +1,8 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { Types } from 'mongoose';
 import { CarRepository } from 'src/car/car.repository';
+import { checkAccessRights } from 'src/common/functions/check-access-rights.function';
+import { EntityType } from 'src/image/enums/entity-type.enum';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { AccessoryRepository } from './accessory.repository';
@@ -21,10 +23,16 @@ export class AccessoryService {
     dto: AccessoryDto,
   ): Promise<ApiResponse<AccessoryDocument>> {
     const car = await this.carRepository.findCar(carId);
-    this.carRepository.checkAccessRights(car.owner, userId);
+    checkAccessRights(car.owner, userId);
 
-    const payload = this.accessoryRepository.buildPayload(carId, userId, dto);
-    const accessory = await this.accessoryRepository.createAccessory(payload);
+    const payload = this.accessoryRepository.buildPayload<AccessoryDto>(
+      carId,
+      userId,
+      dto,
+    );
+
+    const accessory =
+      await this.accessoryRepository.create<AccessoryDto>(payload);
 
     return this.responseService.createSuccessResponse(
       HttpStatus.CREATED,
@@ -38,14 +46,17 @@ export class AccessoryService {
     userId: Types.ObjectId,
     dto: AccessoryDto,
   ): Promise<ApiResponse<AccessoryDocument>> {
-    const accessory = await this.accessoryRepository.updateAccessory(
-      accessoryId,
-      carId,
-      userId,
-      dto,
-    );
+    const accessory = await this.accessoryRepository.findById(accessoryId);
+    checkAccessRights(accessory.owner, userId);
+    checkAccessRights(accessory.carId, carId);
 
-    return this.responseService.createSuccessResponse(HttpStatus.OK, accessory);
+    const updatedAccessory =
+      await this.accessoryRepository.updateById<AccessoryDto>(accessoryId, dto);
+
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      updatedAccessory,
+    );
   }
 
   async delete(
@@ -53,16 +64,18 @@ export class AccessoryService {
     carId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<AccessoryDocument>> {
-    const accessory =
-      await this.accessoryRepository.findAccessoryAndCheckAccessRights(
-        accessoryId,
-        carId,
-        userId,
-      );
+    const accessory = await this.accessoryRepository.findById(accessoryId);
+    checkAccessRights(accessory.owner, userId);
+    checkAccessRights(accessory.carId, carId);
 
-    await this.accessoryRepository.deleteImages(accessory);
+    await this.accessoryRepository.deleteImages(
+      accessory,
+      EntityType.ACCESSORY,
+      accessory._id,
+    );
+
     const deletedAccessory =
-      await this.accessoryRepository.deleteAccessory(accessoryId);
+      await this.accessoryRepository.deleteById(accessoryId);
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
@@ -75,12 +88,9 @@ export class AccessoryService {
     carId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<AccessoryDocument>> {
-    const accessory =
-      await this.accessoryRepository.findAccessoryAndCheckAccessRights(
-        accessoryId,
-        carId,
-        userId,
-      );
+    const accessory = await this.accessoryRepository.findById(accessoryId);
+    checkAccessRights(accessory.owner, userId);
+    checkAccessRights(accessory.carId, carId);
 
     return this.responseService.createSuccessResponse(HttpStatus.OK, accessory);
   }
@@ -91,7 +101,7 @@ export class AccessoryService {
     page: number = 1,
     limit: number = 10,
   ): Promise<ApiResponse<AccessoryDocument[]>> {
-    const accessory = await this.accessoryRepository.listAccessories(
+    const accessory = await this.accessoryRepository.getAll(
       carId,
       userId,
       page,
@@ -107,10 +117,12 @@ export class AccessoryService {
     contactId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<AccessoryDocument>> {
-    const updatedAccessory = await this.accessoryRepository.updateAccessory(
+    const accessory = await this.accessoryRepository.findById(accessoryId);
+    checkAccessRights(accessory.owner, userId);
+    checkAccessRights(accessory.carId, carId);
+
+    const updatedAccessory = await this.accessoryRepository.updateById(
       accessoryId,
-      carId,
-      userId,
       { contactId },
     );
 

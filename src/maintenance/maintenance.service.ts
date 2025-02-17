@@ -1,18 +1,17 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { Types } from 'mongoose';
 import { CarRepository } from 'src/car/car.repository';
+import { checkAccessRights } from 'src/common/functions/check-access-rights.function';
+import { EntityType } from 'src/image/enums/entity-type.enum';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { MaintenanceDto } from './dto/maintenance.dto';
 import { MaintenanceRepository } from './maintenance.repository';
-import { Maintenance, MaintenanceDocument } from './schemas/maintenance.schema';
+import { MaintenanceDocument } from './schemas/maintenance.schema';
 
 @Injectable()
 export class MaintenanceService {
   constructor(
-    @InjectModel(Maintenance.name)
-    private maintenanceModel: Model<MaintenanceDocument>,
     private readonly responseService: ResponseService,
     private readonly carRepository: CarRepository,
     private readonly maintenanceRepository: MaintenanceRepository,
@@ -24,15 +23,17 @@ export class MaintenanceService {
     dto: MaintenanceDto,
   ): Promise<ApiResponse<MaintenanceDocument>> {
     const car = await this.carRepository.findCar(carId);
-    this.carRepository.checkAccessRights(car.owner, userId);
+    checkAccessRights(car.owner, userId);
 
-    const data = {
+    const payload = this.maintenanceRepository.buildPayload<MaintenanceDto>(
       carId,
-      owner: userId,
-      ...dto,
-    };
+      userId,
+      dto,
+    );
 
-    const maintenance = await this.maintenanceModel.create(data);
+    const maintenance =
+      await this.maintenanceRepository.create<MaintenanceDto>(payload);
+
     return this.responseService.createSuccessResponse(
       HttpStatus.CREATED,
       maintenance,
@@ -45,11 +46,14 @@ export class MaintenanceService {
     userId: Types.ObjectId,
     dto: MaintenanceDto,
   ): Promise<ApiResponse<MaintenanceDocument>> {
+    const maintenance =
+      await this.maintenanceRepository.findById(maintenanceId);
+    checkAccessRights(maintenance.owner, userId);
+    checkAccessRights(maintenance.carId, carId);
+
     const updatedMaintenance =
-      await this.maintenanceRepository.updateMaintenance(
+      await this.maintenanceRepository.updateById<MaintenanceDto>(
         maintenanceId,
-        carId,
-        userId,
         dto,
       );
 
@@ -65,18 +69,18 @@ export class MaintenanceService {
     userId: Types.ObjectId,
   ): Promise<ApiResponse<MaintenanceDocument>> {
     const maintenance =
-      await this.maintenanceRepository.findMaintenanceAndCheckAccessRights(
-        maintenanceId,
-        carId,
-        userId,
-      );
+      await this.maintenanceRepository.findById(maintenanceId);
+    checkAccessRights(maintenance.owner, userId);
+    checkAccessRights(maintenance.carId, carId);
 
-    await this.maintenanceRepository.deleteImages(maintenance);
+    await this.maintenanceRepository.deleteImages(
+      maintenance,
+      EntityType.MAINTENANCE,
+      maintenance._id,
+    );
 
-    const deletedMaintenance = await this.maintenanceModel
-      .findByIdAndDelete(maintenanceId)
-      .populate('photos')
-      .populate('contactId');
+    const deletedMaintenance =
+      await this.maintenanceRepository.deleteById(maintenanceId);
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
@@ -90,11 +94,9 @@ export class MaintenanceService {
     userId: Types.ObjectId,
   ): Promise<ApiResponse<MaintenanceDocument>> {
     const maintenance =
-      await this.maintenanceRepository.findMaintenanceAndCheckAccessRights(
-        maintenanceId,
-        carId,
-        userId,
-      );
+      await this.maintenanceRepository.findById(maintenanceId);
+    checkAccessRights(maintenance.owner, userId);
+    checkAccessRights(maintenance.carId, carId);
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
@@ -108,17 +110,12 @@ export class MaintenanceService {
     page: number = 1,
     limit: number = 10,
   ): Promise<ApiResponse<MaintenanceDocument[]>> {
-    const skip = (page - 1) * limit;
-
-    const maintenances = await this.maintenanceModel
-      .find({
-        carId,
-        owner: userId,
-      })
-      .skip(skip)
-      .limit(limit)
-      .populate('photos')
-      .populate('contactId');
+    const maintenances = await this.maintenanceRepository.getAll(
+      carId,
+      userId,
+      page,
+      limit,
+    );
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
@@ -132,16 +129,19 @@ export class MaintenanceService {
     contactId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<MaintenanceDocument>> {
-    const updatedAccessory = await this.maintenanceRepository.updateMaintenance(
+    const maintenance =
+      await this.maintenanceRepository.findById(maintenanceId);
+    checkAccessRights(maintenance.owner, userId);
+    checkAccessRights(maintenance.carId, carId);
+
+    const updatedMaintenance = await this.maintenanceRepository.updateById(
       maintenanceId,
-      carId,
-      userId,
       { contactId },
     );
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
-      updatedAccessory,
+      updatedMaintenance,
     );
   }
 }

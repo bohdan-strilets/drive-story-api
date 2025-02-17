@@ -127,15 +127,15 @@ export class ImageRepository {
         break;
 
       case EntityType.MAINTENANCE:
-        await this.maintenanceRepository.bindImage(entityId, data);
+        await this.maintenanceRepository.setImage(entityId, data);
         break;
 
       case EntityType.FUELING:
-        await this.fuelingRepository.bindImage(entityId, data);
+        await this.fuelingRepository.setImage(entityId, data);
         break;
 
       case EntityType.ACCESSORY:
-        await this.accessoryRepository.bindImage(entityId, data);
+        await this.accessoryRepository.setImage(entityId, data);
         break;
 
       case EntityType.CONTACTS:
@@ -143,11 +143,11 @@ export class ImageRepository {
         break;
 
       case EntityType.INSURANCE:
-        await this.insuranceRepository.bindImage(entityId, data);
+        await this.insuranceRepository.setImage(entityId, data);
         break;
 
       case EntityType.INSPECTION:
-        await this.inspectionRepository.bindImage(entityId, data);
+        await this.inspectionRepository.setImage(entityId, data);
         break;
 
       default:

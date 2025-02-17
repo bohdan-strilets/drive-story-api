@@ -1,17 +1,17 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { Types } from 'mongoose';
 import { CarRepository } from 'src/car/car.repository';
+import { checkAccessRights } from 'src/common/functions/check-access-rights.function';
+import { EntityType } from 'src/image/enums/entity-type.enum';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { FuelingDto } from './dto/fueling.dto';
 import { FuelingRepository } from './fueling.repository';
-import { Fueling, FuelingDocument } from './schemas/fueling.schema';
+import { FuelingDocument } from './schemas/fueling.schema';
 
 @Injectable()
 export class FuelingService {
   constructor(
-    @InjectModel(Fueling.name) private fuelingModel: Model<FuelingDocument>,
     private readonly responseService: ResponseService,
     private readonly carRepository: CarRepository,
     private readonly fuelingRepository: FuelingRepository,
@@ -23,10 +23,15 @@ export class FuelingService {
     dto: FuelingDto,
   ): Promise<ApiResponse<FuelingDocument>> {
     const car = await this.carRepository.findCar(carId);
-    this.carRepository.checkAccessRights(car.owner, userId);
+    checkAccessRights(car.owner, userId);
 
-    const data = { carId, owner: userId, ...dto };
-    const fueling = await this.fuelingModel.create(data);
+    const payload = this.fuelingRepository.buildPayload<FuelingDto>(
+      carId,
+      userId,
+      dto,
+    );
+
+    const fueling = await this.fuelingRepository.create<FuelingDto>(payload);
 
     return this.responseService.createSuccessResponse(
       HttpStatus.CREATED,
@@ -40,14 +45,19 @@ export class FuelingService {
     userId: Types.ObjectId,
     dto: FuelingDto,
   ): Promise<ApiResponse<FuelingDocument>> {
-    const fueling = await this.fuelingRepository.updateFueling(
+    const fueling = await this.fuelingRepository.findById(fuelingId);
+    checkAccessRights(fueling.owner, userId);
+    checkAccessRights(fueling.carId, carId);
+
+    const updatedFueling = await this.fuelingRepository.updateById<FuelingDto>(
       fuelingId,
-      carId,
-      userId,
       dto,
     );
 
-    return this.responseService.createSuccessResponse(HttpStatus.OK, fueling);
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      updatedFueling,
+    );
   }
 
   async delete(
@@ -55,19 +65,17 @@ export class FuelingService {
     carId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<FuelingDocument>> {
-    const fueling =
-      await this.fuelingRepository.findFuelingAndCheckAccessRights(
-        fuelingId,
-        carId,
-        userId,
-      );
+    const fueling = await this.fuelingRepository.findById(fuelingId);
+    checkAccessRights(fueling.owner, userId);
+    checkAccessRights(fueling.carId, carId);
 
-    await this.fuelingRepository.deleteImages(fueling);
+    await this.fuelingRepository.deleteImages(
+      fueling,
+      EntityType.FUELING,
+      fueling._id,
+    );
 
-    const deletedFueling = await this.fuelingModel
-      .findByIdAndDelete(fuelingId)
-      .populate('photos')
-      .populate('contactId');
+    const deletedFueling = await this.fuelingRepository.deleteById(fuelingId);
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
@@ -80,12 +88,9 @@ export class FuelingService {
     carId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<FuelingDocument>> {
-    const fueling =
-      await this.fuelingRepository.findFuelingAndCheckAccessRights(
-        fuelingId,
-        carId,
-        userId,
-      );
+    const fueling = await this.fuelingRepository.findById(fuelingId);
+    checkAccessRights(fueling.owner, userId);
+    checkAccessRights(fueling.carId, carId);
 
     return this.responseService.createSuccessResponse(HttpStatus.OK, fueling);
   }
@@ -96,18 +101,12 @@ export class FuelingService {
     page: number = 1,
     limit: number = 10,
   ): Promise<ApiResponse<FuelingDocument[]>> {
-    const skip = (page - 1) * limit;
-
-    const fueling = await this.fuelingModel
-      .find({
-        carId,
-        owner: userId,
-      })
-      .skip(skip)
-      .limit(limit)
-      .populate('photos')
-      .populate('contactId');
-
+    const fueling = await this.fuelingRepository.getAll(
+      carId,
+      userId,
+      page,
+      limit,
+    );
     return this.responseService.createSuccessResponse(HttpStatus.OK, fueling);
   }
 
@@ -117,12 +116,13 @@ export class FuelingService {
     contactId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<FuelingDocument>> {
-    const updatedFueling = await this.fuelingRepository.updateFueling(
-      fuelingId,
-      carId,
-      userId,
-      { contactId },
-    );
+    const fueling = await this.fuelingRepository.findById(fuelingId);
+    checkAccessRights(fueling.owner, userId);
+    checkAccessRights(fueling.carId, carId);
+
+    const updatedFueling = await this.fuelingRepository.updateById(fuelingId, {
+      contactId,
+    });
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,

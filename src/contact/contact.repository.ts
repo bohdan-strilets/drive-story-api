@@ -18,7 +18,12 @@ export class ContactRepository {
     private readonly imageRepository: ImageRepository,
   ) {}
 
-  async findContactById(contactId: Types.ObjectId): Promise<ContactDocument> {
+  async createContact(userId: Types.ObjectId, dto: ContactDto) {
+    const data = { owner: userId, ...dto };
+    return await this.contactModel.create(data);
+  }
+
+  async findContact(contactId: Types.ObjectId): Promise<ContactDocument> {
     const contact = await this.contactModel
       .findById(contactId)
       .populate('photos');
@@ -31,19 +36,9 @@ export class ContactRepository {
     return contact;
   }
 
-  checkAccessRights(
-    resourceOwnerId: Types.ObjectId,
-    currentUserId: Types.ObjectId,
-  ): void {
-    if (!resourceOwnerId.equals(currentUserId)) {
-      this.logger.error(errorMessages.NO_ACCESS);
-      throw new AppError(HttpStatus.FORBIDDEN, errorMessages.NO_ACCESS);
-    }
-  }
-
-  async updateContact(
+  async updateContact<D>(
     contactId: Types.ObjectId,
-    dto: any,
+    dto: D,
   ): Promise<ContactDocument> {
     return await this.contactModel
       .findByIdAndUpdate(contactId, dto, { new: true })
@@ -75,11 +70,31 @@ export class ContactRepository {
     }
   }
 
+  async deleteContact(contactId: Types.ObjectId): Promise<ContactDocument> {
+    return await this.contactModel
+      .findByIdAndDelete(contactId)
+      .populate('photos');
+  }
+
+  async getAllContacts(
+    userId: Types.ObjectId,
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<ContactDocument[]> {
+    const skip = (page - 1) * limit;
+
+    return await this.contactModel
+      .find({ owner: userId })
+      .skip(skip)
+      .limit(limit)
+      .populate('photos');
+  }
+
   async bindImage(
     contactId: Types.ObjectId,
     data: Types.ObjectId | null,
   ): Promise<ContactDocument> {
-    await this.findContactById(contactId);
+    await this.findContact(contactId);
     return await this.updateContact(contactId, { photos: data });
   }
 

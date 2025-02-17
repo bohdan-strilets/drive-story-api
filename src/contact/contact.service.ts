@@ -1,6 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import { checkAccessRights } from 'src/common/functions/check-access-rights.function';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { ContactRepository } from './contact.repository';
@@ -21,13 +22,11 @@ export class ContactService {
     dto: ContactDto,
   ): Promise<ApiResponse<ContactDocument>> {
     await this.contactRepository.ensureContactDoesNotExist(dto);
-
-    const data = { owner: userId, ...dto };
-    const newContact = await this.contactModel.create(data);
+    const contact = await this.contactRepository.createContact(userId, dto);
 
     return this.responseService.createSuccessResponse(
       HttpStatus.CREATED,
-      newContact,
+      contact,
     );
   }
 
@@ -36,15 +35,13 @@ export class ContactService {
     userId: Types.ObjectId,
     dto: ContactDto,
   ): Promise<ApiResponse<ContactDocument>> {
-    const contact = await this.contactRepository.findContactById(contactId);
+    const contact = await this.contactRepository.findContact(contactId);
 
     this.contactRepository.validateContactDetailsUniqueness(contact, dto);
-    this.contactRepository.checkAccessRights(contact.owner, userId);
+    checkAccessRights(contact.owner, userId);
 
-    const updatedContact = await this.contactRepository.updateContact(
-      contactId,
-      dto,
-    );
+    const updatedContact =
+      await this.contactRepository.updateContact<ContactDto>(contactId, dto);
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
@@ -56,14 +53,13 @@ export class ContactService {
     contactId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<ContactDocument>> {
-    const contact = await this.contactRepository.findContactById(contactId);
-    this.contactRepository.checkAccessRights(contact.owner, userId);
+    const contact = await this.contactRepository.findContact(contactId);
 
+    checkAccessRights(contact.owner, userId);
     await this.contactRepository.deleteImages(contact);
 
-    const deletedContact = await this.contactModel
-      .findByIdAndDelete(contactId)
-      .populate('photos');
+    const deletedContact =
+      await this.contactRepository.deleteContact(contactId);
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
@@ -75,8 +71,9 @@ export class ContactService {
     contactId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<ContactDocument>> {
-    const contact = await this.contactRepository.findContactById(contactId);
-    this.contactRepository.checkAccessRights(contact.owner, userId);
+    const contact = await this.contactRepository.findContact(contactId);
+    checkAccessRights(contact.owner, userId);
+
     return this.responseService.createSuccessResponse(HttpStatus.OK, contact);
   }
 
@@ -85,15 +82,13 @@ export class ContactService {
     page: number = 1,
     limit: number = 10,
   ): Promise<ApiResponse<ContactDocument[]>> {
-    const skip = (page - 1) * limit;
+    const contacts = await this.contactRepository.getAllContacts(
+      userId,
+      page,
+      limit,
+    );
 
-    const fueling = await this.contactModel
-      .find({ owner: userId })
-      .skip(skip)
-      .limit(limit)
-      .populate('photos');
-
-    return this.responseService.createSuccessResponse(HttpStatus.OK, fueling);
+    return this.responseService.createSuccessResponse(HttpStatus.OK, contacts);
   }
 
   async filterContactsByNameOrPhone(

@@ -26,7 +26,7 @@ export class CarRepository {
 
     return await this.carModel
       .findByIdAndUpdate(carId, dto, { new: true })
-      .populate('images');
+      .populate('photos');
   }
 
   async deleteCar(
@@ -36,11 +36,11 @@ export class CarRepository {
     const car = await this.findCar(carId);
     checkAccessRights(car.owner, userId);
 
-    return await this.carModel.findByIdAndDelete(carId).populate('images');
+    return await this.carModel.findByIdAndDelete(carId).populate('photos');
   }
 
   async findCar(carId: Types.ObjectId): Promise<CarDocument> {
-    const car = await this.carModel.findById(carId).populate('images');
+    const car = await this.carModel.findById(carId).populate('photos');
 
     if (!car) {
       throw new AppError(HttpStatus.NOT_FOUND, errorMessages.CAR_NOT_FOUND);
@@ -60,7 +60,7 @@ export class CarRepository {
       .find({ owner: userId })
       .skip(skip)
       .limit(limit)
-      .populate('images');
+      .populate('photos');
   }
 
   async bindImage(
@@ -70,7 +70,7 @@ export class CarRepository {
     await this.findCar(carId);
     return await this.carModel.findByIdAndUpdate(
       carId,
-      { images: data },
+      { photos: data },
       { new: true },
     );
   }

@@ -31,7 +31,7 @@ export class Car {
   description: string | null;
 
   @Prop({ type: Types.ObjectId, ref: 'Image', default: null })
-  images: Types.ObjectId | null;
+  photos: Types.ObjectId | null;
 
   @Prop()
   createdAt: Date;

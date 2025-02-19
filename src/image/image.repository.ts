@@ -109,11 +109,11 @@ export class ImageRepository {
   ): Promise<void> {
     switch (entityType) {
       case EntityType.AVATARS:
-        await this.userRepository.bindImage(entityId, data, 'avatars');
+        await this.userRepository.setImage(entityId, data, 'avatars');
         break;
 
       case EntityType.POSTERS:
-        await this.userRepository.bindImage(entityId, data, 'posters');
+        await this.userRepository.setImage(entityId, data, 'posters');
         break;
 
       case EntityType.CARS:

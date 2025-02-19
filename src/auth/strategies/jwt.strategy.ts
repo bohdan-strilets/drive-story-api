@@ -7,23 +7,17 @@ import { AppError } from 'src/error/app-error';
 import { errorMessages } from 'src/error/helpers/error-messages.helper';
 import { Payload } from 'src/token/types/payload.type';
 import { UserDocument } from 'src/user/schemes/user.schema';
+import { UserHelper } from 'src/user/user.helper';
 import { UserRepository } from 'src/user/user.repository';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
-    private readonly configService: ConfigService,
+    configService: ConfigService,
     private readonly userRepository: UserRepository,
+    private readonly userHelper: UserHelper,
   ) {
-    const accessSecretKey = configService.get<string>('ACCESS_TOKEN_KEY');
-
-    if (!accessSecretKey) {
-      throw new AppError(
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        errorMessages.INVALID_TOKEN,
-      );
-    }
-
+    const accessSecretKey = configService.get('ACCESS_TOKEN_KEY');
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       secretOrKey: accessSecretKey,
@@ -36,7 +30,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
 
     const { _id } = payload;
-    const user = await this.userRepository.findById(new Types.ObjectId(_id));
+    const user = await this.userRepository.findUserById(
+      new Types.ObjectId(_id),
+    );
+    this.userHelper.isValidUser(user);
+
     return user;
   }
 }

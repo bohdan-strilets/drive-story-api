@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { UserHelper } from 'src/user/user.helper';
 import { UserRepository } from 'src/user/user.repository';
 import { ReminderHelper } from './reminder.helper';
 
@@ -7,6 +8,7 @@ import { ReminderHelper } from './reminder.helper';
 export class SchedulerService {
   constructor(
     private readonly userRepository: UserRepository,
+    private readonly userHelper: UserHelper,
     private readonly reminderHelper: ReminderHelper,
   ) {}
 
@@ -16,7 +18,9 @@ export class SchedulerService {
 
     await Promise.all(
       reminders.map(async (reminder) => {
-        const user = await this.userRepository.findById(reminder.owner);
+        const user = await this.userRepository.findUserById(reminder.owner);
+        this.userHelper.isValidUser(user);
+
         const email = user.email;
 
         await this.reminderHelper.sendNotification(

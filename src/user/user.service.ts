@@ -1,13 +1,12 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { AuthRepository } from 'src/auth/auth.repository';
+import { AppError } from 'src/error/app-error';
 import { PasswordService } from 'src/password/password.service';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { SendgridService } from 'src/sendgrid/sendgrid.service';
 import { TokenService } from 'src/token/token.service';
-import { getSafeUserData } from 'src/user/helpers/get-safe-data.helpers';
 import { v4 } from 'uuid';
 import { EditPasswordDto } from './dto/edit-password.dto';
 import { EmailDto } from './dto/email.dto';
@@ -15,6 +14,7 @@ import { ProfileDto } from './dto/profile.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { User, UserDocument } from './schemes/user.schema';
 import { UserInfo } from './types/user-info';
+import { UserHelper } from './user.helper';
 import { UserRepository } from './user.repository';
 
 @Injectable()
@@ -26,30 +26,27 @@ export class UserService {
     private readonly responseService: ResponseService,
     private readonly tokenService: TokenService,
     private readonly userRepository: UserRepository,
-    private readonly authRepository: AuthRepository,
+    private readonly userHelper: UserHelper,
   ) {}
 
   async activationEmail(activationToken: string): Promise<ApiResponse> {
-    const user = await this.userRepository.findByField(
-      'activationToken',
-      activationToken,
-    );
+    const user =
+      await this.userRepository.findUserByActivationToken(activationToken);
+    this.userHelper.isValidUser(user);
 
-    await this.userRepository.setActivationStatus(user._id);
+    const payload = { activationToken: null, isActivated: true };
+    await this.userRepository.updateUser(user._id, payload);
+
     return this.responseService.createSuccessResponse(HttpStatus.OK);
   }
 
   async requestActivationEmailResend(dto: EmailDto): Promise<ApiResponse> {
-    const { email } = dto;
+    const user = await this.userRepository.findUserByEmail(dto.email);
+    this.userHelper.isValidUser(user);
 
-    const user = await this.userRepository.findByField('email', email);
-    const newActivationToken = v4();
-
-    const updatedUser = await this.userRepository.setActivationStatus(
-      user._id,
-      newActivationToken,
-      false,
-    );
+    const activationToken = v4();
+    const payload = { activationToken, isActivated: false };
+    const updatedUser = await this.userRepository.updateUser(user._id, payload);
 
     await this.sendgridService.sendConfirmEmailLetter(
       updatedUser.email,
@@ -63,10 +60,15 @@ export class UserService {
     userId: Types.ObjectId,
     dto: ProfileDto,
   ): Promise<ApiResponse<UserInfo>> {
-    const updatedUser = await this.userRepository.updateUserById(userId, dto);
+    const user = await this.userRepository.findUserById(userId);
+    this.userHelper.isValidUser(user);
+
+    const updatedUser = await this.userRepository.updateUser(userId, dto);
+    const safeUserData = this.userHelper.getSafeUserData(updatedUser);
+
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
-      updatedUser,
+      safeUserData,
     );
   }
 
@@ -74,37 +76,40 @@ export class UserService {
     userId: Types.ObjectId,
     dto: EmailDto,
   ): Promise<ApiResponse<UserInfo>> {
+    const user = await this.userRepository.findUserById(userId);
+    this.userHelper.isValidUser(user);
+
     const { email } = dto;
-    await this.authRepository.validateUniqueEmail(email);
+    await this.userHelper.validateUniqueEmail(email);
 
     const activationToken = v4();
     await this.sendgridService.sendConfirmEmailLetter(email, activationToken);
 
-    const emailData = { email, activationToken, isActivated: false };
-    const updatedUser = await this.userRepository.updateUserById(
-      userId,
-      emailData,
-    );
+    const payload = { email, activationToken, isActivated: false };
+    const updatedUser = await this.userRepository.updateUser(userId, payload);
+    const safeUserData = this.userHelper.getSafeUserData(updatedUser);
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
-      updatedUser,
+      safeUserData,
     );
   }
 
   async requestResetPassword(dto: EmailDto): Promise<ApiResponse> {
-    const { email } = dto;
-    const user = await this.userRepository.findByField('email', email);
+    const user = await this.userRepository.findUserByEmail(dto.email);
+    this.userHelper.isValidUser(user);
 
     const resetToken = v4();
-    await this.userRepository.updateUserById(user._id, { resetToken });
+    await this.userRepository.updateUser(user._id, { resetToken });
     await this.sendgridService.sendPasswordResetEmail(user.email, resetToken);
 
     return this.responseService.createSuccessResponse(HttpStatus.OK);
   }
 
   async verifyResetToken(resetToken: string): Promise<ApiResponse> {
-    await this.userRepository.findByField('resetToken', resetToken);
+    const user = await this.userRepository.findUserByResetToken(resetToken);
+    this.userHelper.isValidUser(user);
+
     return this.responseService.createSuccessResponse(HttpStatus.OK);
   }
 
@@ -112,16 +117,14 @@ export class UserService {
     dto: ResetPasswordDto,
     resetToken: string,
   ): Promise<ApiResponse> {
-    const user = await this.userRepository.findByField(
-      'resetToken',
-      resetToken,
-    );
+    const user = await this.userRepository.findUserByResetToken(resetToken);
+    this.userHelper.isValidUser(user);
 
     const { password } = dto;
     const hashPassword = await this.passwordService.createPassword(password);
 
-    const passwordDto = { password: hashPassword, resetToken: null };
-    await this.userRepository.updateUserById(user._id, passwordDto);
+    const payload = { password: hashPassword, resetToken: null };
+    await this.userRepository.updateUser(user._id, payload);
 
     await this.sendgridService.sendPasswordChangedSuccess(user.email);
 
@@ -132,25 +135,32 @@ export class UserService {
     dto: EditPasswordDto,
     userId: Types.ObjectId,
   ): Promise<ApiResponse> {
-    const user = await this.userRepository.findById(userId);
+    const user = await this.userRepository.findUserById(userId);
+    this.userHelper.isValidUser(user);
+
     await this.passwordService.validatePassword(dto.password, user.password);
 
-    const hashPassword = await this.passwordService.createPassword(
-      dto.newPassword,
-    );
+    const { newPassword } = dto;
+    const hashPassword = await this.passwordService.createPassword(newPassword);
 
-    const passwordData = { password: hashPassword };
-    await this.userRepository.updateUserById(userId, passwordData);
+    const payload = { password: hashPassword };
+    await this.userRepository.updateUser(userId, payload);
+
     await this.sendgridService.sendPasswordChangedSuccess(user.email);
 
     return this.responseService.createSuccessResponse(HttpStatus.OK);
   }
 
   async getCurrentUser(userId: Types.ObjectId): Promise<ApiResponse<UserInfo>> {
-    const user = await this.userRepository.findById(userId);
-    const safeData = getSafeUserData(user);
+    const user = await this.userRepository.findUserById(userId);
+    this.userHelper.isValidUser(user);
 
-    return this.responseService.createSuccessResponse(HttpStatus.OK, safeData);
+    const safeUserData = this.userHelper.getSafeUserData(user);
+
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      safeUserData,
+    );
   }
 
   async removeProfile(userId: Types.ObjectId): Promise<ApiResponse<UserInfo>> {
@@ -158,26 +168,28 @@ export class UserService {
     session.startTransaction();
 
     try {
-      await this.userRepository.findById(userId);
-      const deletedUser = await this.userModel
-        .findByIdAndDelete(userId)
-        .populate('avatars')
-        .populate('posters');
+      const user = await this.userRepository.findUserById(userId);
+      this.userHelper.isValidUser(user);
 
+      const deletedUser = await this.userRepository.deleteUser(userId);
       await this.tokenService.deleteTokensByDb(new Types.ObjectId(userId));
 
       await session.commitTransaction();
       session.endSession();
 
-      const safeData = getSafeUserData(deletedUser);
+      const safeUserData = this.userHelper.getSafeUserData(deletedUser);
+
       return this.responseService.createSuccessResponse(
         HttpStatus.OK,
-        safeData,
+        safeUserData,
       );
     } catch (error) {
       await session.abortTransaction();
       session.endSession();
-      throw error;
+      throw new AppError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        error.message || 'Failed deleted user account.',
+      );
     }
   }
 }

@@ -1,34 +1,43 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { AppError } from 'src/error/app-error';
-import { errorMessages } from 'src/error/helpers/error-messages.helper';
+import { PasswordService } from 'src/password/password.service';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
+import { SendgridService } from 'src/sendgrid/sendgrid.service';
 import { TokenService } from 'src/token/token.service';
-import { User, UserDocument } from 'src/user/schemes/user.schema';
-import { AuthRepository } from './auth.repository';
+import { UserHelper } from 'src/user/user.helper';
+import { UserRepository } from 'src/user/user.repository';
+import { v4 } from 'uuid';
+import { AuthHelper } from './auth.helper';
 import { AuthDto } from './dto/auth.dto';
 import { AuthResponse } from './types/auth-response.type';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectModel(User.name) private userModel: Model<UserDocument>,
     private readonly tokenService: TokenService,
     private readonly responseService: ResponseService,
-    private readonly authRepository: AuthRepository,
+    private readonly userRepository: UserRepository,
+    private readonly userHelper: UserHelper,
+    private readonly passwordService: PasswordService,
+    private readonly sendgridService: SendgridService,
+    private readonly authHelper: AuthHelper,
   ) {}
 
   async registration(dto: AuthDto): Promise<ApiResponse<AuthResponse>> {
     const { email, password } = dto;
-    this.authRepository.validateUniqueEmail(email);
+    this.userHelper.validateUniqueEmail(email);
 
-    const createdUser = await this.authRepository.createUser(email, password);
-    await this.authRepository.sendActivationEmail(createdUser);
+    const activationToken = v4();
+    const hashPassword = await this.passwordService.createPassword(password);
+    const payload = { email, activationToken, password: hashPassword };
 
-    const response = await this.authRepository.createAuthResponse(createdUser);
-    return this.responseService.createSuccessResponse<AuthResponse>(
+    const user = await this.userRepository.createUser(payload);
+
+    await this.sendgridService.sendConfirmEmailLetter(email, activationToken);
+
+    const response = await this.authHelper.authResponse(user);
+
+    return this.responseService.createSuccessResponse(
       HttpStatus.CREATED,
       response,
     );
@@ -36,34 +45,33 @@ export class AuthService {
 
   async login(dto: AuthDto): Promise<ApiResponse<AuthResponse>> {
     const { email, password } = dto;
-    const user = await this.userModel.findOne({ email });
+    const user = await this.userRepository.findUserByEmail(email);
 
-    await this.authRepository.validateUser(user, password);
+    this.userHelper.isValidUser(user);
+    await this.passwordService.validatePassword(password, user.password);
+    this.userHelper.validateUserActivation(user.isActivated);
 
-    const response = await this.authRepository.createAuthResponse(user);
-    return this.responseService.createSuccessResponse<AuthResponse>(
-      HttpStatus.OK,
-      response,
-    );
+    const response = await this.authHelper.authResponse(user);
+
+    return this.responseService.createSuccessResponse(HttpStatus.OK, response);
   }
 
   async logout(refreshToken: string): Promise<ApiResponse> {
     const payload = await this.tokenService.validateRefreshToken(refreshToken);
-
     await this.tokenService.deleteTokensByDb(payload._id);
+
     return this.responseService.createSuccessResponse(HttpStatus.OK);
   }
 
   async refreshToken(refreshToken: string): Promise<ApiResponse<AuthResponse>> {
     const payload = await this.tokenService.validateRefreshToken(refreshToken);
-    const userExists = await this.userModel.findById(payload._id);
 
-    if (!userExists) {
-      throw new AppError(HttpStatus.NOT_FOUND, errorMessages.USER_NOT_FOUND);
-    }
+    const user = await this.userRepository.findUserById(payload._id);
+    this.userHelper.isValidUser(user);
 
-    const response = await this.authRepository.createAuthResponse(userExists);
-    return this.responseService.createSuccessResponse<AuthResponse>(
+    const response = await this.authHelper.authResponse(user);
+
+    return this.responseService.createSuccessResponse(
       HttpStatus.CREATED,
       response,
     );

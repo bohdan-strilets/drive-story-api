@@ -22,13 +22,13 @@ import { AccessoryDocument } from './schemas/accessory.schema';
 export class AccessoryController {
   constructor(private readonly accessoryService: AccessoryService) {}
 
-  @Post('add/:carId')
-  async add(
+  @Post('create/:carId')
+  async create(
     @Body() dto: AccessoryDto,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
   ): Promise<ApiResponse<AccessoryDocument>> {
-    return this.accessoryService.add(userId, carId, dto);
+    return this.accessoryService.create(userId, carId, dto);
   }
 
   @Patch('update/:carId/:accessoryId')
@@ -50,23 +50,23 @@ export class AccessoryController {
     return this.accessoryService.delete(accessoryId, carId, userId);
   }
 
-  @Get('by-id/:carId/:accessoryId')
-  async byId(
+  @Get('get-by-id/:carId/:accessoryId')
+  async getById(
     @Param('accessoryId', ParseObjectIdPipe) accessoryId: Types.ObjectId,
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<AccessoryDocument>> {
-    return this.accessoryService.byId(accessoryId, carId, userId);
+    return this.accessoryService.getById(accessoryId, carId, userId);
   }
 
-  @Get('all/:carId')
-  async all(
+  @Get('get-all/:carId')
+  async getAll(
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
   ): Promise<ApiResponse<AccessoryDocument[]>> {
-    return this.accessoryService.all(carId, userId, page, limit);
+    return this.accessoryService.getAll(carId, userId, page, limit);
   }
 
   @Get('bind-contact/:carId/:accessoryId')

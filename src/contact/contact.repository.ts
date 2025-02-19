@@ -1,11 +1,7 @@
-import { forwardRef, HttpStatus, Inject, Logger } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { AppError } from 'src/error/app-error';
-import { errorMessages } from 'src/error/helpers/error-messages.helper';
-import { EntityType } from 'src/image/enums/entity-type.enum';
-import { ImageRepository } from 'src/image/image.repository';
-import { ContactDto } from './dto/contact.dto';
+import { calculateSkip } from 'src/common/helpers/calculate-skip.helper';
 import { Contact, ContactDocument } from './schemas/contact.schema';
 
 export class ContactRepository {
@@ -14,75 +10,24 @@ export class ContactRepository {
   constructor(
     @InjectModel(Contact.name)
     private contactModel: Model<ContactDocument>,
-    @Inject(forwardRef(() => ImageRepository))
-    private readonly imageRepository: ImageRepository,
   ) {}
 
-  async createContact(userId: Types.ObjectId, dto: ContactDto) {
-    const data = { owner: userId, ...dto };
-    return await this.contactModel.create(data);
+  async findContactById(contactId: Types.ObjectId): Promise<ContactDocument> {
+    return this.contactModel.findById(contactId).populate('photos');
   }
 
-  async findContact(contactId: Types.ObjectId): Promise<ContactDocument> {
-    const contact = await this.contactModel
-      .findById(contactId)
-      .populate('photos');
-
-    if (!contact) {
-      this.logger.error(errorMessages.CONTACT_NOT_FOUND);
-      throw new AppError(HttpStatus.NOT_FOUND, errorMessages.CONTACT_NOT_FOUND);
-    }
-
-    return contact;
-  }
-
-  async updateContact<D>(
-    contactId: Types.ObjectId,
-    dto: D,
+  async findContactByPhoneOrName(
+    name: string,
+    phone: string,
   ): Promise<ContactDocument> {
-    return await this.contactModel
-      .findByIdAndUpdate(contactId, dto, { new: true })
-      .populate('photos');
+    return this.contactModel.findOne({ name, phone }).populate('photos');
   }
 
-  validateContactDetailsUniqueness(
-    existingContact: Contact,
-    contactDto: ContactDto,
-  ): void {
-    if (
-      existingContact.name === contactDto.name ||
-      existingContact.phone === contactDto.phone
-    ) {
-      this.logger.error(errorMessages.CONTACT_ALREADY);
-      throw new AppError(HttpStatus.CONFLICT, errorMessages.CONTACT_ALREADY);
-    }
-  }
-
-  async ensureContactDoesNotExist(dto: ContactDto) {
-    const contact = await this.contactModel.findOne({
-      name: dto.name,
-      phone: dto.phone,
-    });
-
-    if (contact) {
-      this.logger.error(errorMessages.CONTACT_ALREADY);
-      throw new AppError(HttpStatus.CONFLICT, errorMessages.CONTACT_ALREADY);
-    }
-  }
-
-  async deleteContact(contactId: Types.ObjectId): Promise<ContactDocument> {
-    return await this.contactModel
-      .findByIdAndDelete(contactId)
-      .populate('photos');
-  }
-
-  async getAllContacts(
+  async findAllContactsByUser(
     userId: Types.ObjectId,
-    page: number = 1,
-    limit: number = 10,
+    skip: number,
+    limit: number,
   ): Promise<ContactDocument[]> {
-    const skip = (page - 1) * limit;
-
     return await this.contactModel
       .find({ owner: userId })
       .skip(skip)
@@ -90,11 +35,28 @@ export class ContactRepository {
       .populate('photos');
   }
 
-  async bindImage(
+  async createContact(payload: any) {
+    return this.contactModel.create(payload);
+  }
+
+  async updateContact(
+    contactId: Types.ObjectId,
+    dto: any,
+  ): Promise<ContactDocument> {
+    return this.contactModel
+      .findByIdAndUpdate(contactId, dto, { new: true })
+      .populate('photos');
+  }
+
+  async deleteContact(contactId: Types.ObjectId): Promise<ContactDocument> {
+    return this.contactModel.findByIdAndDelete(contactId).populate('photos');
+  }
+
+  async setImage(
     contactId: Types.ObjectId,
     data: Types.ObjectId | null,
   ): Promise<ContactDocument> {
-    await this.findContact(contactId);
+    await this.findContactById(contactId);
     return await this.updateContact(contactId, { photos: data });
   }
 
@@ -104,8 +66,7 @@ export class ContactRepository {
     page: number,
     limit: number,
   ) {
-    const skip = (page - 1) * limit;
-
+    const skip = calculateSkip(page, limit);
     return await this.contactModel
       .find({
         owner: userId,
@@ -113,22 +74,6 @@ export class ContactRepository {
       })
       .skip(skip)
       .limit(limit)
-      .exec();
-  }
-
-  async getContactByUser(userId: Types.ObjectId): Promise<ContactDocument[]> {
-    return this.contactModel.find({ owner: userId });
-  }
-
-  async deleteImages(contact: ContactDocument): Promise<void> {
-    const photos = contact.photos;
-
-    if (photos) {
-      await this.imageRepository.removedAllFiles(
-        photos._id,
-        EntityType.CONTACTS,
-        contact._id,
-      );
-    }
+      .populate('photos');
   }
 }

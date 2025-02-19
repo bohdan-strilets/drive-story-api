@@ -1,8 +1,13 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { Types } from 'mongoose';
 import { CarRepository } from 'src/car/car.repository';
-import { checkAccessRights } from 'src/common/functions/check-access-rights.function';
+import { CarDocument } from 'src/car/schemas/car.schema';
+import { calculateSkip } from 'src/common/helpers/calculate-skip.helper';
+import { checkAccess } from 'src/common/helpers/check-access.helper';
+import { AppError } from 'src/error/app-error';
+import { errorMessages } from 'src/error/helpers/error-messages.helper';
 import { EntityType } from 'src/image/enums/entity-type.enum';
+import { ImageRepository } from 'src/image/image.repository';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { AccessoryRepository } from './accessory.repository';
@@ -11,33 +16,57 @@ import { AccessoryDocument } from './schemas/accessory.schema';
 
 @Injectable()
 export class AccessoryService {
+  private readonly logger = new Logger(AccessoryService.name);
+
   constructor(
     private readonly responseService: ResponseService,
     private readonly carRepository: CarRepository,
     private readonly accessoryRepository: AccessoryRepository,
+    private readonly imageRepository: ImageRepository,
   ) {}
 
-  async add(
+  private isValidCar(car: CarDocument) {
+    if (!car) {
+      throw new AppError(HttpStatus.NOT_FOUND, errorMessages.CAR_NOT_FOUND);
+    }
+  }
+
+  async create(
     userId: Types.ObjectId,
     carId: Types.ObjectId,
     dto: AccessoryDto,
   ): Promise<ApiResponse<AccessoryDocument>> {
-    const car = await this.carRepository.findCar(carId);
-    checkAccessRights(car.owner, userId);
+    const car = await this.carRepository.findCarById(carId);
 
-    const payload = this.accessoryRepository.buildPayload<AccessoryDto>(
-      carId,
-      userId,
-      dto,
-    );
+    this.isValidCar(car);
+    checkAccess(car.owner, userId);
 
-    const accessory =
-      await this.accessoryRepository.create<AccessoryDto>(payload);
+    const payload = { carId, owner: userId, ...dto };
+    const accessory = await this.accessoryRepository.createAccessory(payload);
 
     return this.responseService.createSuccessResponse(
       HttpStatus.CREATED,
       accessory,
     );
+  }
+
+  private isValidAccessory(accessory: AccessoryDocument): void {
+    if (!accessory) {
+      this.logger.error(errorMessages.SERVICE_OR_ACCESSORY_NOT_FOUND);
+      throw new AppError(
+        HttpStatus.NOT_FOUND,
+        errorMessages.SERVICE_OR_ACCESSORY_NOT_FOUND,
+      );
+    }
+  }
+
+  private checkAccessoryAccess(
+    accessory: AccessoryDocument,
+    carId: Types.ObjectId,
+    userId: Types.ObjectId,
+  ): void {
+    checkAccess(accessory.owner, userId);
+    checkAccess(accessory.carId, carId);
   }
 
   async update(
@@ -46,12 +75,15 @@ export class AccessoryService {
     userId: Types.ObjectId,
     dto: AccessoryDto,
   ): Promise<ApiResponse<AccessoryDocument>> {
-    const accessory = await this.accessoryRepository.findById(accessoryId);
-    checkAccessRights(accessory.owner, userId);
-    checkAccessRights(accessory.carId, carId);
+    const accessory =
+      await this.accessoryRepository.findAccessoryById(accessoryId);
+    this.isValidAccessory(accessory);
+    this.checkAccessoryAccess(accessory, userId, carId);
 
-    const updatedAccessory =
-      await this.accessoryRepository.updateById<AccessoryDto>(accessoryId, dto);
+    const updatedAccessory = await this.accessoryRepository.updateAccessory(
+      accessoryId,
+      dto,
+    );
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
@@ -59,23 +91,35 @@ export class AccessoryService {
     );
   }
 
+  private async deletePhotos(
+    accessory: AccessoryDocument,
+    entityType: EntityType,
+  ): Promise<void> {
+    const photos = accessory.photos;
+
+    if (photos) {
+      await this.imageRepository.removedAllFiles(
+        photos._id,
+        entityType,
+        accessory._id,
+      );
+    }
+  }
+
   async delete(
     accessoryId: Types.ObjectId,
     carId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<AccessoryDocument>> {
-    const accessory = await this.accessoryRepository.findById(accessoryId);
-    checkAccessRights(accessory.owner, userId);
-    checkAccessRights(accessory.carId, carId);
+    const accessory =
+      await this.accessoryRepository.findAccessoryById(accessoryId);
+    this.isValidAccessory(accessory);
+    this.checkAccessoryAccess(accessory, userId, carId);
 
-    await this.accessoryRepository.deleteImages(
-      accessory,
-      EntityType.ACCESSORY,
-      accessory._id,
-    );
+    await this.deletePhotos(accessory, EntityType.ACCESSORY);
 
     const deletedAccessory =
-      await this.accessoryRepository.deleteById(accessoryId);
+      await this.accessoryRepository.deleteAccessory(accessoryId);
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
@@ -83,32 +127,38 @@ export class AccessoryService {
     );
   }
 
-  async byId(
+  async getById(
     accessoryId: Types.ObjectId,
     carId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<AccessoryDocument>> {
-    const accessory = await this.accessoryRepository.findById(accessoryId);
-    checkAccessRights(accessory.owner, userId);
-    checkAccessRights(accessory.carId, carId);
+    const accessory =
+      await this.accessoryRepository.findAccessoryById(accessoryId);
+    this.isValidAccessory(accessory);
+    this.checkAccessoryAccess(accessory, userId, carId);
 
     return this.responseService.createSuccessResponse(HttpStatus.OK, accessory);
   }
 
-  async all(
+  async getAll(
     carId: Types.ObjectId,
     userId: Types.ObjectId,
-    page: number = 1,
-    limit: number = 10,
+    page: number,
+    limit: number,
   ): Promise<ApiResponse<AccessoryDocument[]>> {
-    const accessory = await this.accessoryRepository.getAll(
+    const skip = calculateSkip(page, limit);
+
+    const accessories = await this.accessoryRepository.findAllAccessoryByUser(
       carId,
       userId,
-      page,
+      skip,
       limit,
     );
 
-    return this.responseService.createSuccessResponse(HttpStatus.OK, accessory);
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      accessories,
+    );
   }
 
   async bindContact(
@@ -117,11 +167,12 @@ export class AccessoryService {
     contactId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<AccessoryDocument>> {
-    const accessory = await this.accessoryRepository.findById(accessoryId);
-    checkAccessRights(accessory.owner, userId);
-    checkAccessRights(accessory.carId, carId);
+    const accessory =
+      await this.accessoryRepository.findAccessoryById(accessoryId);
+    this.isValidAccessory(accessory);
+    this.checkAccessoryAccess(accessory, userId, carId);
 
-    const updatedAccessory = await this.accessoryRepository.updateById(
+    const updatedAccessory = await this.accessoryRepository.updateAccessory(
       accessoryId,
       { contactId },
     );

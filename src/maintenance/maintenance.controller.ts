@@ -22,13 +22,13 @@ import { MaintenanceDocument } from './schemas/maintenance.schema';
 export class MaintenanceController {
   constructor(private readonly maintenanceService: MaintenanceService) {}
 
-  @Post('add/:carId')
-  async add(
+  @Post('create/:carId')
+  async create(
     @Body() dto: MaintenanceDto,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
   ): Promise<ApiResponse<MaintenanceDocument>> {
-    return this.maintenanceService.add(userId, carId, dto);
+    return this.maintenanceService.create(userId, carId, dto);
   }
 
   @Patch('update/:carId/:maintenanceId')
@@ -50,23 +50,23 @@ export class MaintenanceController {
     return this.maintenanceService.delete(maintenanceId, carId, userId);
   }
 
-  @Get('by-id/:carId/:maintenanceId')
-  async byId(
+  @Get('get-by-id/:carId/:maintenanceId')
+  async getById(
     @Param('maintenanceId', ParseObjectIdPipe) maintenanceId: Types.ObjectId,
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<MaintenanceDocument>> {
-    return this.maintenanceService.byId(maintenanceId, carId, userId);
+    return this.maintenanceService.getById(maintenanceId, carId, userId);
   }
 
-  @Get('all/:carId')
-  async all(
+  @Get('get-all/:carId')
+  async getAll(
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
   ): Promise<ApiResponse<MaintenanceDocument[]>> {
-    return this.maintenanceService.all(carId, userId, page, limit);
+    return this.maintenanceService.getAll(carId, userId, page, limit);
   }
 
   @Get('bind-contact/:carId/:maintenanceId')

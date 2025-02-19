@@ -22,12 +22,12 @@ import { CarDocument } from './schemas/car.schema';
 export class CarController {
   constructor(private readonly carService: CarService) {}
 
-  @Post('add')
-  async add(
+  @Post('create')
+  async create(
     @Body() dto: CarDto,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<CarDocument>> {
-    return this.carService.add(userId, dto);
+    return this.carService.create(userId, dto);
   }
 
   @Patch('update/:carId')
@@ -47,20 +47,20 @@ export class CarController {
     return this.carService.delete(carId, userId);
   }
 
-  @Get('by-id/:carId')
-  async byId(
+  @Get('get-by-id/:carId')
+  async getById(
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<CarDocument>> {
-    return this.carService.byId(carId, userId);
+    return this.carService.getById(carId, userId);
   }
 
-  @Get('all')
-  async all(
+  @Get('get-all')
+  async getAll(
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
   ): Promise<ApiResponse<CarDocument[]>> {
-    return this.carService.all(userId, page, limit);
+    return this.carService.getAll(userId, page, limit);
   }
 }

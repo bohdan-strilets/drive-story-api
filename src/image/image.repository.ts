@@ -1,4 +1,4 @@
-import { forwardRef, HttpStatus, Inject } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { AccessoryRepository } from 'src/accessory/accessory.repository';
@@ -22,19 +22,13 @@ export class ImageRepository {
   constructor(
     @InjectModel(Image.name) private imageModel: Model<ImageDocument>,
     private readonly cloudinaryService: CloudinaryService,
-    @Inject(forwardRef(() => MaintenanceRepository))
     private readonly maintenanceRepository: MaintenanceRepository,
     private readonly carRepository: CarRepository,
     private readonly userRepository: UserRepository,
-    @Inject(forwardRef(() => FuelingRepository))
     private readonly fuelingRepository: FuelingRepository,
-    @Inject(forwardRef(() => AccessoryRepository))
     private readonly accessoryRepository: AccessoryRepository,
-    @Inject(forwardRef(() => ContactRepository))
     private readonly contactRepository: ContactRepository,
-    @Inject(forwardRef(() => InsuranceRepository))
     private readonly insuranceRepository: InsuranceRepository,
-    @Inject(forwardRef(() => InspectionRepository))
     private readonly inspectionRepository: InspectionRepository,
   ) {}
 
@@ -123,7 +117,7 @@ export class ImageRepository {
         break;
 
       case EntityType.CARS:
-        await this.carRepository.bindImage(entityId, data);
+        await this.carRepository.setImage(entityId, data);
         break;
 
       case EntityType.MAINTENANCE:
@@ -139,7 +133,7 @@ export class ImageRepository {
         break;
 
       case EntityType.CONTACTS:
-        await this.contactRepository.bindImage(entityId, data);
+        await this.contactRepository.setImage(entityId, data);
         break;
 
       case EntityType.INSURANCE:

@@ -1,7 +1,7 @@
 import { HttpStatus, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { checkAccessRights } from 'src/common/functions/check-access-rights.function';
+import { checkAccess } from 'src/common/helpers/check-access.helper';
 import { AppError } from 'src/error/app-error';
 import { errorMessages } from 'src/error/helpers/error-messages.helper';
 import { PushRepository } from 'src/push/push.repository';
@@ -31,12 +31,12 @@ export class ReminderRepository {
     return reminder;
   }
 
-  async findReminderAndCheckAccessRights(
+  async findReminderAndCheckAccess(
     reminderId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ReminderDocument> {
     const reminder = await this.findReminder(reminderId);
-    checkAccessRights(reminder.owner, userId);
+    checkAccess(reminder.owner, userId);
     return reminder;
   }
 
@@ -59,7 +59,7 @@ export class ReminderRepository {
     reminderId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<void> {
-    await this.findReminderAndCheckAccessRights(reminderId, userId);
+    await this.findReminderAndCheckAccess(reminderId, userId);
     await this.reminderModel.findByIdAndUpdate(
       reminderId,
       { isSent: true },

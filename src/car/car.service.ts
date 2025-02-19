@@ -1,6 +1,9 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { Types } from 'mongoose';
-import { checkAccessRights } from 'src/common/functions/check-access-rights.function';
+import { calculateSkip } from 'src/common/helpers/calculate-skip.helper';
+import { checkAccess } from 'src/common/helpers/check-access.helper';
+import { AppError } from 'src/error/app-error';
+import { errorMessages } from 'src/error/helpers/error-messages.helper';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { CarRepository } from './car.repository';
@@ -14,12 +17,20 @@ export class CarService {
     private readonly carRepository: CarRepository,
   ) {}
 
-  async add(
+  async create(
     userId: Types.ObjectId,
     dto: CarDto,
   ): Promise<ApiResponse<CarDocument>> {
-    const car = await this.carRepository.createCar(userId, dto);
+    const payload = { owner: userId, ...dto };
+    const car = await this.carRepository.createCar(payload);
+
     return this.responseService.createSuccessResponse(HttpStatus.CREATED, car);
+  }
+
+  private isValidCar(car: CarDocument) {
+    if (!car) {
+      throw new AppError(HttpStatus.NOT_FOUND, errorMessages.CAR_NOT_FOUND);
+    }
   }
 
   async update(
@@ -27,11 +38,12 @@ export class CarService {
     userId: Types.ObjectId,
     dto: CarDto,
   ): Promise<ApiResponse<CarDocument>> {
-    const updatedCar = await this.carRepository.updateCar<CarDto>(
-      carId,
-      userId,
-      dto,
-    );
+    const car = await this.carRepository.findCarById(carId);
+
+    checkAccess(car.owner, userId);
+    this.isValidCar(car);
+
+    const updatedCar = await this.carRepository.updateCar(carId, dto);
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
@@ -43,7 +55,12 @@ export class CarService {
     carId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<CarDocument>> {
-    const deletedCar = await this.carRepository.deleteCar(carId, userId);
+    const car = await this.carRepository.findCarById(carId);
+
+    checkAccess(car.owner, userId);
+    this.isValidCar(car);
+
+    const deletedCar = await this.carRepository.deleteCar(carId);
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
@@ -51,21 +68,26 @@ export class CarService {
     );
   }
 
-  async byId(
+  async getById(
     carId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<CarDocument>> {
-    const car = await this.carRepository.findCar(carId);
-    checkAccessRights(car.owner, userId);
+    const car = await this.carRepository.findCarById(carId);
+
+    checkAccess(car.owner, userId);
+    this.isValidCar(car);
+
     return this.responseService.createSuccessResponse(HttpStatus.OK, car);
   }
 
-  async all(
+  async getAll(
     userId: Types.ObjectId,
-    page: number = 1,
-    limit: number = 10,
+    page: number,
+    limit: number,
   ): Promise<ApiResponse<CarDocument[]>> {
-    const cars = await this.carRepository.getAllCars(userId, page, limit);
+    const skip = calculateSkip(page, limit);
+    const cars = await this.carRepository.findAllCars(userId, skip, limit);
+
     return this.responseService.createSuccessResponse(HttpStatus.OK, cars);
   }
 }

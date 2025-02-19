@@ -36,7 +36,7 @@ export const errorMessages = {
   CONTACT_NOT_FOUND: 'Contact not found.',
   INSURANCE_NOT_FOUND:
     'The information about the insurance policy was not found.',
-  SERVICE_NOT_FOUND: 'The service was not found.',
+  SERVICE_OR_ACCESSORY_NOT_FOUND: 'The service or accessory was not found.',
   INSPECTION_NOT_FOUND:
     'The information about the vehicle inspection was not found.',
   REMINDER_NOT_FOUND: 'Reminder not found.',

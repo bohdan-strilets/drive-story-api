@@ -5,7 +5,7 @@ import { errorMessages } from 'src/error/helpers/error-messages.helper';
 
 const logger = new Logger('AccessRights');
 
-export const checkAccessRights = (
+export const checkAccess = (
   expectedId: Types.ObjectId,
   providedId: Types.ObjectId,
 ): void => {

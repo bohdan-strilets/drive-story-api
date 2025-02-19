@@ -22,12 +22,12 @@ import { ContactDocument } from './schemas/contact.schema';
 export class ContactController {
   constructor(private readonly contactService: ContactService) {}
 
-  @Post('add')
-  async add(
+  @Post('create')
+  async create(
     @Body() dto: ContactDto,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<ContactDocument>> {
-    return this.contactService.add(userId, dto);
+    return this.contactService.create(userId, dto);
   }
 
   @Patch('update/:contactId')
@@ -47,21 +47,21 @@ export class ContactController {
     return this.contactService.delete(contactId, userId);
   }
 
-  @Get('by-id/:contactId')
-  async byId(
+  @Get('get-by-id/:contactId')
+  async getById(
     @Param('contactId', ParseObjectIdPipe) contactId: Types.ObjectId,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<ContactDocument>> {
-    return this.contactService.byId(contactId, userId);
+    return this.contactService.getById(contactId, userId);
   }
 
-  @Get('all')
-  async all(
+  @Get('get-all')
+  async getAll(
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
   ): Promise<ApiResponse<ContactDocument[]>> {
-    return this.contactService.all(userId, page, limit);
+    return this.contactService.getAll(userId, page, limit);
   }
 
   @Get('filter')

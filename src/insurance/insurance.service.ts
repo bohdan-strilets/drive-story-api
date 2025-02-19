@@ -1,8 +1,13 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { Types } from 'mongoose';
 import { CarRepository } from 'src/car/car.repository';
-import { checkAccessRights } from 'src/common/functions/check-access-rights.function';
+import { CarDocument } from 'src/car/schemas/car.schema';
+import { calculateSkip } from 'src/common/helpers/calculate-skip.helper';
+import { checkAccess } from 'src/common/helpers/check-access.helper';
+import { AppError } from 'src/error/app-error';
+import { errorMessages } from 'src/error/helpers/error-messages.helper';
 import { EntityType } from 'src/image/enums/entity-type.enum';
+import { ImageRepository } from 'src/image/image.repository';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { InsuranceDto } from './dto/insurance.dto';
@@ -11,33 +16,57 @@ import { InsuranceDocument } from './schemas/insurance.schema';
 
 @Injectable()
 export class InsuranceService {
+  private readonly logger = new Logger(InsuranceService.name);
+
   constructor(
     private readonly responseService: ResponseService,
     private readonly carRepository: CarRepository,
     private readonly insuranceRepository: InsuranceRepository,
+    private readonly imageRepository: ImageRepository,
   ) {}
 
-  async add(
+  private isValidCar(car: CarDocument) {
+    if (!car) {
+      throw new AppError(HttpStatus.NOT_FOUND, errorMessages.CAR_NOT_FOUND);
+    }
+  }
+
+  async create(
     userId: Types.ObjectId,
     carId: Types.ObjectId,
     dto: InsuranceDto,
   ): Promise<ApiResponse<InsuranceDocument>> {
-    const car = await this.carRepository.findCar(carId);
-    checkAccessRights(car.owner, userId);
+    const car = await this.carRepository.findCarById(carId);
 
-    const payload = this.insuranceRepository.buildPayload<InsuranceDto>(
-      carId,
-      userId,
-      dto,
-    );
+    this.isValidCar(car);
+    checkAccess(car.owner, userId);
 
-    const insurance =
-      await this.insuranceRepository.create<InsuranceDto>(payload);
+    const payload = { carId, owner: userId, ...dto };
+    const insurance = await this.insuranceRepository.createInsurance(payload);
 
     return this.responseService.createSuccessResponse(
       HttpStatus.CREATED,
       insurance,
     );
+  }
+
+  private isValidInsurance(insurance: InsuranceDocument): void {
+    if (!insurance) {
+      this.logger.error(errorMessages.INSURANCE_NOT_FOUND);
+      throw new AppError(
+        HttpStatus.NOT_FOUND,
+        errorMessages.INSURANCE_NOT_FOUND,
+      );
+    }
+  }
+
+  private checkInsuranceAccess(
+    insurance: InsuranceDocument,
+    carId: Types.ObjectId,
+    userId: Types.ObjectId,
+  ): void {
+    checkAccess(insurance.owner, userId);
+    checkAccess(insurance.carId, carId);
   }
 
   async update(
@@ -46,12 +75,15 @@ export class InsuranceService {
     userId: Types.ObjectId,
     dto: InsuranceDto,
   ): Promise<ApiResponse<InsuranceDocument>> {
-    const insurance = await this.insuranceRepository.findById(insuranceId);
-    checkAccessRights(insurance.owner, userId);
-    checkAccessRights(insurance.carId, carId);
+    const insurance =
+      await this.insuranceRepository.findInsuranceById(insuranceId);
+    this.isValidInsurance(insurance);
+    this.checkInsuranceAccess(insurance, userId, carId);
 
-    const updatedInsurance =
-      await this.insuranceRepository.updateById<InsuranceDto>(insuranceId, dto);
+    const updatedInsurance = await this.insuranceRepository.updateInsurance(
+      insuranceId,
+      dto,
+    );
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
@@ -59,23 +91,35 @@ export class InsuranceService {
     );
   }
 
+  private async deletePhotos(
+    insurance: InsuranceDocument,
+    entityType: EntityType,
+  ): Promise<void> {
+    const photos = insurance.photos;
+
+    if (photos) {
+      await this.imageRepository.removedAllFiles(
+        photos._id,
+        entityType,
+        insurance._id,
+      );
+    }
+  }
+
   async delete(
     insuranceId: Types.ObjectId,
     carId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<InsuranceDocument>> {
-    const insurance = await this.insuranceRepository.findById(insuranceId);
-    checkAccessRights(insurance.owner, userId);
-    checkAccessRights(insurance.carId, carId);
+    const insurance =
+      await this.insuranceRepository.findInsuranceById(insuranceId);
+    this.isValidInsurance(insurance);
+    this.checkInsuranceAccess(insurance, userId, carId);
 
-    await this.insuranceRepository.deleteImages(
-      insurance,
-      EntityType.INSURANCE,
-      insurance._id,
-    );
+    await this.deletePhotos(insurance, EntityType.INSURANCE);
 
     const deletedInsurance =
-      await this.insuranceRepository.deleteById(insuranceId);
+      await this.insuranceRepository.deleteInsurance(insuranceId);
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
@@ -83,28 +127,31 @@ export class InsuranceService {
     );
   }
 
-  async byId(
+  async getById(
     insuranceId: Types.ObjectId,
     carId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<InsuranceDocument>> {
-    const insurance = await this.insuranceRepository.findById(insuranceId);
-    checkAccessRights(insurance.owner, userId);
-    checkAccessRights(insurance.carId, carId);
+    const insurance =
+      await this.insuranceRepository.findInsuranceById(insuranceId);
+    this.isValidInsurance(insurance);
+    this.checkInsuranceAccess(insurance, userId, carId);
 
     return this.responseService.createSuccessResponse(HttpStatus.OK, insurance);
   }
 
-  async all(
+  async getAll(
     carId: Types.ObjectId,
     userId: Types.ObjectId,
-    page: number = 1,
-    limit: number = 10,
+    page: number,
+    limit: number,
   ): Promise<ApiResponse<InsuranceDocument[]>> {
-    const insurances = await this.insuranceRepository.getAll(
+    const skip = calculateSkip(page, limit);
+
+    const insurances = await this.insuranceRepository.findAllInsuranceByUser(
       carId,
       userId,
-      page,
+      skip,
       limit,
     );
 
@@ -120,11 +167,12 @@ export class InsuranceService {
     contactId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<InsuranceDocument>> {
-    const insurance = await this.insuranceRepository.findById(insuranceId);
-    checkAccessRights(insurance.owner, userId);
-    checkAccessRights(insurance.carId, carId);
+    const insurance =
+      await this.insuranceRepository.findInsuranceById(insuranceId);
+    this.isValidInsurance(insurance);
+    this.checkInsuranceAccess(insurance, userId, carId);
 
-    const updatedInsurance = await this.insuranceRepository.updateById(
+    const updatedInsurance = await this.insuranceRepository.updateInsurance(
       insuranceId,
       { contactId },
     );

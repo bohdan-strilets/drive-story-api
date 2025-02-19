@@ -22,13 +22,13 @@ import { FuelingDocument } from './schemas/fueling.schema';
 export class FuelingController {
   constructor(private readonly fuelingService: FuelingService) {}
 
-  @Post('add/:carId')
-  async add(
+  @Post('create/:carId')
+  async create(
     @Body() dto: FuelingDto,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
   ): Promise<ApiResponse<FuelingDocument>> {
-    return this.fuelingService.add(userId, carId, dto);
+    return this.fuelingService.create(userId, carId, dto);
   }
 
   @Patch('update/:carId/:fuelingId')
@@ -50,23 +50,23 @@ export class FuelingController {
     return this.fuelingService.delete(fuelingId, carId, userId);
   }
 
-  @Get('by-id/:carId/:fuelingId')
-  async byId(
+  @Get('get-by-id/:carId/:fuelingId')
+  async getById(
     @Param('fuelingId', ParseObjectIdPipe) fuelingId: Types.ObjectId,
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<FuelingDocument>> {
-    return this.fuelingService.byId(fuelingId, carId, userId);
+    return this.fuelingService.getById(fuelingId, carId, userId);
   }
 
-  @Get('all/:carId')
-  async all(
+  @Get('get-all/:carId')
+  async getAll(
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
   ): Promise<ApiResponse<FuelingDocument[]>> {
-    return this.fuelingService.all(carId, userId, page, limit);
+    return this.fuelingService.getAll(carId, userId, page, limit);
   }
 
   @Get('bind-contact/:carId/:fuelingId')

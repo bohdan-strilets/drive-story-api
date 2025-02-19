@@ -22,13 +22,13 @@ import { InsuranceDocument } from './schemas/insurance.schema';
 export class InsuranceController {
   constructor(private readonly insuranceService: InsuranceService) {}
 
-  @Post('add/:carId')
-  async add(
+  @Post('create/:carId')
+  async create(
     @Body() dto: InsuranceDto,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
   ): Promise<ApiResponse<InsuranceDocument>> {
-    return this.insuranceService.add(userId, carId, dto);
+    return this.insuranceService.create(userId, carId, dto);
   }
 
   @Patch('update/:carId/:insuranceId')
@@ -50,23 +50,23 @@ export class InsuranceController {
     return this.insuranceService.delete(insuranceId, carId, userId);
   }
 
-  @Get('by-id/:carId/:insuranceId')
-  async byId(
+  @Get('get-by-id/:carId/:insuranceId')
+  async getById(
     @Param('insuranceId', ParseObjectIdPipe) insuranceId: Types.ObjectId,
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<InsuranceDocument>> {
-    return this.insuranceService.byId(insuranceId, carId, userId);
+    return this.insuranceService.getById(insuranceId, carId, userId);
   }
 
-  @Get('all/:carId')
-  async all(
+  @Get('get-all/:carId')
+  async getAll(
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
   ): Promise<ApiResponse<InsuranceDocument[]>> {
-    return this.insuranceService.all(carId, userId, page, limit);
+    return this.insuranceService.getAll(carId, userId, page, limit);
   }
 
   @Get('bind-contact/:carId/:insuranceId')

@@ -33,7 +33,7 @@ export class ReminderService {
     reminderId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<ReminderDocument>> {
-    await this.reminderRepository.findReminderAndCheckAccessRights(
+    await this.reminderRepository.findReminderAndCheckAccess(
       reminderId,
       userId,
     );

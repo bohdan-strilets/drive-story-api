@@ -13,12 +13,12 @@ import { ReminderDocument } from './schemas/reminder.schema';
 export class ReminderController {
   constructor(private readonly reminderService: ReminderService) {}
 
-  @Post('add')
-  async add(
+  @Post('create')
+  async create(
     @Body() dto: ReminderDto,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<ReminderDocument>> {
-    return this.reminderService.add(userId, dto);
+    return this.reminderService.create(userId, dto);
   }
 
   @Delete('delete/:reminderId')

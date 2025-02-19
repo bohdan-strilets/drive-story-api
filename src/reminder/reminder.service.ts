@@ -1,27 +1,27 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { Types } from 'mongoose';
+import { checkAccess } from 'src/common/helpers/check-access.helper';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { ReminderDto } from './dto/reminder.dto';
+import { ReminderHelper } from './reminder.helper';
 import { ReminderRepository } from './reminder.repository';
-import { Reminder, ReminderDocument } from './schemas/reminder.schema';
+import { ReminderDocument } from './schemas/reminder.schema';
 
 @Injectable()
 export class ReminderService {
   constructor(
-    @InjectModel(Reminder.name) private reminderModel: Model<ReminderDocument>,
     private readonly responseService: ResponseService,
     private readonly reminderRepository: ReminderRepository,
+    private readonly reminderHelper: ReminderHelper,
   ) {}
 
-  async add(
+  async create(
     userId: Types.ObjectId,
-
     dto: ReminderDto,
   ): Promise<ApiResponse<ReminderDocument>> {
-    const data = { owner: userId, ...dto };
-    const reminder = await this.reminderModel.create(data);
+    const payload = { owner: userId, ...dto };
+    const reminder = await this.reminderRepository.createReminder(payload);
 
     return this.responseService.createSuccessResponse(
       HttpStatus.CREATED,
@@ -33,13 +33,13 @@ export class ReminderService {
     reminderId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<ReminderDocument>> {
-    await this.reminderRepository.findReminderAndCheckAccess(
-      reminderId,
-      userId,
-    );
+    const reminder = await this.reminderRepository.findReminderById(reminderId);
+
+    this.reminderHelper.isValidReminder(reminder);
+    checkAccess(reminder.owner, userId);
 
     const deletedReminder =
-      await this.reminderModel.findByIdAndDelete(reminderId);
+      await this.reminderRepository.deleteReminder(reminderId);
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,

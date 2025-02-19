@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ResponseModule } from 'src/response/response.module';
 import { CarController } from './car.controller';
+import { CarHelper } from './car.helper';
 import { CarRepository } from './car.repository';
 import { CarService } from './car.service';
 import { Car, CarSchema } from './schemas/car.schema';
@@ -12,7 +13,7 @@ import { Car, CarSchema } from './schemas/car.schema';
     ResponseModule,
   ],
   controllers: [CarController],
-  providers: [CarService, CarRepository],
-  exports: [CarRepository],
+  providers: [CarService, CarRepository, CarHelper],
+  exports: [CarRepository, CarHelper],
 })
 export class CarModule {}

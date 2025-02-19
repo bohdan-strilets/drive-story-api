@@ -4,6 +4,7 @@ import { CarModule } from 'src/car/car.module';
 import { ImageModule } from 'src/image/image.module';
 import { ResponseModule } from 'src/response/response.module';
 import { InsuranceController } from './insurance.controller';
+import { InsuranceHelper } from './insurance.helper';
 import { InsuranceRepository } from './insurance.repository';
 import { InsuranceService } from './insurance.service';
 import { Insurance, InsuranceSchema } from './schemas/insurance.schema';
@@ -18,7 +19,7 @@ import { Insurance, InsuranceSchema } from './schemas/insurance.schema';
     forwardRef(() => ImageModule),
   ],
   controllers: [InsuranceController],
-  providers: [InsuranceService, InsuranceRepository],
+  providers: [InsuranceService, InsuranceRepository, InsuranceHelper],
   exports: [InsuranceRepository],
 })
 export class InsuranceModule {}

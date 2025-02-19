@@ -4,6 +4,7 @@ import { CarModule } from 'src/car/car.module';
 import { ImageModule } from 'src/image/image.module';
 import { ResponseModule } from 'src/response/response.module';
 import { MaintenanceController } from './maintenance.controller';
+import { MaintenanceHelper } from './maintenance.helper';
 import { MaintenanceRepository } from './maintenance.repository';
 import { MaintenanceService } from './maintenance.service';
 import { Maintenance, MaintenanceSchema } from './schemas/maintenance.schema';
@@ -18,7 +19,7 @@ import { Maintenance, MaintenanceSchema } from './schemas/maintenance.schema';
     forwardRef(() => ImageModule),
   ],
   controllers: [MaintenanceController],
-  providers: [MaintenanceService, MaintenanceRepository],
+  providers: [MaintenanceService, MaintenanceRepository, MaintenanceHelper],
   exports: [MaintenanceRepository],
 })
 export class MaintenanceModule {}

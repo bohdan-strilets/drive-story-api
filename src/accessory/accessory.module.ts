@@ -4,6 +4,7 @@ import { CarModule } from 'src/car/car.module';
 import { ImageModule } from 'src/image/image.module';
 import { ResponseModule } from 'src/response/response.module';
 import { AccessoryController } from './accessory.controller';
+import { AccessoryHelper } from './accessory.helper';
 import { AccessoryRepository } from './accessory.repository';
 import { AccessoryService } from './accessory.service';
 import { Accessory, AccessorySchema } from './schemas/accessory.schema';
@@ -18,7 +19,7 @@ import { Accessory, AccessorySchema } from './schemas/accessory.schema';
     forwardRef(() => ImageModule),
   ],
   controllers: [AccessoryController],
-  providers: [AccessoryService, AccessoryRepository],
+  providers: [AccessoryService, AccessoryRepository, AccessoryHelper],
   exports: [AccessoryRepository],
 })
 export class AccessoryModule {}

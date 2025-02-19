@@ -1,16 +1,14 @@
 import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { Types } from 'mongoose';
+import { CarHelper } from 'src/car/car.helper';
 import { CarRepository } from 'src/car/car.repository';
-import { CarDocument } from 'src/car/schemas/car.schema';
 import { calculateSkip } from 'src/common/helpers/calculate-skip.helper';
 import { checkAccess } from 'src/common/helpers/check-access.helper';
-import { AppError } from 'src/error/app-error';
-import { errorMessages } from 'src/error/helpers/error-messages.helper';
 import { EntityType } from 'src/image/enums/entity-type.enum';
-import { ImageRepository } from 'src/image/image.repository';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { InspectionDto } from './dto/inspection.dto';
+import { InspectionHelper } from './inspection.helper';
 import { InspectionRepository } from './inspection.repository';
 import { InspectionDocument } from './schemas/inspection.schema';
 
@@ -21,15 +19,10 @@ export class InspectionService {
   constructor(
     private readonly responseService: ResponseService,
     private readonly carRepository: CarRepository,
+    private readonly carHelper: CarHelper,
     private readonly inspectionRepository: InspectionRepository,
-    private readonly imageRepository: ImageRepository,
+    private readonly inspectionHelper: InspectionHelper,
   ) {}
-
-  private isValidCar(car: CarDocument) {
-    if (!car) {
-      throw new AppError(HttpStatus.NOT_FOUND, errorMessages.CAR_NOT_FOUND);
-    }
-  }
 
   async create(
     userId: Types.ObjectId,
@@ -38,7 +31,7 @@ export class InspectionService {
   ): Promise<ApiResponse<InspectionDocument>> {
     const car = await this.carRepository.findCarById(carId);
 
-    this.isValidCar(car);
+    this.carHelper.isValidCar(car);
     checkAccess(car.owner, userId);
 
     const payload = { carId, owner: userId, ...dto };
@@ -51,25 +44,6 @@ export class InspectionService {
     );
   }
 
-  private isValidInspection(inspection: InspectionDocument): void {
-    if (!inspection) {
-      this.logger.error(errorMessages.INSPECTION_NOT_FOUND);
-      throw new AppError(
-        HttpStatus.NOT_FOUND,
-        errorMessages.INSPECTION_NOT_FOUND,
-      );
-    }
-  }
-
-  private checkInspectionAccess(
-    inspection: InspectionDocument,
-    carId: Types.ObjectId,
-    userId: Types.ObjectId,
-  ): void {
-    checkAccess(inspection.owner, userId);
-    checkAccess(inspection.carId, carId);
-  }
-
   async update(
     inspectionId: Types.ObjectId,
     carId: Types.ObjectId,
@@ -78,8 +52,8 @@ export class InspectionService {
   ): Promise<ApiResponse<InspectionDocument>> {
     const inspection =
       await this.inspectionRepository.findInspectionById(inspectionId);
-    this.isValidInspection(inspection);
-    this.checkInspectionAccess(inspection, userId, carId);
+    this.inspectionHelper.isValidInspection(inspection);
+    this.inspectionHelper.checkInspectionAccess(inspection, userId, carId);
 
     const updatedInspection = await this.inspectionRepository.updateInspection(
       inspectionId,
@@ -92,21 +66,6 @@ export class InspectionService {
     );
   }
 
-  private async deletePhotos(
-    inspection: InspectionDocument,
-    entityType: EntityType,
-  ): Promise<void> {
-    const photos = inspection.photos;
-
-    if (photos) {
-      await this.imageRepository.removedAllFiles(
-        photos._id,
-        entityType,
-        inspection._id,
-      );
-    }
-  }
-
   async delete(
     inspectionId: Types.ObjectId,
     carId: Types.ObjectId,
@@ -114,10 +73,10 @@ export class InspectionService {
   ): Promise<ApiResponse<InspectionDocument>> {
     const inspection =
       await this.inspectionRepository.findInspectionById(inspectionId);
-    this.isValidInspection(inspection);
-    this.checkInspectionAccess(inspection, userId, carId);
+    this.inspectionHelper.isValidInspection(inspection);
+    this.inspectionHelper.checkInspectionAccess(inspection, userId, carId);
 
-    await this.deletePhotos(inspection, EntityType.INSPECTION);
+    await this.inspectionHelper.deletePhotos(inspection, EntityType.INSPECTION);
 
     const deletedInspection =
       await this.inspectionRepository.deleteInspection(inspectionId);
@@ -135,8 +94,8 @@ export class InspectionService {
   ): Promise<ApiResponse<InspectionDocument>> {
     const inspection =
       await this.inspectionRepository.findInspectionById(inspectionId);
-    this.isValidInspection(inspection);
-    this.checkInspectionAccess(inspection, userId, carId);
+    this.inspectionHelper.isValidInspection(inspection);
+    this.inspectionHelper.checkInspectionAccess(inspection, userId, carId);
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
@@ -174,8 +133,8 @@ export class InspectionService {
   ): Promise<ApiResponse<InspectionDocument>> {
     const inspection =
       await this.inspectionRepository.findInspectionById(inspectionId);
-    this.isValidInspection(inspection);
-    this.checkInspectionAccess(inspection, userId, carId);
+    this.inspectionHelper.isValidInspection(inspection);
+    this.inspectionHelper.checkInspectionAccess(inspection, userId, carId);
 
     const updatedInspection = await this.inspectionRepository.updateInspection(
       inspectionId,

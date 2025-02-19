@@ -1,16 +1,14 @@
 import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { Types } from 'mongoose';
+import { CarHelper } from 'src/car/car.helper';
 import { CarRepository } from 'src/car/car.repository';
-import { CarDocument } from 'src/car/schemas/car.schema';
 import { calculateSkip } from 'src/common/helpers/calculate-skip.helper';
 import { checkAccess } from 'src/common/helpers/check-access.helper';
-import { AppError } from 'src/error/app-error';
-import { errorMessages } from 'src/error/helpers/error-messages.helper';
 import { EntityType } from 'src/image/enums/entity-type.enum';
-import { ImageRepository } from 'src/image/image.repository';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { MaintenanceDto } from './dto/maintenance.dto';
+import { MaintenanceHelper } from './maintenance.helper';
 import { MaintenanceRepository } from './maintenance.repository';
 import { MaintenanceDocument } from './schemas/maintenance.schema';
 
@@ -21,15 +19,10 @@ export class MaintenanceService {
   constructor(
     private readonly responseService: ResponseService,
     private readonly carRepository: CarRepository,
+    private readonly carHelper: CarHelper,
     private readonly maintenanceRepository: MaintenanceRepository,
-    private readonly imageRepository: ImageRepository,
+    private readonly maintenanceHelper: MaintenanceHelper,
   ) {}
-
-  private isValidCar(car: CarDocument) {
-    if (!car) {
-      throw new AppError(HttpStatus.NOT_FOUND, errorMessages.CAR_NOT_FOUND);
-    }
-  }
 
   async create(
     userId: Types.ObjectId,
@@ -38,7 +31,7 @@ export class MaintenanceService {
   ): Promise<ApiResponse<MaintenanceDocument>> {
     const car = await this.carRepository.findCarById(carId);
 
-    this.isValidCar(car);
+    this.carHelper.isValidCar(car);
     checkAccess(car.owner, userId);
 
     const payload = { carId, owner: userId, ...dto };
@@ -51,25 +44,6 @@ export class MaintenanceService {
     );
   }
 
-  private isValidMaintenance(maintenance: MaintenanceDocument): void {
-    if (!maintenance) {
-      this.logger.error(errorMessages.MAINTENANCE_NOT_FOUND);
-      throw new AppError(
-        HttpStatus.NOT_FOUND,
-        errorMessages.MAINTENANCE_NOT_FOUND,
-      );
-    }
-  }
-
-  private checkMaintenanceAccess(
-    maintenance: MaintenanceDocument,
-    carId: Types.ObjectId,
-    userId: Types.ObjectId,
-  ): void {
-    checkAccess(maintenance.owner, userId);
-    checkAccess(maintenance.carId, carId);
-  }
-
   async update(
     maintenanceId: Types.ObjectId,
     carId: Types.ObjectId,
@@ -78,8 +52,8 @@ export class MaintenanceService {
   ): Promise<ApiResponse<MaintenanceDocument>> {
     const maintenance =
       await this.maintenanceRepository.findMaintenanceById(maintenanceId);
-    this.isValidMaintenance(maintenance);
-    this.checkMaintenanceAccess(maintenance, userId, carId);
+    this.maintenanceHelper.isValidMaintenance(maintenance);
+    this.maintenanceHelper.checkMaintenanceAccess(maintenance, userId, carId);
 
     const updatedMaintenance =
       await this.maintenanceRepository.updateMaintenance(maintenanceId, dto);
@@ -90,21 +64,6 @@ export class MaintenanceService {
     );
   }
 
-  private async deletePhotos(
-    maintenance: MaintenanceDocument,
-    entityType: EntityType,
-  ): Promise<void> {
-    const photos = maintenance.photos;
-
-    if (photos) {
-      await this.imageRepository.removedAllFiles(
-        photos._id,
-        entityType,
-        maintenance._id,
-      );
-    }
-  }
-
   async delete(
     maintenanceId: Types.ObjectId,
     carId: Types.ObjectId,
@@ -112,10 +71,13 @@ export class MaintenanceService {
   ): Promise<ApiResponse<MaintenanceDocument>> {
     const maintenance =
       await this.maintenanceRepository.findMaintenanceById(maintenanceId);
-    this.isValidMaintenance(maintenance);
-    this.checkMaintenanceAccess(maintenance, userId, carId);
+    this.maintenanceHelper.isValidMaintenance(maintenance);
+    this.maintenanceHelper.checkMaintenanceAccess(maintenance, userId, carId);
 
-    await this.deletePhotos(maintenance, EntityType.MAINTENANCE);
+    await this.maintenanceHelper.deletePhotos(
+      maintenance,
+      EntityType.MAINTENANCE,
+    );
 
     const deletedMaintenance =
       await this.maintenanceRepository.deleteMaintenance(maintenanceId);
@@ -133,8 +95,8 @@ export class MaintenanceService {
   ): Promise<ApiResponse<MaintenanceDocument>> {
     const maintenance =
       await this.maintenanceRepository.findMaintenanceById(maintenanceId);
-    this.isValidMaintenance(maintenance);
-    this.checkMaintenanceAccess(maintenance, userId, carId);
+    this.maintenanceHelper.isValidMaintenance(maintenance);
+    this.maintenanceHelper.checkMaintenanceAccess(maintenance, userId, carId);
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
@@ -172,8 +134,8 @@ export class MaintenanceService {
   ): Promise<ApiResponse<MaintenanceDocument>> {
     const maintenance =
       await this.maintenanceRepository.findMaintenanceById(maintenanceId);
-    this.isValidMaintenance(maintenance);
-    this.checkMaintenanceAccess(maintenance, userId, carId);
+    this.maintenanceHelper.isValidMaintenance(maintenance);
+    this.maintenanceHelper.checkMaintenanceAccess(maintenance, userId, carId);
 
     const updatedMaintenance =
       await this.maintenanceRepository.updateMaintenance(maintenanceId, {

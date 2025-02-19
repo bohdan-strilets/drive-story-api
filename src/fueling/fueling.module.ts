@@ -4,6 +4,7 @@ import { CarModule } from 'src/car/car.module';
 import { ImageModule } from 'src/image/image.module';
 import { ResponseModule } from 'src/response/response.module';
 import { FuelingController } from './fueling.controller';
+import { FuelingHelper } from './fueling.helper';
 import { FuelingRepository } from './fueling.repository';
 import { FuelingService } from './fueling.service';
 import { Fueling, FuelingSchema } from './schemas/fueling.schema';
@@ -16,7 +17,7 @@ import { Fueling, FuelingSchema } from './schemas/fueling.schema';
     forwardRef(() => ImageModule),
   ],
   controllers: [FuelingController],
-  providers: [FuelingService, FuelingRepository],
+  providers: [FuelingService, FuelingRepository, FuelingHelper],
   exports: [FuelingRepository],
 })
 export class FuelingModule {}

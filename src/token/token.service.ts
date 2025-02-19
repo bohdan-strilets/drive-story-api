@@ -1,13 +1,12 @@
 import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { Types } from 'mongoose';
 import { AppError } from 'src/error/app-error';
 import { errorMessages } from 'src/error/helpers/error-messages.helper';
 import { UserDocument } from 'src/user/schemes/user.schema';
-import TokenName from './enums/token-name.enum';
-import { Token, TokenDocument } from './schemas/token.schema';
+import { TokenDocument } from './schemas/token.schema';
+import { TokenRepository } from './token.repository';
 import { Payload } from './types/payload.type';
 import { TokenPair } from './types/token-pair.type';
 
@@ -16,9 +15,9 @@ export class TokenService {
   private readonly logger = new Logger(TokenService.name);
 
   constructor(
-    @InjectModel(Token.name) private tokenModel: Model<TokenDocument>,
     private jwtService: JwtService,
     private configService: ConfigService,
+    private tokenRepository: TokenRepository,
   ) {}
 
   createPayload(user: UserDocument): Payload {
@@ -48,46 +47,30 @@ export class TokenService {
     const refreshToken = await this.createRefreshToken(payload);
 
     const owner = payload._id;
-
-    await this.tokenModel.findOneAndUpdate(
-      { owner },
-      { refreshToken },
-      { upsert: true, new: true },
-    );
+    await this.tokenRepository.updateTokens(owner, { refreshToken });
 
     return { accessToken, refreshToken };
   }
 
-  checkToken(token: string, type: TokenName): Payload | null {
-    try {
-      if (type === TokenName.ACCESS) {
-        return this.jwtService.verify(token, {
-          secret: process.env.ACCESS_TOKEN_KEY,
-        });
-      } else if (type === TokenName.REFRESH) {
-        return this.jwtService.verify(token, {
-          secret: process.env.REFRESH_TOKEN_KEY,
-        });
-      }
-    } catch (error) {
-      this.logger.error(error);
-      return null;
-    }
+  checkAccessToken(token: string) {
+    return this.jwtService.verify(token, {
+      secret: this.configService.get('ACCESS_TOKEN_KEY'),
+    });
   }
 
-  async findTokenFromDb(userId: Types.ObjectId): Promise<TokenDocument | null> {
+  checkRefreshToken(token: string) {
+    return this.jwtService.verify(token, {
+      secret: this.configService.get('REFRESH_TOKEN_KEY'),
+    });
+  }
+
+  async findTokenFromDb(userId: Types.ObjectId): Promise<TokenDocument> {
     const owner = new Types.ObjectId(userId);
-    const tokens = await this.tokenModel.findOne({ owner });
-
-    if (tokens) {
-      return tokens;
-    }
-
-    return null;
+    return await this.tokenRepository.findTokensByOwner(owner);
   }
 
   async deleteTokensByDb(userId: Types.ObjectId): Promise<void> {
-    await this.tokenModel.findOneAndDelete({ owner: userId });
+    await this.tokenRepository.deleteTokens(userId);
   }
 
   async validateRefreshToken(refreshToken: string): Promise<Payload> {
@@ -98,7 +81,7 @@ export class TokenService {
       );
     }
 
-    const payload = this.checkToken(refreshToken, TokenName.REFRESH);
+    const payload = this.checkRefreshToken(refreshToken);
     const tokenFromDb = await this.findTokenFromDb(payload._id);
 
     if (!payload || !tokenFromDb) {

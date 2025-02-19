@@ -10,7 +10,7 @@ export class PasswordService {
   private readonly saltRounds: number;
 
   constructor(private configService: ConfigService) {
-    this.saltRounds = Number(this.configService.get<number>('SALT'));
+    this.saltRounds = Number(this.configService.get('SALT'));
   }
 
   async createPassword(password: string): Promise<string> {

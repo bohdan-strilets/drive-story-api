@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Token, TokenSchema } from './schemas/token.schema';
+import { TokenRepository } from './token.repository';
 import { TokenService } from './token.service';
 
 const jwtConfig = {
@@ -14,7 +15,7 @@ const jwtConfig = {
     MongooseModule.forFeature([{ name: Token.name, schema: TokenSchema }]),
     JwtModule.register(jwtConfig),
   ],
-  providers: [TokenService],
+  providers: [TokenService, TokenRepository],
   exports: [TokenService],
 })
 export class TokenModule {}

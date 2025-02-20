@@ -3,6 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ImageModule } from 'src/image/image.module';
 import { ResponseModule } from 'src/response/response.module';
 import { ContactController } from './contact.controller';
+import { ContactHelper } from './contact.helper';
 import { ContactRepository } from './contact.repository';
 import { ContactService } from './contact.service';
 import { Contact, ContactSchema } from './schemas/contact.schema';
@@ -14,7 +15,7 @@ import { Contact, ContactSchema } from './schemas/contact.schema';
     forwardRef(() => ImageModule),
   ],
   controllers: [ContactController],
-  providers: [ContactService, ContactRepository],
+  providers: [ContactService, ContactRepository, ContactHelper],
   exports: [ContactRepository],
 })
 export class ContactModule {}

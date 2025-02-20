@@ -1,12 +1,9 @@
-import { Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { calculateSkip } from 'src/common/helpers/calculate-skip.helper';
 import { Contact, ContactDocument } from './schemas/contact.schema';
 
 export class ContactRepository {
-  private readonly logger = new Logger(ContactRepository.name);
-
   constructor(
     @InjectModel(Contact.name)
     private contactModel: Model<ContactDocument>,

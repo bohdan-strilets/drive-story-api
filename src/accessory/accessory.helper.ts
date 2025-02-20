@@ -4,14 +4,14 @@ import { checkAccess } from 'src/common/helpers/check-access.helper';
 import { AppError } from 'src/error/app-error';
 import { errorMessages } from 'src/error/helpers/error-messages.helper';
 import { EntityType } from 'src/image/enums/entity-type.enum';
-import { ImageRepository } from 'src/image/image.repository';
+import { ImageHelper } from 'src/image/image.helper';
 import { AccessoryDocument } from './schemas/accessory.schema';
 
 @Injectable()
 export class AccessoryHelper {
   private readonly logger = new Logger(AccessoryHelper.name);
 
-  constructor(private readonly imageRepository: ImageRepository) {}
+  constructor(private readonly imageHelper: ImageHelper) {}
 
   isValidAccessory(accessory: AccessoryDocument): void {
     if (!accessory) {
@@ -39,7 +39,7 @@ export class AccessoryHelper {
     const photos = accessory.photos;
 
     if (photos) {
-      await this.imageRepository.removedAllFiles(
+      await this.imageHelper.removeAllImages(
         photos._id,
         entityType,
         accessory._id,

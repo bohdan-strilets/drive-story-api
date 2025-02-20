@@ -4,14 +4,14 @@ import { checkAccess } from 'src/common/helpers/check-access.helper';
 import { AppError } from 'src/error/app-error';
 import { errorMessages } from 'src/error/helpers/error-messages.helper';
 import { EntityType } from 'src/image/enums/entity-type.enum';
-import { ImageRepository } from 'src/image/image.repository';
+import { ImageHelper } from 'src/image/image.helper';
 import { InsuranceDocument } from './schemas/insurance.schema';
 
 @Injectable()
 export class InsuranceHelper {
   private readonly logger = new Logger(InsuranceHelper.name);
 
-  constructor(private readonly imageRepository: ImageRepository) {}
+  constructor(private readonly imageHelper: ImageHelper) {}
 
   isValidInsurance(insurance: InsuranceDocument): void {
     if (!insurance) {
@@ -39,7 +39,7 @@ export class InsuranceHelper {
     const photos = insurance.photos;
 
     if (photos) {
-      await this.imageRepository.removedAllFiles(
+      await this.imageHelper.removeAllImages(
         photos._id,
         entityType,
         insurance._id,

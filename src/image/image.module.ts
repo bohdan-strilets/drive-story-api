@@ -11,6 +11,7 @@ import { MaintenanceModule } from 'src/maintenance/maintenance.module';
 import { ResponseModule } from 'src/response/response.module';
 import { UserModule } from 'src/user/user.module';
 import { ImageController } from './image.controller';
+import { ImageHelper } from './image.helper';
 import { ImageRepository } from './image.repository';
 import { ImageService } from './image.service';
 import { Image, ImageSchema } from './schemas/image.schema';
@@ -30,7 +31,7 @@ import { Image, ImageSchema } from './schemas/image.schema';
     forwardRef(() => InspectionModule),
   ],
   controllers: [ImageController],
-  providers: [ImageService, ImageRepository],
-  exports: [ImageRepository],
+  providers: [ImageService, ImageRepository, ImageHelper],
+  exports: [ImageRepository, ImageHelper],
 })
 export class ImageModule {}

@@ -5,7 +5,7 @@ import { checkAccess } from 'src/common/helpers/check-access.helper';
 import { AppError } from 'src/error/app-error';
 import { errorMessages } from 'src/error/helpers/error-messages.helper';
 import { EntityType } from 'src/image/enums/entity-type.enum';
-import { ImageRepository } from 'src/image/image.repository';
+import { ImageHelper } from 'src/image/image.helper';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { ContactRepository } from './contact.repository';
@@ -19,7 +19,7 @@ export class ContactService {
   constructor(
     private readonly responseService: ResponseService,
     private readonly contactRepository: ContactRepository,
-    private readonly imageRepository: ImageRepository,
+    private readonly imageHelper: ImageHelper,
   ) {}
 
   private async ensureContactDoesNotExist(name: string, phone: string) {
@@ -95,7 +95,7 @@ export class ContactService {
     const photos = contact.photos;
 
     if (photos) {
-      await this.imageRepository.removedAllFiles(
+      await this.imageHelper.removeAllImages(
         photos._id,
         EntityType.CONTACTS,
         contact._id,

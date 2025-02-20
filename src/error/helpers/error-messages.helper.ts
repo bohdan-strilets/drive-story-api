@@ -42,4 +42,5 @@ export const errorMessages = {
   REMINDER_NOT_FOUND: 'Reminder not found.',
   NOTIFICATIONS_NOT_ACCESS_RIGHTS:
     'Access rights to notifications have not been granted.',
+  NO_IMAGES_TO_DELETE: 'The entity has no images to delete',
 };

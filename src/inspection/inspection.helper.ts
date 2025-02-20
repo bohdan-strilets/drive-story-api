@@ -4,14 +4,14 @@ import { checkAccess } from 'src/common/helpers/check-access.helper';
 import { AppError } from 'src/error/app-error';
 import { errorMessages } from 'src/error/helpers/error-messages.helper';
 import { EntityType } from 'src/image/enums/entity-type.enum';
-import { ImageRepository } from 'src/image/image.repository';
+import { ImageHelper } from 'src/image/image.helper';
 import { InspectionDocument } from './schemas/inspection.schema';
 
 @Injectable()
 export class InspectionHelper {
   private readonly logger = new Logger(InspectionHelper.name);
 
-  constructor(private readonly imageRepository: ImageRepository) {}
+  constructor(private readonly imageHelper: ImageHelper) {}
 
   isValidInspection(inspection: InspectionDocument): void {
     if (!inspection) {
@@ -39,7 +39,7 @@ export class InspectionHelper {
     const photos = inspection.photos;
 
     if (photos) {
-      await this.imageRepository.removedAllFiles(
+      await this.imageHelper.removeAllImages(
         photos._id,
         entityType,
         inspection._id,

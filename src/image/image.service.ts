@@ -5,6 +5,7 @@ import { FileType } from 'src/cloudinary/enums/file-type.enum';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { EntityType } from './enums/entity-type.enum';
+import { ImageHelper } from './image.helper';
 import { ImageRepository } from './image.repository';
 import { ImageDocument } from './schemas/image.schema';
 
@@ -14,6 +15,7 @@ export class ImageService {
     private readonly cloudinaryService: CloudinaryService,
     private readonly responseService: ResponseService,
     private readonly imageRepository: ImageRepository,
+    private readonly imageHelper: ImageHelper,
   ) {}
 
   async upload(
@@ -22,24 +24,24 @@ export class ImageService {
     entityType: EntityType,
     file: Express.Multer.File,
   ): Promise<ApiResponse<ImageDocument>> {
-    const uploadedImageUrl = await this.imageRepository.uploadFile(
+    const uploadedImageUrl = await this.imageHelper.uploadImage(
       entityId,
       entityType,
       file,
     );
 
-    const defaultImage = this.imageRepository.getDefaultImage(entityType);
-    const imageRecord = await this.imageRepository.findImage(
+    const defaultImage = this.imageHelper.getDefaultImage(entityType);
+    const image = await this.imageRepository.findImage(
       userId,
       entityId,
       entityType,
     );
 
-    const imageUrls = imageRecord
-      ? [...imageRecord.resources, uploadedImageUrl]
+    const imageUrls = image
+      ? [...image.resources, uploadedImageUrl]
       : [uploadedImageUrl];
 
-    const updateData = {
+    const payload = {
       owner: userId,
       entityId,
       entityType,
@@ -48,20 +50,12 @@ export class ImageService {
       selected: uploadedImageUrl,
     };
 
-    const updatedRecord = await this.imageRepository.updateModel(
-      imageRecord,
-      updateData,
-    );
-
-    await this.imageRepository.bindImage(
-      entityType,
-      entityId,
-      updatedRecord._id,
-    );
+    const updatedImage = await this.imageHelper.updateModel(image, payload);
+    await this.imageHelper.setImage(entityType, entityId, updatedImage._id);
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
-      updatedRecord,
+      updatedImage,
     );
   }
 
@@ -71,29 +65,29 @@ export class ImageService {
     entityType: EntityType,
     publicId: string,
   ): Promise<ApiResponse<ImageDocument>> {
-    const imageRecord = await this.imageRepository.findImage(
+    const image = await this.imageRepository.findImage(
       userId,
       entityId,
       entityType,
     );
 
-    const imageUrls = imageRecord.resources;
-    const selectedUrl = imageRecord.selected;
+    const imageUrls = image.resources;
+    const selectedUrl = image.selected;
 
     if (selectedUrl.includes(publicId)) {
-      const defaultImage = this.imageRepository.getDefaultImage(entityType);
-      await this.imageRepository.selectFile(imageRecord, defaultImage);
+      const defaultImage = this.imageHelper.getDefaultImage(entityType);
+      await this.imageHelper.selectImage(image, defaultImage);
     }
 
     await this.cloudinaryService.deleteFile(publicId, FileType.IMAGE);
 
-    const filteredImageUrls = this.imageRepository.removeByPublicId(
+    const filteredImageUrls = this.imageHelper.removeImageByPublicId(
       imageUrls,
       publicId,
     );
 
-    const updatedImage = await this.imageRepository.deleteFile(
-      imageRecord,
+    const updatedImage = await this.imageHelper.deleteImage(
+      image,
       filteredImageUrls,
       entityId,
       entityType,
@@ -118,12 +112,12 @@ export class ImageService {
     );
 
     const imageUrls = imageRecord.resources;
-    const selectedImage = this.imageRepository.findFileByResources(
+    const selectedImage = this.imageHelper.findImageByResources(
       imageUrls,
       publicId,
     );
 
-    const updatedImage = await this.imageRepository.selectFile(
+    const updatedImage = await this.imageHelper.selectImage(
       imageRecord,
       selectedImage,
     );
@@ -139,7 +133,7 @@ export class ImageService {
     entityType: EntityType,
     imageId: Types.ObjectId,
   ): Promise<ApiResponse<ImageDocument>> {
-    const deletedImage = await this.imageRepository.removedAllFiles(
+    const deletedImage = await this.imageHelper.removeAllImages(
       imageId,
       entityType,
       entityId,

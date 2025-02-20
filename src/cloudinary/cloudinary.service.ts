@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { UploadApiResponse, v2 } from 'cloudinary';
 import { AppError } from 'src/error/app-error';
@@ -8,6 +8,7 @@ import { FileType } from './enums/file-type.enum';
 @Injectable()
 export class CloudinaryService {
   private readonly cloudinary = v2;
+  private readonly logger = new Logger(CloudinaryService.name);
 
   constructor(private readonly configService: ConfigService) {
     this.cloudinary.config({
@@ -29,16 +30,17 @@ export class CloudinaryService {
         options,
       );
 
+      this.logger.log(`File uploaded successfully: ${response.secure_url}`);
       return response.secure_url;
     } catch (error) {
-      const code = (error.httpStatus as number) || HttpStatus.BAD_REQUEST;
-      const message = error.message || errorMessages.FILE_UPLOAD_ERROR;
-      throw new AppError(code, message);
+      this.logger.error('Error uploading file', error.stack);
+      throw new AppError(HttpStatus.INTERNAL_SERVER_ERROR, error);
     }
   }
 
   getFolderPath(url: string): string {
     if (!url || typeof url !== 'string') {
+      this.logger.error(errorMessages.INVALID_URL);
       throw new AppError(HttpStatus.BAD_REQUEST, errorMessages.INVALID_URL);
     }
 
@@ -47,6 +49,7 @@ export class CloudinaryService {
       const segments = parsedUrl.pathname.split('/').filter(Boolean);
 
       if (segments.length < 2) {
+        this.logger.error(errorMessages.INSUFFICIENT_URL_SEGMENTS);
         throw new AppError(
           HttpStatus.BAD_REQUEST,
           errorMessages.INSUFFICIENT_URL_SEGMENTS,
@@ -56,10 +59,8 @@ export class CloudinaryService {
       segments.pop();
       return segments.slice(4, segments.length).join('/');
     } catch (error) {
-      throw new AppError(
-        HttpStatus.BAD_REQUEST,
-        error.message || errorMessages.INVALID_URL,
-      );
+      this.logger.error('Error extracting folder path', error.stack);
+      throw new AppError(HttpStatus.INTERNAL_SERVER_ERROR, error);
     }
   }
 
@@ -67,20 +68,20 @@ export class CloudinaryService {
     try {
       const options = { resource_type: fileType, invalidate: true };
       await this.cloudinary.uploader.destroy(publicId, options);
+      this.logger.log(`File ${publicId} deleted successfully`);
     } catch (error) {
-      const code = (error.httpStatus as number) || HttpStatus.NOT_FOUND;
-      const message = error.message || errorMessages.FILE_DELETE_ERROR;
-      throw new AppError(code, message);
+      this.logger.error(`Error deleting file ${publicId}`, error.stack);
+      throw new AppError(HttpStatus.INTERNAL_SERVER_ERROR, error);
     }
   }
 
   async deleteFolder(folderPath: string): Promise<void> {
     try {
       await this.cloudinary.api.delete_folder(folderPath);
+      this.logger.log(`Folder ${folderPath} deleted successfully`);
     } catch (error) {
-      const code = (error.httpStatus as number) || HttpStatus.NOT_FOUND;
-      const message = error.message || errorMessages.FOLDER_DELETE_ERROR;
-      throw new AppError(code, message);
+      this.logger.error(`Error deleting folder ${folderPath}`, error.stack);
+      throw new AppError(HttpStatus.INTERNAL_SERVER_ERROR, error);
     }
   }
 
@@ -90,17 +91,17 @@ export class CloudinaryService {
         try {
           await this.deleteFile(publicId, FileType.IMAGE);
         } catch (error) {
-          const code =
-            (error.httpStatus as number) || HttpStatus.INTERNAL_SERVER_ERROR;
-          const message = error.message || errorMessages.FILE_DELETE_ERROR;
-          throw new AppError(code, message);
+          this.logger.error(`Error deleting file ${publicId}`, error.stack);
+          throw new AppError(HttpStatus.INTERNAL_SERVER_ERROR, error);
         }
       }),
     );
+    this.logger.log('All files deleted successfully');
   }
 
   async deleteFilesAndFolder(folderPath: string): Promise<void> {
     if (!folderPath) {
+      this.logger.error(errorMessages.FOLDER_PATH_REQUIRED);
       throw new AppError(
         HttpStatus.BAD_REQUEST,
         errorMessages.FOLDER_PATH_REQUIRED,
@@ -126,10 +127,15 @@ export class CloudinaryService {
 
       await this.deleteAllFiles(publicIds);
       await this.deleteFolder(folderPath);
+      this.logger.log(
+        `Files and folder at path ${folderPath} deleted successfully`,
+      );
     } catch (error) {
-      const code = (error.httpStatus as number) || HttpStatus.BAD_REQUEST;
-      const message = error.message || errorMessages.FILE_FOLDER_DELETE_ERROR;
-      throw new AppError(code, message);
+      this.logger.error(
+        `Error deleting files and folder at ${folderPath}`,
+        error.stack,
+      );
+      throw new AppError(HttpStatus.INTERNAL_SERVER_ERROR, error);
     }
   }
 }

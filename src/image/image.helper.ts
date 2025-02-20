@@ -1,4 +1,4 @@
-import { HttpStatus } from '@nestjs/common';
+import { HttpStatus, Logger } from '@nestjs/common';
 import { Types } from 'mongoose';
 import { AccessoryRepository } from 'src/accessory/accessory.repository';
 import { CarRepository } from 'src/car/car.repository';
@@ -19,6 +19,8 @@ import { ImageDocument } from './schemas/image.schema';
 import { Payload } from './types/payload.type';
 
 export class ImageHelper {
+  private readonly logger = new Logger(ImageHelper.name);
+
   constructor(
     private readonly cloudinaryService: CloudinaryService,
     private readonly maintenanceRepository: MaintenanceRepository,
@@ -38,11 +40,14 @@ export class ImageHelper {
     file: Express.Multer.File,
   ): Promise<string> {
     const filePath = `drive-story/${entityType}/${entityId}`;
-    return await this.cloudinaryService.uploadFile(
+    const url = await this.cloudinaryService.uploadFile(
       file,
       FileType.IMAGE,
       filePath,
     );
+
+    this.logger.log(`Image uploaded successfully: ${url}`);
+    return url;
   }
 
   getDefaultImage(entityType: EntityType): string {
@@ -66,6 +71,7 @@ export class ImageHelper {
         break;
     }
 
+    this.logger.log(`Default image for ${entityType}: ${defaultImage}`);
     return defaultImage;
   }
 
@@ -74,6 +80,9 @@ export class ImageHelper {
     entityId: Types.ObjectId,
     data: Types.ObjectId | null,
   ): Promise<void> {
+    this.logger.log(
+      `Setting image for ${entityType} with id ${entityId} to ${data}`,
+    );
     switch (entityType) {
       case EntityType.AVATARS:
         await this.userRepository.setImage(entityId, data, 'avatars');
@@ -114,9 +123,13 @@ export class ImageHelper {
       default:
         throw new AppError(HttpStatus.BAD_REQUEST, errorMessages.NOT_FOUND);
     }
+    this.logger.log(
+      `Image set successfully for ${entityType} with id ${entityId}`,
+    );
   }
 
   removeImageByPublicId(imageUrls: string[] = [], publicId: string): string[] {
+    this.logger.log(`Removing image with publicId ${publicId} from URLs`);
     const result = imageUrls.filter((item: string) => !item.includes(publicId));
     return [...result];
   }
@@ -125,9 +138,11 @@ export class ImageHelper {
     const imageUrl = imageUrls.find((item) => item.includes(publicId));
 
     if (!imageUrl) {
+      this.logger.error(errorMessages.FILE_NOT_EXIST);
       throw new AppError(HttpStatus.BAD_REQUEST, errorMessages.FILE_NOT_EXIST);
     }
 
+    this.logger.log(`Found image: ${imageUrl}`);
     return imageUrl;
   }
 
@@ -135,7 +150,11 @@ export class ImageHelper {
     if (imageUrls.length > 0) {
       const folderPath = this.cloudinaryService.getFolderPath(imageUrls[0]);
       await this.cloudinaryService.deleteFilesAndFolder(folderPath);
+      this.logger.log(
+        `Images and folder at path ${folderPath} removed successfully`,
+      );
     } else {
+      this.logger.error(errorMessages.NO_FILES_TO_DELETE);
       throw new AppError(
         HttpStatus.BAD_REQUEST,
         errorMessages.NO_FILES_TO_DELETE,
@@ -151,8 +170,10 @@ export class ImageHelper {
 
     if (imageRecord) {
       image = await this.imageRepository.updateImage(imageRecord._id, payload);
+      this.logger.log(`Image record ${imageRecord._id} updated successfully`);
     } else {
       image = await this.imageRepository.createImage(payload);
+      this.logger.log(`New image record created with id ${image._id}`);
     }
 
     return image;
@@ -173,6 +194,9 @@ export class ImageHelper {
     if (updateData.length === 0) {
       await this.imageRepository.deleteImage(imageRecord._id);
       await this.setImage(entityType, entityId, null);
+      this.logger.log(
+        `Entity ${entityType} with id ${entityId} image reset to null`,
+      );
     }
 
     return updatedImage;
@@ -180,7 +204,16 @@ export class ImageHelper {
 
   async selectImage(imageRecord: ImageDocument, updateData: string) {
     const payload = { $set: { selected: updateData } };
-    return await this.imageRepository.updateImage(imageRecord._id, payload);
+    const updatedImage = await this.imageRepository.updateImage(
+      imageRecord._id,
+      payload,
+    );
+
+    this.logger.log(
+      `Image record ${imageRecord._id} updated with selected image ${updateData}`,
+    );
+
+    return updatedImage;
   }
 
   async removeAllImages(
@@ -191,6 +224,7 @@ export class ImageHelper {
     const image = await this.imageRepository.findImageById(imageId);
 
     if (!imageId) {
+      this.logger.error(errorMessages.NO_IMAGES_TO_DELETE);
       throw new AppError(
         HttpStatus.NOT_FOUND,
         errorMessages.NO_IMAGES_TO_DELETE,
@@ -199,6 +233,11 @@ export class ImageHelper {
 
     await this.removeImagesAndFolder(image.resources);
     await this.setImage(entityType, entityId, null);
-    return await this.imageRepository.deleteImage(imageId);
+
+    const deletedImage = await this.imageRepository.deleteImage(imageId);
+
+    this.logger.log(`Image record ${imageId} deleted successfully`);
+
+    return deletedImage;
   }
 }

@@ -61,6 +61,7 @@ export class ReminderHelper {
       const pushSubscription =
         this.pushHelper.getSubscription(subscriptionByBd);
       await this.pushHelper.sendNotification(pushSubscription, pushPayload);
+      this.logger.log(`Push notification sent for reminder ${reminder._id}`);
     } catch (error) {
       this.logger.error('Error while sending push notification', error.stack);
     }
@@ -72,6 +73,9 @@ export class ReminderHelper {
         reminder.reminderDate,
         reminder.message,
         reminder.eventUrl,
+      );
+      this.logger.log(
+        `Email notification sent to ${userEmail} for reminder ${reminder._id}`,
       );
     } catch (error) {
       this.logger.error('Error while sending email notification', error.stack);

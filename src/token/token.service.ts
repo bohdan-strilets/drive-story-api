@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Types } from 'mongoose';
@@ -12,6 +12,8 @@ import { TokenPair } from './types/token-pair.type';
 
 @Injectable()
 export class TokenService {
+  private readonly logger = new Logger(TokenService.name);
+
   constructor(
     private jwtService: JwtService,
     private configService: ConfigService,
@@ -19,11 +21,14 @@ export class TokenService {
   ) {}
 
   createPayload(user: UserDocument): Payload {
-    return {
+    const payload = {
       _id: user._id,
       email: user.email,
       isActivated: user.isActivated,
     };
+
+    this.logger.debug(`Payload created for user ${user.email}`);
+    return payload;
   }
 
   async createAccessToken(payload: Payload): Promise<string> {
@@ -46,6 +51,7 @@ export class TokenService {
 
     const owner = payload._id;
     await this.tokenRepository.updateTokens(owner, { refreshToken });
+    this.logger.debug(`Refresh token updated in DB for user ID ${payload._id}`);
 
     return { accessToken, refreshToken };
   }
@@ -68,11 +74,13 @@ export class TokenService {
   }
 
   async deleteTokensByDb(userId: Types.ObjectId): Promise<void> {
+    this.logger.log(`Deleting tokens for user ID ${userId}`);
     await this.tokenRepository.deleteTokens(userId);
   }
 
   async validateRefreshToken(refreshToken: string): Promise<Payload> {
     if (!refreshToken) {
+      this.logger.error('No refresh token provided.');
       throw new AppError(
         HttpStatus.UNAUTHORIZED,
         errorMessages.UNAUTHORIZED_USER,
@@ -80,9 +88,13 @@ export class TokenService {
     }
 
     const payload = this.checkRefreshToken(refreshToken);
-    const tokenFromDb = await this.findTokenFromDb(payload._id);
+    this.logger.debug(`Refresh token verified for user ID ${payload._id}`);
 
+    const tokenFromDb = await this.findTokenFromDb(payload._id);
     if (!payload || !tokenFromDb) {
+      this.logger.error(
+        `Invalid refresh token or token not found in DB for user ID ${payload._id}`,
+      );
       throw new AppError(
         HttpStatus.UNAUTHORIZED,
         errorMessages.UNAUTHORIZED_USER,

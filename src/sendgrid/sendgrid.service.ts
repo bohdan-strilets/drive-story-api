@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as sendgrid from '@sendgrid/mail';
 import * as fs from 'fs';
@@ -21,6 +21,7 @@ export class SendgridService {
     'templates',
   );
   private readonly currentYear = new Date().getFullYear().toString();
+  private readonly logger = new Logger(SendgridService.name);
 
   constructor(private readonly configService: ConfigService) {
     sendgrid.setApiKey(this.configService.get('SENDGRID_API_KEY'));
@@ -43,7 +44,7 @@ export class SendgridService {
     const sendgridOwner = this.sendgridOwner;
     const email = { ...emailData, from: sendgridOwner };
     await sendgrid.send(email);
-    return;
+    this.logger.log(`Email sent to ${email.to} successfully.`);
   }
 
   private async sendTemplateEmail(

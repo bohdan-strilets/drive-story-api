@@ -4,6 +4,7 @@ import {
   ExceptionFilter,
   HttpException,
   Injectable,
+  Logger,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { errorMessages } from 'src/error/helpers/error-messages.helper';
@@ -13,6 +14,8 @@ import { AppError } from './app-error';
 @Injectable()
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
+  private readonly logger = new Logger(HttpExceptionFilter.name);
+
   constructor(private readonly responseService: ResponseService) {}
 
   catch(exception: unknown, host: ArgumentsHost) {
@@ -44,6 +47,11 @@ export class HttpExceptionFilter implements ExceptionFilter {
     }
 
     const res = this.responseService.createErrorResponse(status, message);
+
+    this.logger.debug(
+      `Sending error response: status ${status}, message: ${message}`,
+    );
+
     response.status(status).json(res);
   }
 }

@@ -20,6 +20,7 @@ export class PushHelper {
 
   isValidSubscription(subscription: SubscriptionDocument) {
     if (!subscription) {
+      this.logger.warn(errorMessages.NOTIFICATIONS_NOT_ACCESS_RIGHTS);
       throw new AppError(
         HttpStatus.NOT_FOUND,
         errorMessages.NOTIFICATIONS_NOT_ACCESS_RIGHTS,
@@ -58,7 +59,7 @@ export class PushHelper {
       return response;
     } catch (error) {
       this.logger.error('Error sending notification', error.stack);
-      throw error;
+      throw new AppError(HttpStatus.INTERNAL_SERVER_ERROR, error);
     }
   }
 }

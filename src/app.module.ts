@@ -15,13 +15,13 @@ import { InspectionModule } from './inspection/inspection.module';
 import { InsuranceModule } from './insurance/insurance.module';
 import { MaintenanceModule } from './maintenance/maintenance.module';
 import { PasswordModule } from './password/password.module';
+import { PushModule } from './push/push.module';
 import { ReminderModule } from './reminder/reminder.module';
 import { ResponseModule } from './response/response.module';
 import { ResponseService } from './response/response.service';
 import { SendgridModule } from './sendgrid/sendgrid.module';
 import { TokenModule } from './token/token.module';
 import { UserModule } from './user/user.module';
-import { PushModule } from './push/push.module';
 
 @Module({
   imports: [

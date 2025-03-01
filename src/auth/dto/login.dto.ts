@@ -7,7 +7,7 @@ import {
 } from 'class-validator';
 import { passwordRegex } from 'src/password/regex/password.regex';
 
-export class AuthDto {
+export class LoginDto {
   @IsNotEmpty({ message: 'Email must not be empty' })
   @IsString({ message: 'Email must be a string' })
   @IsEmail({}, { message: 'Invalid email format' })

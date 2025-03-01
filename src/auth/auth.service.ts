@@ -8,7 +8,8 @@ import { UserHelper } from 'src/user/user.helper';
 import { UserRepository } from 'src/user/user.repository';
 import { v4 } from 'uuid';
 import { AuthHelper } from './auth.helper';
-import { AuthDto } from './dto/auth.dto';
+import { LoginDto } from './dto/login.dto';
+import { RegistrationDto } from './dto/registration.dto';
 import { AuthResponse } from './types/auth-response.type';
 
 @Injectable()
@@ -23,7 +24,7 @@ export class AuthService {
     private readonly authHelper: AuthHelper,
   ) {}
 
-  async registration(dto: AuthDto): Promise<ApiResponse<AuthResponse>> {
+  async registration(dto: RegistrationDto): Promise<ApiResponse<AuthResponse>> {
     const { email, password } = dto;
     this.userHelper.validateUniqueEmail(email);
 
@@ -43,7 +44,7 @@ export class AuthService {
     );
   }
 
-  async login(dto: AuthDto): Promise<ApiResponse<AuthResponse>> {
+  async login(dto: LoginDto): Promise<ApiResponse<AuthResponse>> {
     const { email, password } = dto;
     const user = await this.userRepository.findUserByEmail(email);
 

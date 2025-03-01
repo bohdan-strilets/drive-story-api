@@ -14,7 +14,8 @@ import { Request, Response } from 'express';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { AuthService } from './auth.service';
 import { Auth } from './decorators/auth.decorator';
-import { AuthDto } from './dto/auth.dto';
+import { LoginDto } from './dto/login.dto';
+import { RegistrationDto } from './dto/registration.dto';
 import { GoogleService } from './google.service';
 import { cookieKeys, cookieOptions } from './options/cookie.option';
 import { AuthResponse } from './types/auth-response.type';
@@ -29,7 +30,7 @@ export class AuthController {
   @UsePipes(new ValidationPipe())
   @Post('registration')
   async registration(
-    @Body() dto: AuthDto,
+    @Body() dto: RegistrationDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<ApiResponse<AuthResponse>> {
     const data = await this.authService.registration(dto);
@@ -46,7 +47,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Post('login')
   async login(
-    @Body() dto: AuthDto,
+    @Body() dto: LoginDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<ApiResponse<AuthResponse>> {
     const data = await this.authService.login(dto);

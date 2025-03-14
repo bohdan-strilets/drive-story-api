@@ -1,10 +1,11 @@
-import { HttpStatus, Logger } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { AppError } from 'src/error/app-error';
 import { errorMessages } from 'src/error/helpers/error-messages.helper';
 import { UserDocument } from './schemes/user.schema';
 import { UserInfo } from './types/user-info';
 import { UserRepository } from './user.repository';
 
+@Injectable()
 export class UserHelper {
   private readonly logger = new Logger(UserHelper.name);
 

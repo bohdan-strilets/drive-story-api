@@ -26,7 +26,7 @@ export class AuthService {
 
   async registration(dto: RegistrationDto): Promise<ApiResponse<AuthResponse>> {
     const { email, password } = dto;
-    this.userHelper.validateUniqueEmail(email);
+    await this.userHelper.validateUniqueEmail(email);
 
     const activationToken = v4();
     const hashPassword = await this.passwordService.createPassword(password);

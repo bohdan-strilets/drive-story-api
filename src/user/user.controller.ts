@@ -83,9 +83,7 @@ export class UserController {
     const clientUrl = this.configService.get('CLIENT_URL');
 
     if (data.success) {
-      res.redirect(`${clientUrl}/reset-password?valid=true`);
-    } else {
-      res.redirect(`${clientUrl}/reset-password?valid=false`);
+      res.redirect(`${clientUrl}/reset-password`);
     }
 
     return data;

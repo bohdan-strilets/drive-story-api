@@ -1,4 +1,5 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
+import { Types } from 'mongoose';
 import { PasswordService } from 'src/password/password.service';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
@@ -72,8 +73,9 @@ export class AuthService {
 
   async refreshToken(refreshToken: string): Promise<ApiResponse<AuthResponse>> {
     const payload = await this.tokenService.validateRefreshToken(refreshToken);
+    const userId = new Types.ObjectId(payload._id);
 
-    const user = await this.userRepository.findUserById(payload._id);
+    const user = await this.userRepository.findUserById(userId);
     this.userHelper.isValidUser(user);
 
     const response = await this.authHelper.authResponse(user);

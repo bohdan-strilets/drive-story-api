@@ -76,7 +76,6 @@ export class AuthController {
     return data;
   }
 
-  @Auth()
   @Get('refresh-token')
   async refreshToken(
     @Req() req: Request,

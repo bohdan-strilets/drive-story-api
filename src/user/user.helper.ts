@@ -34,6 +34,7 @@ export class UserHelper {
       phoneNumber: user.phoneNumber,
       isActivated: user.isActivated,
       location: user.location,
+      resetToken: user.resetToken,
     };
   };
 

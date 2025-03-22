@@ -36,9 +36,15 @@ export class UserController {
     @Param('activationToken') activationToken: string,
     @Res({ passthrough: true }) res: Response,
   ): Promise<ApiResponse> {
+    const data = await this.userService.activationEmail(activationToken);
     const clientUrl = this.configService.get('CLIENT_URL');
-    res.redirect(`${clientUrl}/activation-success`);
-    return this.userService.activationEmail(activationToken);
+
+    if (data.success) {
+      res.redirect(`${clientUrl}/activation-success`);
+      return;
+    }
+
+    return data;
   }
 
   @Auth()
@@ -84,6 +90,7 @@ export class UserController {
 
     if (data.success) {
       res.redirect(`${clientUrl}/reset-password`);
+      return;
     }
 
     return data;

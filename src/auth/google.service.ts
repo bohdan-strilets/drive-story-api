@@ -1,4 +1,4 @@
-import { HttpStatus } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { UserHelper } from 'src/user/user.helper';
@@ -6,6 +6,7 @@ import { UserRepository } from 'src/user/user.repository';
 import { AuthHelper } from './auth.helper';
 import { AuthResponse } from './types/auth-response.type';
 
+@Injectable()
 export class GoogleService {
   constructor(
     private readonly responseService: ResponseService,

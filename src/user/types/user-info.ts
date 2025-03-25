@@ -17,5 +17,4 @@ export type UserInfo = {
   phoneNumber?: string | null;
   isActivated?: boolean;
   location?: LocationDocument | null;
-  resetToken?: string | null;
 };

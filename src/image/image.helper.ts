@@ -1,4 +1,4 @@
-import { HttpStatus, Logger } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { Types } from 'mongoose';
 import { AccessoryRepository } from 'src/accessory/accessory.repository';
 import { CarRepository } from 'src/car/car.repository';
@@ -18,6 +18,7 @@ import { ImageRepository } from './image.repository';
 import { ImageDocument } from './schemas/image.schema';
 import { Payload } from './types/payload.type';
 
+@Injectable()
 export class ImageHelper {
   private readonly logger = new Logger(ImageHelper.name);
 

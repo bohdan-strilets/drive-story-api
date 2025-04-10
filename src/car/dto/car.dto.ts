@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsOptional, IsString, ValidateNested } from 'class-validator';
+import { IsOptional, IsString, Length, ValidateNested } from 'class-validator';
 import { BasicInfoDto } from './basic-info.dto';
 import { OwnerShipDto } from './ownership.dto';
 import { RegistrationDto } from './registration.dto';
@@ -24,5 +24,8 @@ export class CarDto {
 
   @IsOptional()
   @IsString({ message: 'Description must be a string' })
+  @Length(20, 500, {
+    message: 'Description must be between 20 and 500 characters long',
+  })
   description: string | null;
 }

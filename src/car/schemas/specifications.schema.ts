@@ -22,7 +22,7 @@ export class Specifications {
   @Prop({ default: Drivetrain.NOT_SELECTED, enum: Drivetrain })
   drivetrain: Drivetrain;
 
-  @Prop({ default: Drivetrain.NOT_SELECTED, enum: Drivetrain })
+  @Prop({ default: BodyType.NOT_SELECTED, enum: BodyType })
   bodyType: BodyType;
 
   @Prop({ type: Engine })

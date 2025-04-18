@@ -1,10 +1,10 @@
 export enum BodyType {
-  SEDAN = 'Sedan',
-  HATCHBACK = 'Hatchback',
-  WAGON = 'Wagon',
-  COUPE = 'Coupe',
-  CROSSOVER = 'Crossover',
-  MINIVAN = 'Minivan',
-  PICKUP = 'Pickup',
-  NOT_SELECTED = 'Not selected',
+  SEDAN = 'sedan',
+  HATCHBACK = 'hatchback',
+  WAGON = 'wagon',
+  COUPE = 'coupe',
+  CROSSOVER = 'crossover',
+  MINIVAN = 'minivan',
+  PICKUP = 'pickup',
+  NOT_SELECTED = 'not-selected',
 }

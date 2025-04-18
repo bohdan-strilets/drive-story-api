@@ -21,23 +21,27 @@ export class SpecificationsDto {
   @IsPositive({ message: 'Mileage must be a positive number' })
   mileage: number;
 
+  @IsOptional()
   @IsEnum(FuelType, {
     message: `Fuel type must be one of the following: ${Object.values(FuelType).join(', ')}`,
   })
   fuelType: FuelType;
 
+  @IsOptional()
   @IsEnum(Transmission, {
     message: `Transmission must be one of the following: ${Object.values(Transmission).join(', ')}`,
   })
   transmission: Transmission;
 
+  @IsOptional()
   @IsEnum(Drivetrain, {
     message: `Drivetrain must be one of the following: ${Object.values(Drivetrain).join(', ')}`,
   })
   drivetrain: Drivetrain;
 
+  @IsOptional()
   @IsEnum(BodyType, {
-    message: `Body type must be one of the following: ${Object.values(BodyType).join(', ')}`,
+    message: `BodyType must be one of the following: ${Object.values(BodyType).join(', ')}`,
   })
   bodyType: BodyType;
 

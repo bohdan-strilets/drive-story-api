@@ -1,6 +1,6 @@
 export enum Drivetrain {
-  FRONT = 'Front',
-  REAR = 'Rear',
-  ALL_WHEEL = 'All-wheel',
-  NOT_SELECTED = 'Not selected',
+  FRONT = 'front',
+  REAR = 'rear',
+  ALL_WHEEL = 'all-wheel',
+  NOT_SELECTED = 'not-selected',
 }

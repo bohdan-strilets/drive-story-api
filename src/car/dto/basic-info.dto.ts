@@ -25,8 +25,8 @@ export class BasicInfoDto {
 
   @IsOptional()
   @IsString({ message: 'Generation must be a string' })
-  @Length(2, 50, {
-    message: 'Generation must be between 2 and 50 characters long',
+  @Length(1, 50, {
+    message: 'Generation must be between 1 and 50 characters long',
   })
   generation?: string | null;
 }

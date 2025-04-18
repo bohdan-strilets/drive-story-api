@@ -1,7 +1,7 @@
 export enum Transmission {
-  MANUAL = 'Manual',
-  AUTOMATIC = 'Automatic',
-  ROBOT = 'Robot',
-  CVT = 'CVT',
-  NOT_SELECTED = 'Not selected',
+  MANUAL = 'manual',
+  AUTOMATIC = 'automatic',
+  ROBOT = 'robot',
+  CVT = 'cvt',
+  NOT_SELECTED = 'not-selected',
 }

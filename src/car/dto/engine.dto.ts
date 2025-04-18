@@ -2,8 +2,8 @@ import { IsInt, IsNumber, Max, Min } from 'class-validator';
 
 export class EngineDto {
   @IsNumber()
-  @Min(0.5, { message: 'Engine volume must be at least 0.5L' })
-  @Max(10, { message: 'Engine volume cannot exceed 10L' })
+  @Min(500, { message: 'Engine volume must be at least 0.5L' })
+  @Max(10000, { message: 'Engine volume cannot exceed 10L' })
   volume: number;
 
   @IsInt()

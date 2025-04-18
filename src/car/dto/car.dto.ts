@@ -27,5 +27,5 @@ export class CarDto {
   @Length(20, 500, {
     message: 'Description must be between 20 and 500 characters long',
   })
-  description: string | null;
+  description?: string | null;
 }

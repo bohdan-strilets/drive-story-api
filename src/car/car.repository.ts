@@ -1,9 +1,7 @@
-import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Car, CarDocument } from './schemas/car.schema';
 
-@Injectable()
 export class CarRepository {
   constructor(@InjectModel(Car.name) private carModel: Model<CarDocument>) {}
 
@@ -23,7 +21,7 @@ export class CarRepository {
       .populate('photos');
   }
 
-  async createCar(dto: any) {
+  async createCar(dto: any): Promise<CarDocument> {
     return this.carModel.create(dto);
   }
 

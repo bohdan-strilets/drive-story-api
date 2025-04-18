@@ -28,7 +28,7 @@ export class Car {
   ownership: Ownership;
 
   @Prop({ default: null })
-  description: string | null;
+  description?: string | null;
 
   @Prop({ type: Types.ObjectId, ref: 'Image', default: null })
   photos: Types.ObjectId | null;

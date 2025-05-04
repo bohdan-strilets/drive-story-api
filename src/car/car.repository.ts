@@ -25,7 +25,7 @@ export class CarRepository {
   }
 
   async createCar(dto: any): Promise<CarDocument> {
-    return this.carModel.create(dto).populate('photos');
+    return this.carModel.create(dto);
   }
 
   async updateCar(carId: Types.ObjectId, dto: any): Promise<CarDocument> {

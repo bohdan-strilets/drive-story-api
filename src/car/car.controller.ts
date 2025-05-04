@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { Types } from 'mongoose';
 import { Auth } from 'src/auth/decorators/auth.decorator';
+import { PaginationMeta } from 'src/pagination/types/pagination-meta.type';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { User } from 'src/user/decorators/user.decorator';
 import { CarService } from './car.service';
@@ -60,7 +61,12 @@ export class CarController {
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
-  ): Promise<ApiResponse<CarDocument[]>> {
+  ): Promise<
+    ApiResponse<{
+      data: CarDocument[];
+      meta: PaginationMeta;
+    }>
+  > {
     return this.carService.getAll(userId, page, limit);
   }
 }

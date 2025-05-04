@@ -9,16 +9,19 @@ export class CarRepository {
     return this.carModel.findById(carId).populate('photos');
   }
 
-  async findAllCars(
+  async findAndCountCars(
     userId: Types.ObjectId,
     skip: number,
     limit: number,
-  ): Promise<CarDocument[]> {
-    return this.carModel
-      .find({ owner: userId })
-      .skip(skip)
-      .limit(limit)
-      .populate('photos');
+  ): Promise<{ items: CarDocument[]; totalItems: number }> {
+    const filter = { owner: userId };
+
+    const [items, totalItems] = await Promise.all([
+      this.carModel.find(filter).skip(skip).limit(limit),
+      this.carModel.countDocuments(filter),
+    ]);
+
+    return { items, totalItems };
   }
 
   async createCar(dto: any): Promise<CarDocument> {

@@ -2,6 +2,8 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { Types } from 'mongoose';
 import { calculateSkip } from 'src/common/helpers/calculate-skip.helper';
 import { checkAccess } from 'src/common/helpers/check-access.helper';
+import { PaginationService } from 'src/pagination/pagination.service';
+import { PaginationMeta } from 'src/pagination/types/pagination-meta.type';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { CarHelper } from './car.helper';
@@ -15,6 +17,7 @@ export class CarService {
     private readonly responseService: ResponseService,
     private readonly carRepository: CarRepository,
     private readonly carHelper: CarHelper,
+    private readonly paginationService: PaginationService,
   ) {}
 
   async create(
@@ -78,10 +81,32 @@ export class CarService {
     userId: Types.ObjectId,
     page: number,
     limit: number,
-  ): Promise<ApiResponse<CarDocument[]>> {
+  ): Promise<
+    ApiResponse<{
+      data: CarDocument[];
+      meta: PaginationMeta;
+    }>
+  > {
     const skip = calculateSkip(page, limit);
-    const cars = await this.carRepository.findAllCars(userId, skip, limit);
+    const { items: cars, totalItems } =
+      await this.carRepository.findAndCountCars(userId, skip, limit);
 
-    return this.responseService.createSuccessResponse(HttpStatus.OK, cars);
+    const totalPages = this.paginationService.calculateTotalPages(
+      totalItems,
+      limit,
+    );
+
+    const meta = this.paginationService.createMeta({
+      limit,
+      page,
+      itemCount: cars.length,
+      totalItems,
+      totalPages,
+    });
+
+    return this.responseService.createSuccessResponse(HttpStatus.OK, {
+      data: cars,
+      meta,
+    });
   }
 }

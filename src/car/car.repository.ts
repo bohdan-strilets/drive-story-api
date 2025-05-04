@@ -17,7 +17,7 @@ export class CarRepository {
     const filter = { owner: userId };
 
     const [items, totalItems] = await Promise.all([
-      this.carModel.find(filter).skip(skip).limit(limit),
+      this.carModel.find(filter).skip(skip).limit(limit).populate('photos'),
       this.carModel.countDocuments(filter),
     ]);
 
@@ -25,7 +25,7 @@ export class CarRepository {
   }
 
   async createCar(dto: any): Promise<CarDocument> {
-    return this.carModel.create(dto);
+    return this.carModel.create(dto).populate('photos');
   }
 
   async updateCar(carId: Types.ObjectId, dto: any): Promise<CarDocument> {

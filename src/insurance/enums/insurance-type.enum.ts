@@ -1,4 +1,4 @@
 export enum InsuranceType {
-  OC = 'OC',
-  AC = 'AC',
+  OC = 'oc',
+  AC = 'ac',
 }

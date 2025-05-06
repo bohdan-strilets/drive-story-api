@@ -2,6 +2,7 @@ import { forwardRef, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CarModule } from 'src/car/car.module';
 import { ImageModule } from 'src/image/image.module';
+import { PaginationModule } from 'src/pagination/pagination.module';
 import { ResponseModule } from 'src/response/response.module';
 import { InsuranceController } from './insurance.controller';
 import { InsuranceHelper } from './insurance.helper';
@@ -17,6 +18,7 @@ import { Insurance, InsuranceSchema } from './schemas/insurance.schema';
     ResponseModule,
     CarModule,
     forwardRef(() => ImageModule),
+    PaginationModule,
   ],
   controllers: [InsuranceController],
   providers: [InsuranceService, InsuranceRepository, InsuranceHelper],

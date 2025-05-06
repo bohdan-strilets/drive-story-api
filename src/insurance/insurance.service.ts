@@ -5,6 +5,8 @@ import { CarRepository } from 'src/car/car.repository';
 import { calculateSkip } from 'src/common/helpers/calculate-skip.helper';
 import { checkAccess } from 'src/common/helpers/check-access.helper';
 import { EntityType } from 'src/image/enums/entity-type.enum';
+import { PaginationService } from 'src/pagination/pagination.service';
+import { PaginatedResponse } from 'src/pagination/types/paginated-response';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { InsuranceDto } from './dto/insurance.dto';
@@ -22,6 +24,7 @@ export class InsuranceService {
     private readonly carHelper: CarHelper,
     private readonly insuranceRepository: InsuranceRepository,
     private readonly insuranceHelper: InsuranceHelper,
+    private readonly paginationService: PaginationService,
   ) {}
 
   async create(
@@ -104,20 +107,33 @@ export class InsuranceService {
     userId: Types.ObjectId,
     page: number,
     limit: number,
-  ): Promise<ApiResponse<InsuranceDocument[]>> {
+  ): Promise<ApiResponse<PaginatedResponse<InsuranceDocument>>> {
     const skip = calculateSkip(page, limit);
+    const { items: insurances, totalItems } =
+      await this.insuranceRepository.findAllInsuranceByUserAndCount(
+        carId,
+        userId,
+        skip,
+        limit,
+      );
 
-    const insurances = await this.insuranceRepository.findAllInsuranceByUser(
-      carId,
-      userId,
-      skip,
+    const totalPages = this.paginationService.calculateTotalPages(
+      totalItems,
       limit,
     );
 
-    return this.responseService.createSuccessResponse(
-      HttpStatus.OK,
-      insurances,
-    );
+    const meta = this.paginationService.createMeta({
+      limit,
+      page,
+      itemCount: insurances.length,
+      totalItems,
+      totalPages,
+    });
+
+    return this.responseService.createSuccessResponse(HttpStatus.OK, {
+      data: insurances,
+      meta,
+    });
   }
 
   async bindContact(

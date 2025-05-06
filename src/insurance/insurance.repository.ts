@@ -17,18 +17,25 @@ export class InsuranceRepository {
       .populate('contactId');
   }
 
-  async findAllInsuranceByUser(
+  async findAllInsuranceByUserAndCount(
     carId: Types.ObjectId,
     userId: Types.ObjectId,
     skip: number,
     limit: number,
-  ): Promise<InsuranceDocument[]> {
-    return await this.insuranceModel
-      .find({ carId, owner: userId })
-      .skip(skip)
-      .limit(limit)
-      .populate('photos')
-      .populate('contactId');
+  ): Promise<{ items: InsuranceDocument[]; totalItems: number }> {
+    const filter = { carId, owner: userId };
+
+    const [items, totalItems] = await Promise.all([
+      this.insuranceModel
+        .find(filter)
+        .skip(skip)
+        .limit(limit)
+        .populate('photos')
+        .populate('contactId'),
+      this.insuranceModel.countDocuments(filter),
+    ]);
+
+    return { items, totalItems };
   }
 
   async createInsurance(dto: any): Promise<InsuranceDocument> {

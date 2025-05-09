@@ -3,21 +3,17 @@ import {
   IsArray,
   IsBoolean,
   IsDate,
-  IsEnum,
   IsNumber,
   IsOptional,
 } from 'class-validator';
-import { InstallmentsCount } from '../enums/installments-count.enum';
 
 export class PaymentStatusDto {
   @IsBoolean({ message: 'isPaid must be a boolean value.' })
   isPaid: boolean;
 
   @IsOptional()
-  @IsEnum(InstallmentsCount, {
-    message: 'installmentsCount must be a valid InstallmentsCount value.',
-  })
-  installmentsCount?: InstallmentsCount;
+  @IsNumber({}, { message: 'installationsCount must be between 1 and 12' })
+  installmentsCount?: number;
 
   @IsOptional()
   @Type(() => Number)

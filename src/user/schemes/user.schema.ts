@@ -10,6 +10,12 @@ export class User {
   @Prop({ default: () => new Types.ObjectId() })
   _id: Types.ObjectId;
 
+  @Prop({ required: true })
+  firstName: string;
+
+  @Prop({ required: true })
+  lastName: string;
+
   @Prop({ required: true, unique: true })
   email: string;
 
@@ -24,12 +30,6 @@ export class User {
 
   @Prop({ default: false })
   isActivated: boolean;
-
-  @Prop({ default: null })
-  firstName?: string | null;
-
-  @Prop({ default: null })
-  lastName?: string | null;
 
   @Prop({ default: null })
   nickname?: string | null;

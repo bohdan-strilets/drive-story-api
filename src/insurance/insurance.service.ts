@@ -2,11 +2,9 @@ import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { Types } from 'mongoose';
 import { CarHelper } from 'src/car/car.helper';
 import { CarRepository } from 'src/car/car.repository';
-import { calculateSkip } from 'src/common/helpers/calculate-skip.helper';
 import { checkAccess } from 'src/common/helpers/check-access.helper';
 import { EntityType } from 'src/image/enums/entity-type.enum';
 import { PaginationService } from 'src/pagination/pagination.service';
-import { PaginatedResponse } from 'src/pagination/types/paginated-response';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { InsuranceDto } from './dto/insurance.dto';
@@ -89,51 +87,15 @@ export class InsuranceService {
     );
   }
 
-  async getById(
-    insuranceId: Types.ObjectId,
+  async getByCar(
     carId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<InsuranceDocument>> {
-    const insurance =
-      await this.insuranceRepository.findInsuranceById(insuranceId);
+    const insurance = await this.insuranceRepository.findInsuranceByCar(carId);
     this.insuranceHelper.isValidInsurance(insurance);
-    this.insuranceHelper.checkInsuranceAccess(insurance, userId, carId);
+    this.insuranceHelper.checkInsuranceAccess(insurance, carId, userId);
 
     return this.responseService.createSuccessResponse(HttpStatus.OK, insurance);
-  }
-
-  async getAll(
-    carId: Types.ObjectId,
-    userId: Types.ObjectId,
-    page: number,
-    limit: number,
-  ): Promise<ApiResponse<PaginatedResponse<InsuranceDocument>>> {
-    const skip = calculateSkip(page, limit);
-    const { items: insurances, totalItems } =
-      await this.insuranceRepository.findAllInsuranceByUserAndCount(
-        carId,
-        userId,
-        skip,
-        limit,
-      );
-
-    const totalPages = this.paginationService.calculateTotalPages(
-      totalItems,
-      limit,
-    );
-
-    const meta = this.paginationService.createMeta({
-      limit,
-      page,
-      itemCount: insurances.length,
-      totalItems,
-      totalPages,
-    });
-
-    return this.responseService.createSuccessResponse(HttpStatus.OK, {
-      data: insurances,
-      meta,
-    });
   }
 
   async bindContact(

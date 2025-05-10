@@ -11,7 +11,6 @@ import {
 import { Types } from 'mongoose';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { ParseObjectIdPipe } from 'src/car/pipes/parse-objectid.pipe';
-import { PaginatedResponse } from 'src/pagination/types/paginated-response';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { User } from 'src/user/decorators/user.decorator';
 import { InsuranceDto } from './dto/insurance.dto';
@@ -51,23 +50,12 @@ export class InsuranceController {
     return this.insuranceService.delete(insuranceId, carId, userId);
   }
 
-  @Get('get-by-id/:carId/:insuranceId')
+  @Get('get-by-car/:carId')
   async getById(
-    @Param('insuranceId', ParseObjectIdPipe) insuranceId: Types.ObjectId,
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<InsuranceDocument>> {
-    return this.insuranceService.getById(insuranceId, carId, userId);
-  }
-
-  @Get('get-all/:carId')
-  async getAll(
-    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
-    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
-    @Query('page') page: number = 1,
-    @Query('limit') limit: number = 10,
-  ): Promise<ApiResponse<PaginatedResponse<InsuranceDocument>>> {
-    return this.insuranceService.getAll(carId, userId, page, limit);
+    return this.insuranceService.getByCar(carId, userId);
   }
 
   @Get('bind-contact/:carId/:insuranceId')

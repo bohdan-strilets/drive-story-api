@@ -11,8 +11,8 @@ export class BasicInfo {
   @Prop({ required: true })
   model: string;
 
-  @Prop({ required: true, isInteger: true })
-  year: number;
+  @Prop({ required: true, length: 4 })
+  year: string;
 
   @Prop({ default: null })
   shortName?: string | null;

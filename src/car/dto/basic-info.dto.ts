@@ -1,4 +1,4 @@
-import { IsInt, IsOptional, IsString, Length, Max, Min } from 'class-validator';
+import { IsOptional, IsString, Length } from 'class-validator';
 
 export class BasicInfoDto {
   @IsString({ message: 'Make must be a string' })
@@ -9,12 +9,8 @@ export class BasicInfoDto {
   @Length(2, 50, { message: 'Model must be between 2 and 50 characters long' })
   model: string;
 
-  @IsInt({ message: 'Year must be an integer' })
-  @Min(1886, { message: 'Year cannot be before 1886' })
-  @Max(new Date().getFullYear() + 1, {
-    message: `Year cannot be later than ${new Date().getFullYear() + 1}`,
-  })
-  year: number;
+  @IsString({ message: 'Year must be a string' })
+  year: string;
 
   @IsOptional()
   @IsString({ message: 'Short name must be a string' })

@@ -50,12 +50,12 @@ export class InsuranceController {
     return this.insuranceService.delete(insuranceId, carId, userId);
   }
 
-  @Get('get-by-car/:carId')
+  @Get('get-by-id/:insuranceId')
   async getById(
-    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
+    @Param('insuranceId', ParseObjectIdPipe) insuranceId: Types.ObjectId,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<InsuranceDocument>> {
-    return this.insuranceService.getByCar(carId, userId);
+    return this.insuranceService.getById(insuranceId, userId);
   }
 
   @Get('bind-contact/:carId/:insuranceId')

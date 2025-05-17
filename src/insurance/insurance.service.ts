@@ -37,6 +37,7 @@ export class InsuranceService {
 
     const payload = { carId, owner: userId, ...dto };
     const insurance = await this.insuranceRepository.createInsurance(payload);
+    await this.carRepository.setInsurance(carId, insurance._id);
 
     return this.responseService.createSuccessResponse(
       HttpStatus.CREATED,
@@ -80,6 +81,7 @@ export class InsuranceService {
 
     const deletedInsurance =
       await this.insuranceRepository.deleteInsurance(insuranceId);
+    await this.carRepository.setInsurance(carId, null);
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
@@ -87,13 +89,19 @@ export class InsuranceService {
     );
   }
 
-  async getByCar(
-    carId: Types.ObjectId,
+  async getById(
+    insuranceId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<InsuranceDocument>> {
-    const insurance = await this.insuranceRepository.findInsuranceByCar(carId);
+    const insurance =
+      await this.insuranceRepository.findInsuranceById(insuranceId);
+
     this.insuranceHelper.isValidInsurance(insurance);
-    this.insuranceHelper.checkInsuranceAccess(insurance, carId, userId);
+    this.insuranceHelper.checkInsuranceAccess(
+      insurance,
+      insurance.carId,
+      userId,
+    );
 
     return this.responseService.createSuccessResponse(HttpStatus.OK, insurance);
   }

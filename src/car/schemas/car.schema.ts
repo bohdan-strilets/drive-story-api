@@ -33,6 +33,9 @@ export class Car {
   @Prop({ type: Types.ObjectId, ref: 'Image', default: null })
   photos: Types.ObjectId | null;
 
+  @Prop({ type: Types.ObjectId, ref: 'Insurance', default: null })
+  insuranceId?: Types.ObjectId | null;
+
   @Prop()
   createdAt: Date;
 

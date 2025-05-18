@@ -54,7 +54,7 @@ export class InsuranceService {
     const insurance =
       await this.insuranceRepository.findInsuranceById(insuranceId);
     this.insuranceHelper.isValidInsurance(insurance);
-    this.insuranceHelper.checkInsuranceAccess(insurance, userId, carId);
+    this.insuranceHelper.checkInsuranceAccess(insurance, carId, userId);
 
     const updatedInsurance = await this.insuranceRepository.updateInsurance(
       insuranceId,
@@ -115,7 +115,7 @@ export class InsuranceService {
     const insurance =
       await this.insuranceRepository.findInsuranceById(insuranceId);
     this.insuranceHelper.isValidInsurance(insurance);
-    this.insuranceHelper.checkInsuranceAccess(insurance, userId, carId);
+    this.insuranceHelper.checkInsuranceAccess(insurance, carId, userId);
 
     const updatedInsurance = await this.insuranceRepository.updateInsurance(
       insuranceId,

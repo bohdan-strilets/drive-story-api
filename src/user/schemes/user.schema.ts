@@ -52,6 +52,9 @@ export class User {
   @Prop({ type: Location, default: null })
   location: LocationDocument | null;
 
+  @Prop({ type: Types.ObjectId, ref: 'Car', default: null })
+  currentCar?: Types.ObjectId | null;
+
   @Prop()
   createdAt: Date;
 

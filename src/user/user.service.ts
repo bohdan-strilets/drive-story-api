@@ -1,6 +1,8 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import { CarHelper } from 'src/car/car.helper';
+import { CarRepository } from 'src/car/car.repository';
 import { AppError } from 'src/error/app-error';
 import { PasswordService } from 'src/password/password.service';
 import { ResponseService } from 'src/response/response.service';
@@ -12,6 +14,7 @@ import { EditPasswordDto } from './dto/edit-password.dto';
 import { EmailDto } from './dto/email.dto';
 import { ProfileDto } from './dto/profile.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { CurrentCarDto } from './dto/set-current-car.dto';
 import { User, UserDocument } from './schemes/user.schema';
 import { UserInfo } from './types/user-info';
 import { UserHelper } from './user.helper';
@@ -27,6 +30,8 @@ export class UserService {
     private readonly tokenService: TokenService,
     private readonly userRepository: UserRepository,
     private readonly userHelper: UserHelper,
+    private readonly carHelper: CarHelper,
+    private readonly carRepository: CarRepository,
   ) {}
 
   async activationEmail(activationToken: string): Promise<ApiResponse> {
@@ -191,5 +196,26 @@ export class UserService {
         error.message || 'Failed deleted user account.',
       );
     }
+  }
+
+  async setCurrentCar(
+    userId: Types.ObjectId,
+    dto: CurrentCarDto,
+  ): Promise<ApiResponse<UserInfo>> {
+    const user = await this.userRepository.findUserById(userId);
+    this.userHelper.isValidUser(user);
+
+    const carId = new Types.ObjectId(dto.carId);
+    const car = await this.carRepository.findCarById(carId);
+    this.carHelper.isValidCar(car);
+
+    const payload = { currentCar: carId };
+    const updatedUser = await this.userRepository.updateUser(userId, payload);
+    const safeUserData = this.userHelper.getSafeUserData(updatedUser);
+
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      safeUserData,
+    );
   }
 }

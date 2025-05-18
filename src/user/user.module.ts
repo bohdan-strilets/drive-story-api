@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { CarModule } from 'src/car/car.module';
 import { PasswordModule } from 'src/password/password.module';
 import { ResponseModule } from 'src/response/response.module';
 import { SendgridModule } from 'src/sendgrid/sendgrid.module';
@@ -17,6 +18,7 @@ import { UserService } from './user.service';
     PasswordModule,
     ResponseModule,
     TokenModule,
+    CarModule,
   ],
   controllers: [UserController],
   providers: [UserService, UserRepository, UserHelper],

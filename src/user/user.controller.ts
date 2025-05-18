@@ -21,6 +21,7 @@ import { EditPasswordDto } from './dto/edit-password.dto';
 import { EmailDto } from './dto/email.dto';
 import { ProfileDto } from './dto/profile.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { CurrentCarDto } from './dto/set-current-car.dto';
 import { UserInfo } from './types/user-info';
 import { UserService } from './user.service';
 
@@ -128,5 +129,14 @@ export class UserController {
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<UserInfo>> {
     return this.userService.removeProfile(userId);
+  }
+
+  @Auth()
+  @Patch('set-current-car')
+  async(
+    @Body() dto: CurrentCarDto,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
+  ): Promise<ApiResponse<UserInfo>> {
+    return this.userService.setCurrentCar(userId, dto);
   }
 }

@@ -1,14 +1,13 @@
 import { Type } from 'class-transformer';
 import {
   IsArray,
+  IsBoolean,
   IsDate,
-  IsEnum,
   IsNotEmpty,
   IsOptional,
   IsString,
   Length,
 } from 'class-validator';
-import { InspectionStatus } from '../enums/inspection-status.enum';
 
 export class InspectionDto {
   @Type(() => Date)
@@ -22,11 +21,8 @@ export class InspectionDto {
   })
   organization: string;
 
-  @IsEnum(InspectionStatus, {
-    message:
-      'inspectionStatus must be one of the allowed values from the InspectionStatus enum',
-  })
-  inspectionStatus: InspectionStatus;
+  @IsBoolean()
+  isInspectionPassed: boolean;
 
   @IsOptional()
   @Type(() => Date)

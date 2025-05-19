@@ -1,7 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
 import { ImageDocument } from 'src/image/schemas/image.schema';
-import { InspectionStatus } from '../enums/inspection-status.enum';
 
 export type InspectionDocument = HydratedDocument<Inspection>;
 
@@ -25,8 +24,8 @@ export class Inspection {
   @Prop({ required: true })
   organization: string;
 
-  @Prop({ required: true, enum: InspectionStatus })
-  inspectionStatus: InspectionStatus;
+  @Prop({ required: true })
+  isInspectionPassed: boolean;
 
   @Prop({ default: null })
   nextInspectionDate?: Date | null;

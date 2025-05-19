@@ -53,7 +53,7 @@ export class InspectionService {
     const inspection =
       await this.inspectionRepository.findInspectionById(inspectionId);
     this.inspectionHelper.isValidInspection(inspection);
-    this.inspectionHelper.checkInspectionAccess(inspection, userId, carId);
+    this.inspectionHelper.checkInspectionAccess(inspection, carId, userId);
 
     const updatedInspection = await this.inspectionRepository.updateInspection(
       inspectionId,
@@ -74,7 +74,7 @@ export class InspectionService {
     const inspection =
       await this.inspectionRepository.findInspectionById(inspectionId);
     this.inspectionHelper.isValidInspection(inspection);
-    this.inspectionHelper.checkInspectionAccess(inspection, userId, carId);
+    this.inspectionHelper.checkInspectionAccess(inspection, carId, userId);
 
     await this.inspectionHelper.deletePhotos(inspection, EntityType.INSPECTION);
 
@@ -89,13 +89,17 @@ export class InspectionService {
 
   async getById(
     inspectionId: Types.ObjectId,
-    carId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<InspectionDocument>> {
     const inspection =
       await this.inspectionRepository.findInspectionById(inspectionId);
+
     this.inspectionHelper.isValidInspection(inspection);
-    this.inspectionHelper.checkInspectionAccess(inspection, userId, carId);
+    this.inspectionHelper.checkInspectionAccess(
+      inspection,
+      inspection.carId,
+      userId,
+    );
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
@@ -134,7 +138,7 @@ export class InspectionService {
     const inspection =
       await this.inspectionRepository.findInspectionById(inspectionId);
     this.inspectionHelper.isValidInspection(inspection);
-    this.inspectionHelper.checkInspectionAccess(inspection, userId, carId);
+    this.inspectionHelper.checkInspectionAccess(inspection, carId, userId);
 
     const updatedInspection = await this.inspectionRepository.updateInspection(
       inspectionId,

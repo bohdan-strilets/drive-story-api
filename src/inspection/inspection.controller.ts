@@ -50,13 +50,12 @@ export class InspectionController {
     return this.inspectionService.delete(inspectionId, carId, userId);
   }
 
-  @Get('get-by-id/:carId/:inspectionId')
+  @Get('get-by-id/:inspectionId')
   async getById(
     @Param('inspectionId', ParseObjectIdPipe) inspectionId: Types.ObjectId,
-    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<InspectionDocument>> {
-    return this.inspectionService.getById(inspectionId, carId, userId);
+    return this.inspectionService.getById(inspectionId, userId);
   }
 
   @Get('get-all/:carId')

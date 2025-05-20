@@ -37,6 +37,7 @@ export class InspectionService {
     const payload = { carId, owner: userId, ...dto };
     const inspection =
       await this.inspectionRepository.createInspection(payload);
+    await this.carRepository.setInspection(carId, inspection._id);
 
     return this.responseService.createSuccessResponse(
       HttpStatus.CREATED,

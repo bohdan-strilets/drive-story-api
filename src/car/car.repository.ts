@@ -51,4 +51,11 @@ export class CarRepository {
   ) {
     return this.updateCar(carId, { insuranceId });
   }
+
+  async setInspection(
+    carId: Types.ObjectId,
+    inspectionId: Types.ObjectId | null,
+  ) {
+    return this.updateCar(carId, { inspectionId });
+  }
 }

@@ -14,6 +14,7 @@ import { ParseObjectIdPipe } from 'src/car/pipes/parse-objectid.pipe';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { User } from 'src/user/decorators/user.decorator';
 import { InsuranceDto } from './dto/insurance.dto';
+import { PaidStatusDto } from './dto/paid-status.dto';
 import { InsuranceService } from './insurance.service';
 import { InsuranceDocument } from './schemas/insurance.schema';
 
@@ -39,6 +40,21 @@ export class InsuranceController {
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<InsuranceDocument>> {
     return this.insuranceService.update(insuranceId, carId, userId, dto);
+  }
+
+  @Patch('update-paid-status/:carId/:insuranceId')
+  async updatePaidStatus(
+    @Body() dto: PaidStatusDto,
+    @Param('insuranceId', ParseObjectIdPipe) insuranceId: Types.ObjectId,
+    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
+  ): Promise<ApiResponse<InsuranceDocument>> {
+    return this.insuranceService.updatePaidStatus(
+      insuranceId,
+      carId,
+      userId,
+      dto,
+    );
   }
 
   @Delete('delete/:carId/:insuranceId')

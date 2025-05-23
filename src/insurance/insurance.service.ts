@@ -8,6 +8,7 @@ import { PaginationService } from 'src/pagination/pagination.service';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { InsuranceDto } from './dto/insurance.dto';
+import { PaidStatusDto } from './dto/paid-status.dto';
 import { InsuranceHelper } from './insurance.helper';
 import { InsuranceRepository } from './insurance.repository';
 import { InsuranceDocument } from './schemas/insurance.schema';
@@ -59,6 +60,28 @@ export class InsuranceService {
     const updatedInsurance = await this.insuranceRepository.updateInsurance(
       insuranceId,
       dto,
+    );
+
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      updatedInsurance,
+    );
+  }
+
+  async updatePaidStatus(
+    insuranceId: Types.ObjectId,
+    carId: Types.ObjectId,
+    userId: Types.ObjectId,
+    dto: PaidStatusDto,
+  ): Promise<ApiResponse<InsuranceDocument>> {
+    const insurance =
+      await this.insuranceRepository.findInsuranceById(insuranceId);
+    this.insuranceHelper.isValidInsurance(insurance);
+    this.insuranceHelper.checkInsuranceAccess(insurance, carId, userId);
+
+    const updatedInsurance = await this.insuranceRepository.updateInsurance(
+      insuranceId,
+      { $set: { 'paymentStatus.isPaid': dto.isPaid } },
     );
 
     return this.responseService.createSuccessResponse(

@@ -81,6 +81,7 @@ export class InspectionService {
 
     const deletedInspection =
       await this.inspectionRepository.deleteInspection(inspectionId);
+    await this.carRepository.setInspection(carId, null);
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,

@@ -15,6 +15,7 @@ import { ApiResponse } from 'src/response/types/api-response.type';
 import { User } from 'src/user/decorators/user.decorator';
 import { CarService } from './car.service';
 import { CarDto } from './dto/car.dto';
+import { MileageDto } from './dto/mileage.dto';
 import { ParseObjectIdPipe } from './pipes/parse-objectid.pipe';
 import { CarDocument } from './schemas/car.schema';
 
@@ -38,6 +39,15 @@ export class CarController {
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<CarDocument>> {
     return this.carService.update(carId, userId, dto);
+  }
+
+  @Patch('update-mileage/:carId')
+  async updateMileage(
+    @Body() dto: MileageDto,
+    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
+  ): Promise<ApiResponse<CarDocument>> {
+    return this.carService.updateMileage(carId, userId, dto);
   }
 
   @Delete('delete/:carId')

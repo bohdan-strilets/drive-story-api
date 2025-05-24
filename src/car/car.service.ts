@@ -9,6 +9,7 @@ import { ApiResponse } from 'src/response/types/api-response.type';
 import { CarHelper } from './car.helper';
 import { CarRepository } from './car.repository';
 import { CarDto } from './dto/car.dto';
+import { MileageDto } from './dto/mileage.dto';
 import { CarDocument } from './schemas/car.schema';
 
 @Injectable()
@@ -41,6 +42,26 @@ export class CarService {
     this.carHelper.isValidCar(car);
 
     const updatedCar = await this.carRepository.updateCar(carId, dto);
+
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      updatedCar,
+    );
+  }
+
+  async updateMileage(
+    carId: Types.ObjectId,
+    userId: Types.ObjectId,
+    dto: MileageDto,
+  ): Promise<ApiResponse<CarDocument>> {
+    const car = await this.carRepository.findCarById(carId);
+
+    checkAccess(car.owner, userId);
+    this.carHelper.isValidCar(car);
+
+    const updatedCar = await this.carRepository.updateCar(carId, {
+      $set: { 'specifications.mileage': dto.mileage },
+    });
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,

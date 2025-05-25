@@ -2,6 +2,8 @@ import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { Types } from 'mongoose';
 import { calculateSkip } from 'src/common/helpers/calculate-skip.helper';
 import { checkAccess } from 'src/common/helpers/check-access.helper';
+import { PaginationService } from 'src/pagination/pagination.service';
+import { PaginatedResponse } from 'src/pagination/types/paginated-response';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { ContactHelper } from './contact.helper';
@@ -17,6 +19,7 @@ export class ContactService {
     private readonly responseService: ResponseService,
     private readonly contactRepository: ContactRepository,
     private readonly contactHelper: ContactHelper,
+    private readonly paginationService: PaginationService,
   ) {}
 
   async create(
@@ -92,16 +95,31 @@ export class ContactService {
     userId: Types.ObjectId,
     page: number,
     limit: number,
-  ): Promise<ApiResponse<ContactDocument[]>> {
+  ): Promise<ApiResponse<PaginatedResponse<ContactDocument>>> {
     const skip = calculateSkip(page, limit);
-
-    const contacts = await this.contactRepository.findAllContactsByUser(
+    const result = await this.contactRepository.findAndCountContacts(
       userId,
       skip,
       limit,
     );
 
-    return this.responseService.createSuccessResponse(HttpStatus.OK, contacts);
+    const totalPages = this.paginationService.calculateTotalPages(
+      result.totalItems,
+      limit,
+    );
+
+    const meta = this.paginationService.createMeta({
+      limit,
+      page,
+      itemCount: result.items.length,
+      totalItems: result.totalItems,
+      totalPages,
+    });
+
+    return this.responseService.createSuccessResponse(HttpStatus.OK, {
+      data: result.items,
+      meta,
+    });
   }
 
   async filterContactsByNameOrPhone(

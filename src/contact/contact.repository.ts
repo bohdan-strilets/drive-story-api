@@ -32,6 +32,21 @@ export class ContactRepository {
       .populate('photos');
   }
 
+  async findAndCountContacts(
+    userId: Types.ObjectId,
+    skip: number,
+    limit: number,
+  ): Promise<{ items: ContactDocument[]; totalItems: number }> {
+    const filter = { owner: userId };
+
+    const [items, totalItems] = await Promise.all([
+      this.contactModel.find(filter).skip(skip).limit(limit).populate('photos'),
+      this.contactModel.countDocuments(filter),
+    ]);
+
+    return { items, totalItems };
+  }
+
   async createContact(payload: any) {
     return this.contactModel.create(payload);
   }

@@ -1,6 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
 import { BasicInfo } from './basic-info.schema';
+import { InspectionInfo } from './inspection-info.schema';
+import { InsuranceInfo } from './insurance-info.schema';
 import { Ownership } from './ownership.schema';
 import { Registration } from './registration.schema';
 import { Specifications } from './specifications.schema';
@@ -33,11 +35,11 @@ export class Car {
   @Prop({ type: Types.ObjectId, ref: 'Image', default: null })
   photos: Types.ObjectId | null;
 
-  @Prop({ type: Types.ObjectId, ref: 'Insurance', default: null })
-  insuranceId?: Types.ObjectId | null;
+  @Prop({ type: InsuranceInfo, default: {} })
+  insurance: InsuranceInfo;
 
-  @Prop({ type: Types.ObjectId, ref: 'Inspection', default: null })
-  inspectionId?: Types.ObjectId | null;
+  @Prop({ type: InspectionInfo, default: {} })
+  inspection: InspectionInfo;
 
   @Prop()
   createdAt: Date;

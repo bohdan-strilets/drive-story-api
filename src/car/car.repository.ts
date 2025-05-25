@@ -44,18 +44,4 @@ export class CarRepository {
   ): Promise<CarDocument> {
     return this.updateCar(carId, { photos: data });
   }
-
-  async setInsurance(
-    carId: Types.ObjectId,
-    insuranceId: Types.ObjectId | null,
-  ) {
-    return this.updateCar(carId, { insuranceId });
-  }
-
-  async setInspection(
-    carId: Types.ObjectId,
-    inspectionId: Types.ObjectId | null,
-  ) {
-    return this.updateCar(carId, { inspectionId });
-  }
 }

@@ -37,7 +37,15 @@ export class InspectionService {
     const payload = { carId, owner: userId, ...dto };
     const inspection =
       await this.inspectionRepository.createInspection(payload);
-    await this.carRepository.setInspection(carId, inspection._id);
+
+    await this.carRepository.updateCar(carId, {
+      $set: {
+        inspection: {
+          inspectionId: inspection._id,
+          inspectionEnds: inspection.nextInspectionDate,
+        },
+      },
+    });
 
     return this.responseService.createSuccessResponse(
       HttpStatus.CREATED,
@@ -81,7 +89,8 @@ export class InspectionService {
 
     const deletedInspection =
       await this.inspectionRepository.deleteInspection(inspectionId);
-    await this.carRepository.setInspection(carId, null);
+
+    await this.carRepository.updateCar(carId, { $set: { inspection: null } });
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,

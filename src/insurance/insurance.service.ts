@@ -38,7 +38,15 @@ export class InsuranceService {
 
     const payload = { carId, owner: userId, ...dto };
     const insurance = await this.insuranceRepository.createInsurance(payload);
-    await this.carRepository.setInsurance(carId, insurance._id);
+
+    await this.carRepository.updateCar(carId, {
+      $set: {
+        insurance: {
+          insuranceId: insurance._id,
+          insuranceEnds: insurance.endDate,
+        },
+      },
+    });
 
     return this.responseService.createSuccessResponse(
       HttpStatus.CREATED,
@@ -104,7 +112,8 @@ export class InsuranceService {
 
     const deletedInsurance =
       await this.insuranceRepository.deleteInsurance(insuranceId);
-    await this.carRepository.setInsurance(carId, null);
+
+    await this.carRepository.updateCar(carId, { $set: { insurance: null } });
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,

@@ -11,6 +11,7 @@ import {
 import { Types } from 'mongoose';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { ParseObjectIdPipe } from 'src/car/pipes/parse-objectid.pipe';
+import { PaginatedResponse } from 'src/pagination/types/paginated-response';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { User } from 'src/user/decorators/user.decorator';
 import { ContactService } from './contact.service';
@@ -60,7 +61,7 @@ export class ContactController {
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
-  ): Promise<ApiResponse<ContactDocument[]>> {
+  ): Promise<ApiResponse<PaginatedResponse<ContactDocument>>> {
     return this.contactService.getAll(userId, page, limit);
   }
 
@@ -70,7 +71,7 @@ export class ContactController {
     @Query('searchQuery') searchQuery: string = '',
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
-  ): Promise<ApiResponse<ContactDocument[]>> {
+  ): Promise<ApiResponse<PaginatedResponse<ContactDocument>>> {
     return this.contactService.filterContactsByNameOrPhone(
       userId,
       searchQuery,

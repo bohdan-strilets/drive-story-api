@@ -127,28 +127,41 @@ export class ContactService {
     searchQuery: string,
     page: number = 1,
     limit: number = 10,
-  ): Promise<ApiResponse<ContactDocument[]>> {
+  ): Promise<ApiResponse<PaginatedResponse<ContactDocument>>> {
     if (!searchQuery) {
-      const contacts = await this.contactRepository.findAllContactsByUser(
-        userId,
-        page,
-        limit,
-      );
+      const response = await this.getAll(userId, page, limit);
 
       return this.responseService.createSuccessResponse(
         HttpStatus.OK,
-        contacts,
+        response.data,
       );
     }
 
+    const skip = calculateSkip(page, limit);
     const regex = new RegExp(searchQuery, 'i');
-    const contacts = await this.contactRepository.filterByNameOrPhone(
+
+    const result = await this.contactRepository.filterByNameOrPhone(
       userId,
       regex,
-      page,
+      skip,
+      limit,
+    );
+    const totalPages = this.paginationService.calculateTotalPages(
+      result.totalItems,
       limit,
     );
 
-    return this.responseService.createSuccessResponse(HttpStatus.OK, contacts);
+    const meta = this.paginationService.createMeta({
+      limit,
+      page,
+      itemCount: result.items.length,
+      totalItems: result.totalItems,
+      totalPages,
+    });
+
+    return this.responseService.createSuccessResponse(HttpStatus.OK, {
+      data: result.items,
+      meta,
+    });
   }
 }

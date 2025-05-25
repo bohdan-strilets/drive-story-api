@@ -1,6 +1,5 @@
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { calculateSkip } from 'src/common/helpers/calculate-skip.helper';
 import { Contact, ContactDocument } from './schemas/contact.schema';
 
 export class ContactRepository {
@@ -75,17 +74,19 @@ export class ContactRepository {
   async filterByNameOrPhone(
     userId: Types.ObjectId,
     regex: RegExp,
-    page: number,
+    skip: number,
     limit: number,
-  ) {
-    const skip = calculateSkip(page, limit);
-    return await this.contactModel
-      .find({
-        owner: userId,
-        $or: [{ name: { $regex: regex } }, { phone: { $regex: regex } }],
-      })
-      .skip(skip)
-      .limit(limit)
-      .populate('photos');
+  ): Promise<{ items: ContactDocument[]; totalItems: number }> {
+    const filter = {
+      owner: userId,
+      $or: [{ name: { $regex: regex } }, { phone: { $regex: regex } }],
+    };
+
+    const [items, totalItems] = await Promise.all([
+      this.contactModel.find(filter).skip(skip).limit(limit).populate('photos'),
+      this.contactModel.countDocuments(filter),
+    ]);
+
+    return { items, totalItems };
   }
 }

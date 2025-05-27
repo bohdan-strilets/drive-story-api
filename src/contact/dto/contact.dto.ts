@@ -56,7 +56,7 @@ export class ContactDto {
   @ArrayMinSize(2, { message: 'Working hours must have exactly two elements.' })
   @ArrayMaxSize(2, { message: 'Working hours must have exactly two elements.' })
   @IsString({ each: true, message: 'Each working hour must be a string.' })
-  workingHours?: [string, string];
+  workingHours?: [string, string] | null;
 
   @IsOptional()
   @IsArray({ message: 'Specializations must be an array.' })

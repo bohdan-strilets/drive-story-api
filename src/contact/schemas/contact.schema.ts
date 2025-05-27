@@ -31,8 +31,8 @@ export class Contact {
   @Prop({ default: null })
   website?: string | null;
 
-  @Prop({ default: [] })
-  workingHours?: [string, string];
+  @Prop({ default: null })
+  workingHours?: [string, string] | null;
 
   @Prop({ default: [] })
   specializations?: string[];

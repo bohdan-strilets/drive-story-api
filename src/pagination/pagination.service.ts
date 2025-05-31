@@ -16,10 +16,10 @@ export class PaginationService {
   }: CreateMetaDto) {
     return {
       totalItems,
-      itemsPerPage: limit,
+      itemsPerPage: Number(limit),
       itemCount: itemCount,
       totalPages,
-      currentPage: page,
+      currentPage: Number(page),
     };
   }
 }

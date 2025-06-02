@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   Query,
 } from '@nestjs/common';
 import { Types } from 'mongoose';
@@ -74,7 +75,7 @@ export class InsuranceController {
     return this.insuranceService.getById(insuranceId, userId);
   }
 
-  @Get('bind-contact/:carId/:insuranceId')
+  @Put('bind-contact/:carId/:insuranceId')
   async bindContact(
     @Param('insuranceId', ParseObjectIdPipe) insuranceId: Types.ObjectId,
     @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,

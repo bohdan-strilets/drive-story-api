@@ -73,6 +73,6 @@ export class InsuranceController {
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
     @Query('contactId', ParseObjectIdPipe) contactId?: Types.ObjectId,
   ): Promise<ApiResponse<InsuranceDocument>> {
-    return this.insuranceService.bindContact(contactId, userId);
+    return this.insuranceService.bindContact(insuranceId, userId, contactId);
   }
 }

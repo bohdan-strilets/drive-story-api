@@ -31,23 +31,21 @@ export class InspectionController {
     return this.inspectionService.create(userId, carId, dto);
   }
 
-  @Patch('update/:carId/:inspectionId')
+  @Patch('update/:inspectionId')
   async update(
     @Body() dto: InspectionDto,
     @Param('inspectionId', ParseObjectIdPipe) inspectionId: Types.ObjectId,
-    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<InspectionDocument>> {
-    return this.inspectionService.update(inspectionId, carId, userId, dto);
+    return this.inspectionService.update(inspectionId, userId, dto);
   }
 
-  @Delete('delete/:carId/:inspectionId')
+  @Delete('delete/:inspectionId')
   async delete(
     @Param('inspectionId', ParseObjectIdPipe) inspectionId: Types.ObjectId,
-    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<InspectionDocument>> {
-    return this.inspectionService.delete(inspectionId, carId, userId);
+    return this.inspectionService.delete(inspectionId, userId);
   }
 
   @Get('get-by-id/:inspectionId')
@@ -68,18 +66,12 @@ export class InspectionController {
     return this.inspectionService.getAll(carId, userId, page, limit);
   }
 
-  @Get('bind-contact/:carId/:inspectionId')
+  @Get('bind-contact/:inspectionId')
   async bindContact(
     @Param('inspectionId', ParseObjectIdPipe) inspectionId: Types.ObjectId,
-    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
     @Query('contactId', ParseObjectIdPipe) contactId: Types.ObjectId,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<InspectionDocument>> {
-    return this.inspectionService.bindContact(
-      inspectionId,
-      carId,
-      contactId,
-      userId,
-    );
+    return this.inspectionService.bindContact(inspectionId, contactId, userId);
   }
 }

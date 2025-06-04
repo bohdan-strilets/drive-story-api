@@ -45,6 +45,7 @@ export class ContactService {
     const contact = await this.contactRepository.findContactById(contactId);
 
     this.contactHelper.isValidContact(contact);
+    this.contactHelper.validateContactDetailsUniqueness(contact, dto);
     checkAccess(contact.owner, userId);
 
     const updatedContact = await this.contactRepository.updateContact(

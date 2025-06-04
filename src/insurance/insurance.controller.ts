@@ -33,38 +33,30 @@ export class InsuranceController {
     return this.insuranceService.create(userId, carId, dto);
   }
 
-  @Patch('update/:carId/:insuranceId')
+  @Patch('update/:insuranceId')
   async update(
     @Body() dto: InsuranceDto,
     @Param('insuranceId', ParseObjectIdPipe) insuranceId: Types.ObjectId,
-    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<InsuranceDocument>> {
-    return this.insuranceService.update(insuranceId, carId, userId, dto);
+    return this.insuranceService.update(insuranceId, userId, dto);
   }
 
-  @Patch('update-paid-status/:carId/:insuranceId')
+  @Patch('update-paid-status/:insuranceId')
   async updatePaidStatus(
     @Body() dto: PaidStatusDto,
     @Param('insuranceId', ParseObjectIdPipe) insuranceId: Types.ObjectId,
-    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<InsuranceDocument>> {
-    return this.insuranceService.updatePaidStatus(
-      insuranceId,
-      carId,
-      userId,
-      dto,
-    );
+    return this.insuranceService.updatePaidStatus(insuranceId, userId, dto);
   }
 
-  @Delete('delete/:carId/:insuranceId')
+  @Delete('delete/:insuranceId')
   async delete(
     @Param('insuranceId', ParseObjectIdPipe) insuranceId: Types.ObjectId,
-    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<InsuranceDocument>> {
-    return this.insuranceService.delete(insuranceId, carId, userId);
+    return this.insuranceService.delete(insuranceId, userId);
   }
 
   @Get('get-by-id/:insuranceId')
@@ -75,18 +67,12 @@ export class InsuranceController {
     return this.insuranceService.getById(insuranceId, userId);
   }
 
-  @Put('bind-contact/:carId/:insuranceId')
+  @Put('bind-contact/:insuranceId')
   async bindContact(
     @Param('insuranceId', ParseObjectIdPipe) insuranceId: Types.ObjectId,
-    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
-    @Query('contactId', ParseObjectIdPipe) contactId: Types.ObjectId,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
+    @Query('contactId', ParseObjectIdPipe) contactId?: Types.ObjectId,
   ): Promise<ApiResponse<InsuranceDocument>> {
-    return this.insuranceService.bindContact(
-      insuranceId,
-      carId,
-      contactId,
-      userId,
-    );
+    return this.insuranceService.bindContact(contactId, userId);
   }
 }

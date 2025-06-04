@@ -56,14 +56,18 @@ export class InsuranceService {
 
   async update(
     insuranceId: Types.ObjectId,
-    carId: Types.ObjectId,
     userId: Types.ObjectId,
     dto: InsuranceDto,
   ): Promise<ApiResponse<InsuranceDocument>> {
     const insurance =
       await this.insuranceRepository.findInsuranceById(insuranceId);
+
     this.insuranceHelper.isValidInsurance(insurance);
-    this.insuranceHelper.checkInsuranceAccess(insurance, carId, userId);
+    this.insuranceHelper.checkInsuranceAccess(
+      insurance,
+      insurance.carId,
+      userId,
+    );
 
     const updatedInsurance = await this.insuranceRepository.updateInsurance(
       insuranceId,
@@ -78,14 +82,18 @@ export class InsuranceService {
 
   async updatePaidStatus(
     insuranceId: Types.ObjectId,
-    carId: Types.ObjectId,
     userId: Types.ObjectId,
     dto: PaidStatusDto,
   ): Promise<ApiResponse<InsuranceDocument>> {
     const insurance =
       await this.insuranceRepository.findInsuranceById(insuranceId);
+
     this.insuranceHelper.isValidInsurance(insurance);
-    this.insuranceHelper.checkInsuranceAccess(insurance, carId, userId);
+    this.insuranceHelper.checkInsuranceAccess(
+      insurance,
+      insurance.carId,
+      userId,
+    );
 
     const updatedInsurance = await this.insuranceRepository.updateInsurance(
       insuranceId,
@@ -100,11 +108,12 @@ export class InsuranceService {
 
   async delete(
     insuranceId: Types.ObjectId,
-    carId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<InsuranceDocument>> {
     const insurance =
       await this.insuranceRepository.findInsuranceById(insuranceId);
+    const carId = insurance.carId;
+
     this.insuranceHelper.isValidInsurance(insurance);
     this.insuranceHelper.checkInsuranceAccess(insurance, carId, userId);
 
@@ -140,18 +149,22 @@ export class InsuranceService {
 
   async bindContact(
     insuranceId: Types.ObjectId,
-    carId: Types.ObjectId,
-    contactId: Types.ObjectId,
     userId: Types.ObjectId,
+    contactId?: Types.ObjectId,
   ): Promise<ApiResponse<InsuranceDocument>> {
     const insurance =
       await this.insuranceRepository.findInsuranceById(insuranceId);
+
     this.insuranceHelper.isValidInsurance(insurance);
-    this.insuranceHelper.checkInsuranceAccess(insurance, carId, userId);
+    this.insuranceHelper.checkInsuranceAccess(
+      insurance,
+      insurance.carId,
+      userId,
+    );
 
     const updatedInsurance = await this.insuranceRepository.updateInsurance(
       insuranceId,
-      { contactId },
+      { contactId: contactId ? contactId : null },
     );
 
     return this.responseService.createSuccessResponse(

@@ -31,32 +31,29 @@ export class FuelingController {
     return this.fuelingService.create(userId, carId, dto);
   }
 
-  @Patch('update/:carId/:fuelingId')
+  @Patch('update/:fuelingId')
   async update(
     @Body() dto: FuelingDto,
     @Param('fuelingId', ParseObjectIdPipe) fuelingId: Types.ObjectId,
-    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<FuelingDocument>> {
-    return this.fuelingService.update(fuelingId, carId, userId, dto);
+    return this.fuelingService.update(fuelingId, userId, dto);
   }
 
-  @Delete('delete/:carId/:fuelingId')
+  @Delete('delete/:fuelingId')
   async delete(
     @Param('fuelingId', ParseObjectIdPipe) fuelingId: Types.ObjectId,
-    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
     @User('_id', ParseObjectIdPipe, ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<FuelingDocument>> {
-    return this.fuelingService.delete(fuelingId, carId, userId);
+    return this.fuelingService.delete(fuelingId, userId);
   }
 
-  @Get('get-by-id/:carId/:fuelingId')
+  @Get('get-by-id/:fuelingId')
   async getById(
     @Param('fuelingId', ParseObjectIdPipe) fuelingId: Types.ObjectId,
-    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<FuelingDocument>> {
-    return this.fuelingService.getById(fuelingId, carId, userId);
+    return this.fuelingService.getById(fuelingId, userId);
   }
 
   @Get('get-all/:carId')
@@ -69,13 +66,12 @@ export class FuelingController {
     return this.fuelingService.getAll(carId, userId, page, limit);
   }
 
-  @Get('bind-contact/:carId/:fuelingId')
+  @Get('bind-contact/:fuelingId')
   async bindContact(
     @Param('fuelingId', ParseObjectIdPipe) fuelingId: Types.ObjectId,
-    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
     @Query('contactId', ParseObjectIdPipe) contactId: Types.ObjectId,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<FuelingDocument>> {
-    return this.fuelingService.bindContact(fuelingId, carId, contactId, userId);
+    return this.fuelingService.bindContact(fuelingId, contactId, userId);
   }
 }

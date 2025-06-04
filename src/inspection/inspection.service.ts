@@ -55,14 +55,18 @@ export class InspectionService {
 
   async update(
     inspectionId: Types.ObjectId,
-    carId: Types.ObjectId,
     userId: Types.ObjectId,
     dto: InspectionDto,
   ): Promise<ApiResponse<InspectionDocument>> {
     const inspection =
       await this.inspectionRepository.findInspectionById(inspectionId);
+
     this.inspectionHelper.isValidInspection(inspection);
-    this.inspectionHelper.checkInspectionAccess(inspection, carId, userId);
+    this.inspectionHelper.checkInspectionAccess(
+      inspection,
+      inspection.carId,
+      userId,
+    );
 
     const updatedInspection = await this.inspectionRepository.updateInspection(
       inspectionId,
@@ -77,11 +81,12 @@ export class InspectionService {
 
   async delete(
     inspectionId: Types.ObjectId,
-    carId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<InspectionDocument>> {
     const inspection =
       await this.inspectionRepository.findInspectionById(inspectionId);
+    const carId = inspection.carId;
+
     this.inspectionHelper.isValidInspection(inspection);
     this.inspectionHelper.checkInspectionAccess(inspection, carId, userId);
 
@@ -142,14 +147,18 @@ export class InspectionService {
 
   async bindContact(
     inspectionId: Types.ObjectId,
-    carId: Types.ObjectId,
     contactId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<InspectionDocument>> {
     const inspection =
       await this.inspectionRepository.findInspectionById(inspectionId);
+
     this.inspectionHelper.isValidInspection(inspection);
-    this.inspectionHelper.checkInspectionAccess(inspection, carId, userId);
+    this.inspectionHelper.checkInspectionAccess(
+      inspection,
+      inspection.carId,
+      userId,
+    );
 
     const updatedInspection = await this.inspectionRepository.updateInspection(
       inspectionId,

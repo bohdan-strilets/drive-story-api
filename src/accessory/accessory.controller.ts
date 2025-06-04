@@ -31,32 +31,29 @@ export class AccessoryController {
     return this.accessoryService.create(userId, carId, dto);
   }
 
-  @Patch('update/:carId/:accessoryId')
+  @Patch('update/:accessoryId')
   async update(
     @Body() dto: AccessoryDto,
     @Param('accessoryId', ParseObjectIdPipe) accessoryId: Types.ObjectId,
-    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<AccessoryDocument>> {
-    return this.accessoryService.update(accessoryId, carId, userId, dto);
+    return this.accessoryService.update(accessoryId, userId, dto);
   }
 
-  @Delete('delete/:carId/:accessoryId')
+  @Delete('delete/:accessoryId')
   async delete(
     @Param('accessoryId', ParseObjectIdPipe) accessoryId: Types.ObjectId,
-    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<AccessoryDocument>> {
-    return this.accessoryService.delete(accessoryId, carId, userId);
+    return this.accessoryService.delete(accessoryId, userId);
   }
 
-  @Get('get-by-id/:carId/:accessoryId')
+  @Get('get-by-id/:accessoryId')
   async getById(
     @Param('accessoryId', ParseObjectIdPipe) accessoryId: Types.ObjectId,
-    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<AccessoryDocument>> {
-    return this.accessoryService.getById(accessoryId, carId, userId);
+    return this.accessoryService.getById(accessoryId, userId);
   }
 
   @Get('get-all/:carId')
@@ -69,18 +66,12 @@ export class AccessoryController {
     return this.accessoryService.getAll(carId, userId, page, limit);
   }
 
-  @Get('bind-contact/:carId/:accessoryId')
+  @Get('bind-contact/:accessoryId')
   async bindContact(
     @Param('accessoryId', ParseObjectIdPipe) accessoryId: Types.ObjectId,
-    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
     @Query('contactId', ParseObjectIdPipe) contactId: Types.ObjectId,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<AccessoryDocument>> {
-    return this.accessoryService.bindContact(
-      accessoryId,
-      carId,
-      contactId,
-      userId,
-    );
+    return this.accessoryService.bindContact(accessoryId, contactId, userId);
   }
 }

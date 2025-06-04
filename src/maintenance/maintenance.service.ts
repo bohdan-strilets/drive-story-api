@@ -46,14 +46,18 @@ export class MaintenanceService {
 
   async update(
     maintenanceId: Types.ObjectId,
-    carId: Types.ObjectId,
     userId: Types.ObjectId,
     dto: MaintenanceDto,
   ): Promise<ApiResponse<MaintenanceDocument>> {
     const maintenance =
       await this.maintenanceRepository.findMaintenanceById(maintenanceId);
+
     this.maintenanceHelper.isValidMaintenance(maintenance);
-    this.maintenanceHelper.checkMaintenanceAccess(maintenance, userId, carId);
+    this.maintenanceHelper.checkMaintenanceAccess(
+      maintenance,
+      userId,
+      maintenance.carId,
+    );
 
     const updatedMaintenance =
       await this.maintenanceRepository.updateMaintenance(maintenanceId, dto);
@@ -66,13 +70,17 @@ export class MaintenanceService {
 
   async delete(
     maintenanceId: Types.ObjectId,
-    carId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<MaintenanceDocument>> {
     const maintenance =
       await this.maintenanceRepository.findMaintenanceById(maintenanceId);
+
     this.maintenanceHelper.isValidMaintenance(maintenance);
-    this.maintenanceHelper.checkMaintenanceAccess(maintenance, userId, carId);
+    this.maintenanceHelper.checkMaintenanceAccess(
+      maintenance,
+      userId,
+      maintenance.carId,
+    );
 
     await this.maintenanceHelper.deletePhotos(
       maintenance,
@@ -90,13 +98,17 @@ export class MaintenanceService {
 
   async getById(
     maintenanceId: Types.ObjectId,
-    carId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<MaintenanceDocument>> {
     const maintenance =
       await this.maintenanceRepository.findMaintenanceById(maintenanceId);
+
     this.maintenanceHelper.isValidMaintenance(maintenance);
-    this.maintenanceHelper.checkMaintenanceAccess(maintenance, userId, carId);
+    this.maintenanceHelper.checkMaintenanceAccess(
+      maintenance,
+      userId,
+      maintenance.carId,
+    );
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
@@ -128,14 +140,18 @@ export class MaintenanceService {
 
   async bindContact(
     maintenanceId: Types.ObjectId,
-    carId: Types.ObjectId,
     contactId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<MaintenanceDocument>> {
     const maintenance =
       await this.maintenanceRepository.findMaintenanceById(maintenanceId);
+
     this.maintenanceHelper.isValidMaintenance(maintenance);
-    this.maintenanceHelper.checkMaintenanceAccess(maintenance, userId, carId);
+    this.maintenanceHelper.checkMaintenanceAccess(
+      maintenance,
+      userId,
+      maintenance.carId,
+    );
 
     const updatedMaintenance =
       await this.maintenanceRepository.updateMaintenance(maintenanceId, {

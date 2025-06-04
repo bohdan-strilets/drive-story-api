@@ -45,13 +45,13 @@ export class FuelingService {
 
   async update(
     fuelingId: Types.ObjectId,
-    carId: Types.ObjectId,
     userId: Types.ObjectId,
     dto: FuelingDto,
   ): Promise<ApiResponse<FuelingDocument>> {
     const fueling = await this.fuelingRepository.findFuelingById(fuelingId);
+
     this.fuelingHelper.isValidFueling(fueling);
-    this.fuelingHelper.checkFuelingAccess(fueling, userId, carId);
+    this.fuelingHelper.checkFuelingAccess(fueling, userId, fueling.carId);
 
     const updatedFueling = await this.fuelingRepository.updateFueling(
       fuelingId,
@@ -66,12 +66,12 @@ export class FuelingService {
 
   async delete(
     fuelingId: Types.ObjectId,
-    carId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<FuelingDocument>> {
     const fueling = await this.fuelingRepository.findFuelingById(fuelingId);
+
     this.fuelingHelper.isValidFueling(fueling);
-    this.fuelingHelper.checkFuelingAccess(fueling, userId, carId);
+    this.fuelingHelper.checkFuelingAccess(fueling, userId, fueling.carId);
 
     await this.fuelingHelper.deletePhotos(fueling, EntityType.FUELING);
 
@@ -86,12 +86,12 @@ export class FuelingService {
 
   async getById(
     fuelingId: Types.ObjectId,
-    carId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<FuelingDocument>> {
     const fueling = await this.fuelingRepository.findFuelingById(fuelingId);
+
     this.fuelingHelper.isValidFueling(fueling);
-    this.fuelingHelper.checkFuelingAccess(fueling, userId, carId);
+    this.fuelingHelper.checkFuelingAccess(fueling, userId, fueling.carId);
 
     return this.responseService.createSuccessResponse(HttpStatus.OK, fueling);
   }
@@ -116,13 +116,13 @@ export class FuelingService {
 
   async bindContact(
     fuelingId: Types.ObjectId,
-    carId: Types.ObjectId,
     contactId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<FuelingDocument>> {
     const fueling = await this.fuelingRepository.findFuelingById(fuelingId);
+
     this.fuelingHelper.isValidFueling(fueling);
-    this.fuelingHelper.checkFuelingAccess(fueling, userId, carId);
+    this.fuelingHelper.checkFuelingAccess(fueling, userId, fueling.carId);
 
     const updatedFueling = await this.fuelingRepository.updateFueling(
       fuelingId,

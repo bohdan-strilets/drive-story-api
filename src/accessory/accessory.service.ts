@@ -43,14 +43,18 @@ export class AccessoryService {
 
   async update(
     accessoryId: Types.ObjectId,
-    carId: Types.ObjectId,
     userId: Types.ObjectId,
     dto: AccessoryDto,
   ): Promise<ApiResponse<AccessoryDocument>> {
     const accessory =
       await this.accessoryRepository.findAccessoryById(accessoryId);
+
     this.accessoryHelper.isValidAccessory(accessory);
-    this.accessoryHelper.checkAccessoryAccess(accessory, userId, carId);
+    this.accessoryHelper.checkAccessoryAccess(
+      accessory,
+      userId,
+      accessory.carId,
+    );
 
     const updatedAccessory = await this.accessoryRepository.updateAccessory(
       accessoryId,
@@ -65,13 +69,17 @@ export class AccessoryService {
 
   async delete(
     accessoryId: Types.ObjectId,
-    carId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<AccessoryDocument>> {
     const accessory =
       await this.accessoryRepository.findAccessoryById(accessoryId);
+
     this.accessoryHelper.isValidAccessory(accessory);
-    this.accessoryHelper.checkAccessoryAccess(accessory, userId, carId);
+    this.accessoryHelper.checkAccessoryAccess(
+      accessory,
+      userId,
+      accessory.carId,
+    );
 
     await this.accessoryHelper.deletePhotos(accessory, EntityType.ACCESSORY);
 
@@ -86,13 +94,17 @@ export class AccessoryService {
 
   async getById(
     accessoryId: Types.ObjectId,
-    carId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<AccessoryDocument>> {
     const accessory =
       await this.accessoryRepository.findAccessoryById(accessoryId);
+
     this.accessoryHelper.isValidAccessory(accessory);
-    this.accessoryHelper.checkAccessoryAccess(accessory, userId, carId);
+    this.accessoryHelper.checkAccessoryAccess(
+      accessory,
+      userId,
+      accessory.carId,
+    );
 
     return this.responseService.createSuccessResponse(HttpStatus.OK, accessory);
   }
@@ -120,14 +132,18 @@ export class AccessoryService {
 
   async bindContact(
     accessoryId: Types.ObjectId,
-    carId: Types.ObjectId,
     contactId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<AccessoryDocument>> {
     const accessory =
       await this.accessoryRepository.findAccessoryById(accessoryId);
+
     this.accessoryHelper.isValidAccessory(accessory);
-    this.accessoryHelper.checkAccessoryAccess(accessory, userId, carId);
+    this.accessoryHelper.checkAccessoryAccess(
+      accessory,
+      userId,
+      accessory.carId,
+    );
 
     const updatedAccessory = await this.accessoryRepository.updateAccessory(
       accessoryId,

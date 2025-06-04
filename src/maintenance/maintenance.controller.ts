@@ -31,32 +31,29 @@ export class MaintenanceController {
     return this.maintenanceService.create(userId, carId, dto);
   }
 
-  @Patch('update/:carId/:maintenanceId')
+  @Patch('update/:maintenanceId')
   async update(
     @Body() dto: MaintenanceDto,
     @Param('maintenanceId', ParseObjectIdPipe) maintenanceId: Types.ObjectId,
-    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<MaintenanceDocument>> {
-    return this.maintenanceService.update(maintenanceId, carId, userId, dto);
+    return this.maintenanceService.update(maintenanceId, userId, dto);
   }
 
-  @Delete('delete/:carId/:maintenanceId')
+  @Delete('delete/:maintenanceId')
   async delete(
     @Param('maintenanceId', ParseObjectIdPipe) maintenanceId: Types.ObjectId,
-    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<MaintenanceDocument>> {
-    return this.maintenanceService.delete(maintenanceId, carId, userId);
+    return this.maintenanceService.delete(maintenanceId, userId);
   }
 
-  @Get('get-by-id/:carId/:maintenanceId')
+  @Get('get-by-id/:maintenanceId')
   async getById(
     @Param('maintenanceId', ParseObjectIdPipe) maintenanceId: Types.ObjectId,
-    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<MaintenanceDocument>> {
-    return this.maintenanceService.getById(maintenanceId, carId, userId);
+    return this.maintenanceService.getById(maintenanceId, userId);
   }
 
   @Get('get-all/:carId')
@@ -69,16 +66,14 @@ export class MaintenanceController {
     return this.maintenanceService.getAll(carId, userId, page, limit);
   }
 
-  @Get('bind-contact/:carId/:maintenanceId')
+  @Get('bind-contact/:maintenanceId')
   async bindContact(
     @Param('maintenanceId', ParseObjectIdPipe) maintenanceId: Types.ObjectId,
-    @Param('carId', ParseObjectIdPipe) carId: Types.ObjectId,
     @Query('contactId', ParseObjectIdPipe) contactId: Types.ObjectId,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<MaintenanceDocument>> {
     return this.maintenanceService.bindContact(
       maintenanceId,
-      carId,
       contactId,
       userId,
     );

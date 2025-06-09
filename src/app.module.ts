@@ -20,6 +20,7 @@ import { SendgridModule } from './sendgrid/sendgrid.module';
 import { TokenModule } from './token/token.module';
 import { UserModule } from './user/user.module';
 import { PaginationModule } from './pagination/pagination.module';
+import { CarQueryModule } from './car-query/car-query.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { PaginationModule } from './pagination/pagination.module';
     ReminderModule,
     PushModule,
     PaginationModule,
+    CarQueryModule,
   ],
 })
 export class AppModule {}

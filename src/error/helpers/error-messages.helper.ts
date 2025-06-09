@@ -43,4 +43,7 @@ export const errorMessages = {
   NOTIFICATIONS_NOT_ACCESS_RIGHTS:
     'Access rights to notifications have not been granted.',
   NO_IMAGES_TO_DELETE: 'The entity has no images to delete',
+  MARK_REQUIRED: 'Make is required',
+  MODEL_NAME_REQUIRED: 'Model name is required',
+  YEAR_REQUIRED: 'Year of production is required',
 };

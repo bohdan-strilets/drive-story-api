@@ -19,4 +19,7 @@ export class BasicInfo {
 
   @Prop({ default: null })
   generation?: string | null;
+
+  @Prop({ default: null })
+  trimsId?: string | null;
 }

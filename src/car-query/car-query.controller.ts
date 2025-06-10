@@ -3,8 +3,8 @@ import { Auth } from 'src/auth/decorators/auth.decorator';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { CarQueryService } from './car-query.service';
 import { CarTrim } from './types/car-trim.type';
-import { MakeResponse } from './types/make-response.type';
-import { ModelResponse } from './types/model-response.type';
+import { Make } from './types/make.type';
+import { Model } from './types/model.type';
 
 @Auth()
 @Controller('v1/car-query')
@@ -14,7 +14,7 @@ export class CarQueryController {
   @Get('makes')
   async getAllMakes(
     @Query('year') year?: string,
-  ): Promise<ApiResponse<MakeResponse>> {
+  ): Promise<ApiResponse<Make[]>> {
     return this.carQueryService.getAllMakes(year);
   }
 
@@ -22,7 +22,7 @@ export class CarQueryController {
   async getModelsForMake(
     @Query('make') make: string,
     @Query('year') year?: string,
-  ): Promise<ApiResponse<ModelResponse>> {
+  ): Promise<ApiResponse<Model[]>> {
     return this.carQueryService.getModelsForMake(make, year);
   }
 
@@ -33,5 +33,15 @@ export class CarQueryController {
     @Query('year') year: string,
   ): Promise<ApiResponse<CarTrim[]>> {
     return this.carQueryService.getTrims(make, model, year);
+  }
+
+  @Get('trims-by-id')
+  async getTrimById(
+    @Query('make') make: string,
+    @Query('model') model: string,
+    @Query('year') year: string,
+    @Query('trimsId') trimsId: string,
+  ): Promise<ApiResponse<CarTrim>> {
+    return this.carQueryService.getTrimById(make, model, year, trimsId);
   }
 }

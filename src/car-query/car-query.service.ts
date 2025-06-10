@@ -4,9 +4,8 @@ import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
 import { CarQueryHelper } from './car-query.helpers';
 import { CarTrim } from './types/car-trim.type';
-import { MakeResponse } from './types/make-response.type';
 import { Make } from './types/make.type';
-import { ModelResponse } from './types/model-response.type';
+import { Model } from './types/model.type';
 
 @Injectable()
 export class CarQueryService {
@@ -15,7 +14,7 @@ export class CarQueryService {
     private readonly responseService: ResponseService,
   ) {}
 
-  async getAllMakes(year?: string): Promise<ApiResponse<MakeResponse>> {
+  async getAllMakes(year?: string): Promise<ApiResponse<Make[]>> {
     const params: { year?: string } = {};
     if (year) params.year = year;
 
@@ -37,7 +36,7 @@ export class CarQueryService {
   async getModelsForMake(
     makeId: string,
     year?: string,
-  ): Promise<ApiResponse<ModelResponse>> {
+  ): Promise<ApiResponse<Model[]>> {
     this.carQueryHelper.isValidMakeId(makeId);
 
     const params: { make: string; year?: string } = { make: makeId };
@@ -78,5 +77,18 @@ export class CarQueryService {
       HttpStatus.OK,
       result.Trims,
     );
+  }
+
+  async getTrimById(
+    makeId: string,
+    modelName: string,
+    year: string,
+    trimsId: string,
+  ): Promise<ApiResponse<CarTrim>> {
+    const response = await this.getTrims(makeId, modelName, year);
+
+    const trimsById = response.data.find((item) => item.model_id === trimsId);
+
+    return this.responseService.createSuccessResponse(HttpStatus.OK, trimsById);
   }
 }

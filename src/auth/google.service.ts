@@ -23,7 +23,6 @@ export class GoogleService {
 
     const email = googlePayload.email;
     let user = await this.userRepository.findUserByEmail(email);
-    this.userHelper.isValidUser(user);
 
     if (!user) {
       const payload = this.authHelper.createGooglePayload(googlePayload);

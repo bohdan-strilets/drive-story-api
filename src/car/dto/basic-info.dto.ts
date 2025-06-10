@@ -25,4 +25,8 @@ export class BasicInfoDto {
     message: 'Generation must be between 1 and 50 characters long',
   })
   generation?: string | null;
+
+  @IsOptional()
+  @IsString({ message: 'TrimsId must be a string' })
+  trimsId?: string | null;
 }

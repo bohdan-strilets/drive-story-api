@@ -1,7 +1,6 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
-import { UserHelper } from 'src/user/user.helper';
 import { UserRepository } from 'src/user/user.repository';
 import { AuthHelper } from './auth.helper';
 import { AuthResponse } from './types/auth-response.type';
@@ -12,7 +11,6 @@ export class GoogleService {
     private readonly responseService: ResponseService,
     private readonly authHelper: AuthHelper,
     private readonly userRepository: UserRepository,
-    private readonly userHelper: UserHelper,
   ) {}
 
   async auth(googleIdToken: string): Promise<ApiResponse<AuthResponse>> {

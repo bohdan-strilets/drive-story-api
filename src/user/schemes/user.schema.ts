@@ -19,11 +19,11 @@ export class User {
   @Prop({ required: true, unique: true })
   email: string;
 
-  @Prop({ required: true })
-  password: string;
+  @Prop({ default: null })
+  password?: string | null;
 
-  @Prop({ required: true })
-  activationToken: string;
+  @Prop({ default: null })
+  activationToken?: string | null;
 
   @Prop({ default: null })
   resetToken?: string | null;

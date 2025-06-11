@@ -67,6 +67,7 @@ export class AuthHelper {
       nickname: googlePayload.name,
       email: googlePayload.email,
       isActivated: googlePayload.email_verified,
+      isGoogleAuth: true,
     };
   }
 }

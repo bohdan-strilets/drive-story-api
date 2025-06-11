@@ -15,6 +15,7 @@ import { EmailDto } from './dto/email.dto';
 import { ProfileDto } from './dto/profile.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { CurrentCarDto } from './dto/set-current-car.dto';
+import { SetPasswordDto } from './dto/set-password.dto';
 import { User, UserDocument } from './schemes/user.schema';
 import { UserInfo } from './types/user-info';
 import { UserHelper } from './user.helper';
@@ -217,5 +218,23 @@ export class UserService {
       HttpStatus.OK,
       safeUserData,
     );
+  }
+
+  async setPassword(
+    userId: Types.ObjectId,
+    dto: SetPasswordDto,
+  ): Promise<ApiResponse> {
+    const user = await this.userRepository.findUserById(userId);
+    this.userHelper.isValidUser(user);
+
+    const { password } = dto;
+    const hashPassword = await this.passwordService.createPassword(password);
+
+    const payload = { password: hashPassword, isGoogleAuth: false };
+    await this.userRepository.updateUser(user._id, payload);
+
+    await this.sendgridService.sendPasswordChangedSuccess(user.email);
+
+    return this.responseService.createSuccessResponse(HttpStatus.OK);
   }
 }

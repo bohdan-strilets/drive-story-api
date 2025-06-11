@@ -18,4 +18,5 @@ export type UserInfo = {
   isActivated?: boolean;
   location?: LocationDocument | null;
   currentCar?: Types.ObjectId | null;
+  isGoogleAuth: boolean;
 };

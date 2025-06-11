@@ -55,6 +55,9 @@ export class User {
   @Prop({ type: Types.ObjectId, ref: 'Car', default: null })
   currentCar?: Types.ObjectId | null;
 
+  @Prop({ default: false })
+  isGoogleAuth: boolean;
+
   @Prop()
   createdAt: Date;
 

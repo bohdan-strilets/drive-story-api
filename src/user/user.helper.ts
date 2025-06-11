@@ -35,6 +35,7 @@ export class UserHelper {
       isActivated: user.isActivated,
       location: user.location,
       currentCar: user.currentCar,
+      isGoogleAuth: user.isGoogleAuth,
     };
   };
 

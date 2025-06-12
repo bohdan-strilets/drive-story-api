@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { Types } from 'mongoose';
 import { calculateSkip } from 'src/common/helpers/calculate-skip.helper';
 import { checkAccess } from 'src/common/helpers/check-access.helper';
@@ -13,8 +13,6 @@ import { ContactDocument } from './schemas/contact.schema';
 
 @Injectable()
 export class ContactService {
-  private readonly logger = new Logger(ContactService.name);
-
   constructor(
     private readonly responseService: ResponseService,
     private readonly contactRepository: ContactRepository,

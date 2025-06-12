@@ -71,8 +71,16 @@ export class InsuranceController {
   async bindContact(
     @Param('insuranceId', ParseObjectIdPipe) insuranceId: Types.ObjectId,
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
-    @Query('contactId', ParseObjectIdPipe) contactId?: Types.ObjectId,
+    @Query('contactId', ParseObjectIdPipe) contactId?: string,
   ): Promise<ApiResponse<InsuranceDocument>> {
     return this.insuranceService.bindContact(insuranceId, userId, contactId);
+  }
+
+  @Put('clear-contact/:insuranceId')
+  async clearContact(
+    @Param('insuranceId', ParseObjectIdPipe) insuranceId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
+  ): Promise<ApiResponse<InsuranceDocument>> {
+    return this.insuranceService.clearContact(insuranceId, userId);
   }
 }

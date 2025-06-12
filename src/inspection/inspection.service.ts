@@ -147,8 +147,8 @@ export class InspectionService {
 
   async bindContact(
     inspectionId: Types.ObjectId,
-    contactId: Types.ObjectId,
     userId: Types.ObjectId,
+    contactId?: Types.ObjectId,
   ): Promise<ApiResponse<InspectionDocument>> {
     const inspection =
       await this.inspectionRepository.findInspectionById(inspectionId);
@@ -163,6 +163,31 @@ export class InspectionService {
     const updatedInspection = await this.inspectionRepository.updateInspection(
       inspectionId,
       { contactId },
+    );
+
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      updatedInspection,
+    );
+  }
+
+  async clearContact(
+    inspectionId: Types.ObjectId,
+    userId: Types.ObjectId,
+  ): Promise<ApiResponse<InspectionDocument>> {
+    const inspection =
+      await this.inspectionRepository.findInspectionById(inspectionId);
+
+    this.inspectionHelper.isValidInspection(inspection);
+    this.inspectionHelper.checkInspectionAccess(
+      inspection,
+      inspection.carId,
+      userId,
+    );
+
+    const updatedInspection = await this.inspectionRepository.updateInspection(
+      inspectionId,
+      { contactId: null },
     );
 
     return this.responseService.createSuccessResponse(

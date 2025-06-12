@@ -150,7 +150,7 @@ export class InsuranceService {
   async bindContact(
     insuranceId: Types.ObjectId,
     userId: Types.ObjectId,
-    contactId?: Types.ObjectId,
+    contactId?: string,
   ): Promise<ApiResponse<InsuranceDocument>> {
     const insurance =
       await this.insuranceRepository.findInsuranceById(insuranceId);
@@ -165,6 +165,31 @@ export class InsuranceService {
     const updatedInsurance = await this.insuranceRepository.updateInsurance(
       insuranceId,
       { contactId: contactId ? contactId : null },
+    );
+
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      updatedInsurance,
+    );
+  }
+
+  async clearContact(
+    insuranceId: Types.ObjectId,
+    userId: Types.ObjectId,
+  ): Promise<ApiResponse<InsuranceDocument>> {
+    const insurance =
+      await this.insuranceRepository.findInsuranceById(insuranceId);
+
+    this.insuranceHelper.isValidInsurance(insurance);
+    this.insuranceHelper.checkInsuranceAccess(
+      insurance,
+      insurance.carId,
+      userId,
+    );
+
+    const updatedInsurance = await this.insuranceRepository.updateInsurance(
+      insuranceId,
+      { contactId: null },
     );
 
     return this.responseService.createSuccessResponse(

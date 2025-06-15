@@ -6,7 +6,7 @@ export class BasicInfoDto {
   make: string;
 
   @IsString({ message: 'Model must be a string' })
-  @Length(2, 50, { message: 'Model must be between 2 and 50 characters long' })
+  @Length(1, 50, { message: 'Model must be between 1 and 50 characters long' })
   model: string;
 
   @IsString({ message: 'Year must be a string' })

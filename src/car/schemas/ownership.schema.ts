@@ -16,4 +16,7 @@ export class Ownership {
 
   @Prop({ default: 0 })
   salePrice?: number;
+
+  @Prop({ default: false })
+  isSold?: boolean;
 }

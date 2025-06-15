@@ -1,9 +1,9 @@
 import { Type } from 'class-transformer';
 import {
+  IsBoolean,
   IsDate,
   IsInt,
   IsOptional,
-  IsPositive,
   ValidateIf,
 } from 'class-validator';
 
@@ -23,11 +23,12 @@ export class OwnerShipDto {
 
   @IsOptional()
   @IsInt({ message: 'Purchase price must be an integer' })
-  @IsPositive({ message: 'Purchase price must be a positive number' })
   purchasePrice?: number;
 
   @IsOptional()
   @IsInt({ message: 'Sale price must be an integer' })
-  @IsPositive({ message: 'Sale price must be a positive number' })
   salePrice?: number;
+
+  @IsBoolean()
+  isSold?: boolean;
 }

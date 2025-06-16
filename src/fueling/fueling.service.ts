@@ -91,7 +91,7 @@ export class FuelingService {
     const fueling = await this.fuelingRepository.findFuelingById(fuelingId);
 
     this.fuelingHelper.isValidFueling(fueling);
-    this.fuelingHelper.checkFuelingAccess(fueling, userId, fueling.carId);
+    this.fuelingHelper.checkFuelingAccess(fueling, fueling.carId, userId);
 
     return this.responseService.createSuccessResponse(HttpStatus.OK, fueling);
   }

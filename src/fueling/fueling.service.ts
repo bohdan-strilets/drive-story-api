@@ -134,4 +134,24 @@ export class FuelingService {
       updatedFueling,
     );
   }
+
+  async clearContact(
+    fuelingId: Types.ObjectId,
+    userId: Types.ObjectId,
+  ): Promise<ApiResponse<FuelingDocument>> {
+    const insurance = await this.fuelingRepository.findFuelingById(fuelingId);
+
+    this.fuelingHelper.isValidFueling(insurance);
+    this.fuelingHelper.checkFuelingAccess(insurance, insurance.carId, userId);
+
+    const updatedInsurance = await this.fuelingRepository.updateFueling(
+      fuelingId,
+      { contactId: null },
+    );
+
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      updatedInsurance,
+    );
+  }
 }

@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   Query,
 } from '@nestjs/common';
 import { Types } from 'mongoose';
@@ -73,5 +74,13 @@ export class FuelingController {
     @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
   ): Promise<ApiResponse<FuelingDocument>> {
     return this.fuelingService.bindContact(fuelingId, contactId, userId);
+  }
+
+  @Put('clear-contact/:fuelingId')
+  async clearContact(
+    @Param('fuelingId', ParseObjectIdPipe) fuelingId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
+  ): Promise<ApiResponse<FuelingDocument>> {
+    return this.fuelingService.clearContact(fuelingId, userId);
   }
 }

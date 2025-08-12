@@ -1,9 +1,9 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { Types } from 'mongoose';
 import { PasswordService } from 'src/password/password.service';
+import { ResendService } from 'src/resend/resend.service';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
-import { SendgridService } from 'src/sendgrid/sendgrid.service';
 import { TokenService } from 'src/token/token.service';
 import { UserHelper } from 'src/user/user.helper';
 import { UserRepository } from 'src/user/user.repository';
@@ -21,7 +21,7 @@ export class AuthService {
     private readonly userRepository: UserRepository,
     private readonly userHelper: UserHelper,
     private readonly passwordService: PasswordService,
-    private readonly sendgridService: SendgridService,
+    private readonly resendService: ResendService,
     private readonly authHelper: AuthHelper,
   ) {}
 
@@ -41,7 +41,7 @@ export class AuthService {
 
     const user = await this.userRepository.createUser(payload);
 
-    await this.sendgridService.sendConfirmEmailLetter(email, activationToken);
+    await this.resendService.sendConfirmEmailLetter(email, activationToken);
 
     const response = await this.authHelper.authResponse(user);
 

@@ -1,0 +1,72 @@
+<html lang='en'>
+  <head>
+    <meta charset='UTF-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1' />
+    <title>Event Reminder: {{title}}</title>
+    <style>{{styles}}</style>
+  </head>
+
+  <body>
+    <table
+      role='presentation'
+      width='100%'
+      cellpadding='0'
+      cellspacing='0'
+      border='0'
+    >
+      <tr>
+        <td align='center'>
+          <table
+            role='presentation'
+            cellpadding='0'
+            cellspacing='0'
+            border='0'
+            class='container'
+          >
+            <tr>
+              <td class='header'>
+                <p class='logo'>DRIVE STORY</p>
+                <p class='subtitle'>your car in detail</p>
+              </td>
+            </tr>
+
+            <tr>
+              <td class='main'>
+                <p style='margin: 0 0 15px'>Hello,</p>
+                <p style='margin: 0 0 15px'>
+                  This is a reminder for the upcoming event "<strong
+                  >{{title}}</strong>".
+                </p>
+                <p style='margin: 0 0 15px'><strong>When:</strong>
+                  {{reminderDate}}</p>
+                {{#if message}}
+                  <p style='margin: 0 0 15px'>{{message}}</p>
+                {{/if}}
+                <p>
+                  <a
+                    class='linkBtn'
+                    href='{{clientUrl}}{{eventUrl}}'
+                    style='color: #0f0f0f'
+                  >More details about the event</a>
+                </p>
+              </td>
+            </tr>
+
+            <tr>
+              <td class='footer'>
+                <p style='margin: 0 0 10px'>
+                  Need help? Please contact our
+                  <a
+                    href='mailto:{{supportEmail}}'
+                    style='color: #eecd10'
+                  >support team</a>.
+                </p>
+                <p>&copy; {{year}} DriveStory. All rights reserved.</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

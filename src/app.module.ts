@@ -4,6 +4,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AccessoryModule } from './accessory/accessory.module';
 import { AuthModule } from './auth/auth.module';
+import { CarQueryModule } from './car-query/car-query.module';
 import { CarModule } from './car/car.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { ContactModule } from './contact/contact.module';
@@ -12,15 +13,14 @@ import { ImageModule } from './image/image.module';
 import { InspectionModule } from './inspection/inspection.module';
 import { InsuranceModule } from './insurance/insurance.module';
 import { MaintenanceModule } from './maintenance/maintenance.module';
+import { PaginationModule } from './pagination/pagination.module';
 import { PasswordModule } from './password/password.module';
 import { PushModule } from './push/push.module';
 import { ReminderModule } from './reminder/reminder.module';
+import { ResendModule } from './resend/resend.module';
 import { ResponseModule } from './response/response.module';
-import { SendgridModule } from './sendgrid/sendgrid.module';
 import { TokenModule } from './token/token.module';
 import { UserModule } from './user/user.module';
-import { PaginationModule } from './pagination/pagination.module';
-import { CarQueryModule } from './car-query/car-query.module';
 
 @Module({
   imports: [
@@ -31,7 +31,6 @@ import { CarQueryModule } from './car-query/car-query.module';
     AuthModule,
     PasswordModule,
     TokenModule,
-    SendgridModule,
     CloudinaryModule,
     ResponseModule,
     CarModule,
@@ -46,6 +45,7 @@ import { CarQueryModule } from './car-query/car-query.module';
     PushModule,
     PaginationModule,
     CarQueryModule,
+    ResendModule,
   ],
 })
 export class AppModule {}

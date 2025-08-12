@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { PushModule } from 'src/push/push.module';
+import { ResendModule } from 'src/resend/resend.module';
 import { ResponseModule } from 'src/response/response.module';
-import { SendgridModule } from 'src/sendgrid/sendgrid.module';
 import { UserModule } from 'src/user/user.module';
 import { ReminderController } from './reminder.controller';
 import { ReminderHelper } from './reminder.helper';
@@ -17,7 +17,7 @@ import { Reminder, ReminderSchema } from './schemas/reminder.schema';
       { name: Reminder.name, schema: ReminderSchema },
     ]),
     ResponseModule,
-    SendgridModule,
+    ResendModule,
     UserModule,
     PushModule,
   ],

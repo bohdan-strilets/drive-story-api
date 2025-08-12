@@ -14,7 +14,7 @@ export class PushHelper {
   constructor(private readonly configService: ConfigService) {
     const publicKey = this.configService.get('VAPID_PUBLIC_KEY');
     const privateKey = this.configService.get('VAPID_PRIVATE_KEY');
-    const contactEmail = this.configService.get('SENDGRID_OWNER');
+    const contactEmail = this.configService.get('RESEND_OWNER');
     webPush.setVapidDetails(`mailto:${contactEmail}`, publicKey, privateKey);
   }
 

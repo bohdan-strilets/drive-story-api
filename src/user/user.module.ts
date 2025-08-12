@@ -2,8 +2,8 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CarModule } from 'src/car/car.module';
 import { PasswordModule } from 'src/password/password.module';
+import { ResendModule } from 'src/resend/resend.module';
 import { ResponseModule } from 'src/response/response.module';
-import { SendgridModule } from 'src/sendgrid/sendgrid.module';
 import { TokenModule } from 'src/token/token.module';
 import { User, UserSchema } from './schemes/user.schema';
 import { UserController } from './user.controller';
@@ -14,7 +14,7 @@ import { UserService } from './user.service';
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
-    SendgridModule,
+    ResendModule,
     PasswordModule,
     ResponseModule,
     TokenModule,

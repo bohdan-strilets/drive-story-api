@@ -1,34 +1,58 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as sendgrid from '@sendgrid/mail';
 import * as fs from 'fs';
 import * as handlebars from 'handlebars';
 import { join } from 'path';
+import { Resend } from 'resend';
 import { EmailType } from './types/email.type';
 import { HbsTemplate } from './types/hbs-template.type';
 
 @Injectable()
-export class SendgridService {
-  private readonly sendgridOwner: string;
+export class ResendService {
+  private readonly resendOwner: string;
   private readonly apiUrl: string;
   private readonly clientUrl: string;
+
+  private readonly currentYear = new Date().getFullYear().toString();
+  private readonly resend: Resend;
+  private readonly logger = new Logger(ResendService.name);
+
   private readonly rootPath: string = join(
     __dirname,
     '..',
     '..',
     'src',
-    'sendgrid',
+    'resend',
     'templates',
   );
-  private readonly currentYear = new Date().getFullYear().toString();
-  private readonly logger = new Logger(SendgridService.name);
+
+  private readonly stylesPath: string = join(
+    __dirname,
+    '..',
+    '..',
+    'src',
+    'resend',
+    'styles',
+  );
 
   constructor(private readonly configService: ConfigService) {
-    sendgrid.setApiKey(this.configService.get('SENDGRID_API_KEY'));
-
-    this.sendgridOwner = this.configService.get('SENDGRID_OWNER');
+    this.resend = new Resend(this.configService.get('RESEND_API_KEY'));
+    this.resendOwner = this.configService.get('RESEND_OWNER');
     this.apiUrl = this.configService.get('API_URL');
     this.clientUrl = this.configService.get('CLIENT_URL');
+  }
+
+  private async sendEmail(emailData: EmailType) {
+    try {
+      const email = { ...emailData, from: this.resendOwner };
+      const result = await this.resend.emails.send(email);
+
+      this.logger.log(`Email sent to ${email.to} successfully.`);
+      return result;
+    } catch (error) {
+      this.logger.error('Error sending email:', error);
+      throw error;
+    }
   }
 
   private async renderTemplateAsync(
@@ -37,14 +61,11 @@ export class SendgridService {
   ): Promise<string> {
     const templateSource = await fs.promises.readFile(templatePath, 'utf8');
     const template = handlebars.compile(templateSource);
-    return template(variables);
-  }
 
-  private async sendEmail(emailData: EmailType) {
-    const sendgridOwner = this.sendgridOwner;
-    const email = { ...emailData, from: sendgridOwner };
-    await sendgrid.send(email);
-    this.logger.log(`Email sent to ${email.to} successfully.`);
+    const stylesPath = join(this.stylesPath, 'email-style.css');
+    const styles = await fs.promises.readFile(stylesPath, 'utf8');
+
+    return template({ ...variables, styles });
   }
 
   private async sendTemplateEmail(
@@ -60,7 +81,7 @@ export class SendgridService {
       to: email,
       subject,
       html: htmlContent,
-      from: this.sendgridOwner,
+      from: this.resendOwner,
     });
   }
 
@@ -75,7 +96,7 @@ export class SendgridService {
       {
         API_URL: this.apiUrl,
         activationToken,
-        supportEmail: this.sendgridOwner,
+        supportEmail: this.resendOwner,
         year: this.currentYear,
       },
     );
@@ -92,7 +113,7 @@ export class SendgridService {
       {
         API_URL: this.apiUrl,
         resetToken,
-        supportEmail: this.sendgridOwner,
+        supportEmail: this.resendOwner,
         year: this.currentYear,
       },
     );
@@ -104,8 +125,9 @@ export class SendgridService {
       'Password Changed Successfully',
       'password-changed-success.template.hbs',
       {
-        supportEmail: this.sendgridOwner,
+        supportEmail: this.resendOwner,
         year: this.currentYear,
+        CLIENT_URL: this.clientUrl,
       },
     );
   }
@@ -123,7 +145,7 @@ export class SendgridService {
       message,
       eventUrl,
       clientUrl: this.clientUrl,
-      supportEmail: this.sendgridOwner,
+      supportEmail: this.resendOwner,
       year: this.currentYear,
     });
   }

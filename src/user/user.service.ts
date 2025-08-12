@@ -5,9 +5,9 @@ import { CarHelper } from 'src/car/car.helper';
 import { CarRepository } from 'src/car/car.repository';
 import { AppError } from 'src/error/app-error';
 import { PasswordService } from 'src/password/password.service';
+import { ResendService } from 'src/resend/resend.service';
 import { ResponseService } from 'src/response/response.service';
 import { ApiResponse } from 'src/response/types/api-response.type';
-import { SendgridService } from 'src/sendgrid/sendgrid.service';
 import { TokenService } from 'src/token/token.service';
 import { v4 } from 'uuid';
 import { EditPasswordDto } from './dto/edit-password.dto';
@@ -25,7 +25,7 @@ import { UserRepository } from './user.repository';
 export class UserService {
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
-    private readonly sendgridService: SendgridService,
+    private readonly resendService: ResendService,
     private readonly passwordService: PasswordService,
     private readonly responseService: ResponseService,
     private readonly tokenService: TokenService,
@@ -54,7 +54,7 @@ export class UserService {
     const payload = { activationToken, isActivated: false };
     const updatedUser = await this.userRepository.updateUser(user._id, payload);
 
-    await this.sendgridService.sendConfirmEmailLetter(
+    await this.resendService.sendConfirmEmailLetter(
       updatedUser.email,
       updatedUser.activationToken,
     );
@@ -89,7 +89,7 @@ export class UserService {
     await this.userHelper.validateUniqueEmail(email);
 
     const activationToken = v4();
-    await this.sendgridService.sendConfirmEmailLetter(email, activationToken);
+    await this.resendService.sendConfirmEmailLetter(email, activationToken);
 
     const payload = { email, activationToken, isActivated: false };
     const updatedUser = await this.userRepository.updateUser(userId, payload);
@@ -107,7 +107,7 @@ export class UserService {
 
     const resetToken = v4();
     await this.userRepository.updateUser(user._id, { resetToken });
-    await this.sendgridService.sendPasswordResetEmail(user.email, resetToken);
+    await this.resendService.sendPasswordResetEmail(user.email, resetToken);
 
     return this.responseService.createSuccessResponse(HttpStatus.OK);
   }
@@ -132,7 +132,7 @@ export class UserService {
     const payload = { password: hashPassword, resetToken: null };
     await this.userRepository.updateUser(user._id, payload);
 
-    await this.sendgridService.sendPasswordChangedSuccess(user.email);
+    await this.resendService.sendPasswordChangedSuccess(user.email);
 
     return this.responseService.createSuccessResponse(HttpStatus.OK);
   }
@@ -152,7 +152,7 @@ export class UserService {
     const payload = { password: hashPassword };
     await this.userRepository.updateUser(userId, payload);
 
-    await this.sendgridService.sendPasswordChangedSuccess(user.email);
+    await this.resendService.sendPasswordChangedSuccess(user.email);
 
     return this.responseService.createSuccessResponse(HttpStatus.OK);
   }
@@ -233,7 +233,7 @@ export class UserService {
     const payload = { password: hashPassword, isGoogleAuth: false };
     await this.userRepository.updateUser(user._id, payload);
 
-    await this.sendgridService.sendPasswordChangedSuccess(user.email);
+    await this.resendService.sendPasswordChangedSuccess(user.email);
 
     return this.responseService.createSuccessResponse(HttpStatus.OK);
   }

@@ -4,7 +4,7 @@ import { AppError } from 'src/error/app-error';
 import { errorMessages } from 'src/error/helpers/error-messages.helper';
 import { PushHelper } from 'src/push/push.helper';
 import { PushRepository } from 'src/push/push.repository';
-import { SendgridService } from 'src/sendgrid/sendgrid.service';
+import { ResendService } from 'src/resend/resend.service';
 import { ReminderRepository } from './reminder.repository';
 import { ReminderDocument } from './schemas/reminder.schema';
 
@@ -15,7 +15,7 @@ export class ReminderHelper {
   constructor(
     private readonly reminderRepository: ReminderRepository,
     private readonly pushRepository: PushRepository,
-    private readonly sendgridService: SendgridService,
+    private readonly resendService: ResendService,
     private readonly pushHelper: PushHelper,
   ) {}
 
@@ -67,7 +67,7 @@ export class ReminderHelper {
     }
 
     try {
-      await this.sendgridService.sendReminderEmail(
+      await this.resendService.sendReminderEmail(
         userEmail,
         reminder.title,
         reminder.reminderDate,

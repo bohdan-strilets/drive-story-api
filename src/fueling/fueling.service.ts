@@ -51,7 +51,7 @@ export class FuelingService {
     const fueling = await this.fuelingRepository.findFuelingById(fuelingId);
 
     this.fuelingHelper.isValidFueling(fueling);
-    this.fuelingHelper.checkFuelingAccess(fueling, userId, fueling.carId);
+    this.fuelingHelper.checkFuelingAccess(fueling, fueling.carId, userId);
 
     const updatedFueling = await this.fuelingRepository.updateFueling(
       fuelingId,
@@ -71,7 +71,7 @@ export class FuelingService {
     const fueling = await this.fuelingRepository.findFuelingById(fuelingId);
 
     this.fuelingHelper.isValidFueling(fueling);
-    this.fuelingHelper.checkFuelingAccess(fueling, userId, fueling.carId);
+    this.fuelingHelper.checkFuelingAccess(fueling, fueling.carId, userId);
 
     await this.fuelingHelper.deletePhotos(fueling, EntityType.FUELING);
 
@@ -122,7 +122,7 @@ export class FuelingService {
     const fueling = await this.fuelingRepository.findFuelingById(fuelingId);
 
     this.fuelingHelper.isValidFueling(fueling);
-    this.fuelingHelper.checkFuelingAccess(fueling, userId, fueling.carId);
+    this.fuelingHelper.checkFuelingAccess(fueling, fueling.carId, userId);
 
     const updatedFueling = await this.fuelingRepository.updateFueling(
       fuelingId,
@@ -139,19 +139,19 @@ export class FuelingService {
     fuelingId: Types.ObjectId,
     userId: Types.ObjectId,
   ): Promise<ApiResponse<FuelingDocument>> {
-    const insurance = await this.fuelingRepository.findFuelingById(fuelingId);
+    const fueling = await this.fuelingRepository.findFuelingById(fuelingId);
 
-    this.fuelingHelper.isValidFueling(insurance);
-    this.fuelingHelper.checkFuelingAccess(insurance, insurance.carId, userId);
+    this.fuelingHelper.isValidFueling(fueling);
+    this.fuelingHelper.checkFuelingAccess(fueling, fueling.carId, userId);
 
-    const updatedInsurance = await this.fuelingRepository.updateFueling(
+    const updatedFueling = await this.fuelingRepository.updateFueling(
       fuelingId,
       { contactId: null },
     );
 
     return this.responseService.createSuccessResponse(
       HttpStatus.OK,
-      updatedInsurance,
+      updatedFueling,
     );
   }
 }

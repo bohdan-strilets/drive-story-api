@@ -67,7 +67,7 @@ export class FuelingController {
     return this.fuelingService.getAll(carId, userId, page, limit);
   }
 
-  @Get('bind-contact/:fuelingId')
+  @Put('bind-contact/:fuelingId')
   async bindContact(
     @Param('fuelingId', ParseObjectIdPipe) fuelingId: Types.ObjectId,
     @Query('contactId', ParseObjectIdPipe) contactId: Types.ObjectId,

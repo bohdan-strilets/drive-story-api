@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   Query,
 } from '@nestjs/common';
 import { Types } from 'mongoose';
@@ -66,7 +67,7 @@ export class MaintenanceController {
     return this.maintenanceService.getAll(carId, userId, page, limit);
   }
 
-  @Get('bind-contact/:maintenanceId')
+  @Put('bind-contact/:maintenanceId')
   async bindContact(
     @Param('maintenanceId', ParseObjectIdPipe) maintenanceId: Types.ObjectId,
     @Query('contactId', ParseObjectIdPipe) contactId: Types.ObjectId,
@@ -77,5 +78,13 @@ export class MaintenanceController {
       contactId,
       userId,
     );
+  }
+
+  @Put('clear-contact/:maintenanceId')
+  async clearContact(
+    @Param('maintenanceId', ParseObjectIdPipe) maintenanceId: Types.ObjectId,
+    @User('_id', ParseObjectIdPipe) userId: Types.ObjectId,
+  ): Promise<ApiResponse<MaintenanceDocument>> {
+    return this.maintenanceService.clearContact(maintenanceId, userId);
   }
 }

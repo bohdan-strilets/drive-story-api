@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { Types } from 'mongoose';
 import { CarHelper } from 'src/car/car.helper';
 import { CarRepository } from 'src/car/car.repository';
@@ -14,8 +14,6 @@ import { MaintenanceDocument } from './schemas/maintenance.schema';
 
 @Injectable()
 export class MaintenanceService {
-  private readonly logger = new Logger(MaintenanceService.name);
-
   constructor(
     private readonly responseService: ResponseService,
     private readonly carRepository: CarRepository,
@@ -55,8 +53,8 @@ export class MaintenanceService {
     this.maintenanceHelper.isValidMaintenance(maintenance);
     this.maintenanceHelper.checkMaintenanceAccess(
       maintenance,
-      userId,
       maintenance.carId,
+      userId,
     );
 
     const updatedMaintenance =
@@ -78,8 +76,8 @@ export class MaintenanceService {
     this.maintenanceHelper.isValidMaintenance(maintenance);
     this.maintenanceHelper.checkMaintenanceAccess(
       maintenance,
-      userId,
       maintenance.carId,
+      userId,
     );
 
     await this.maintenanceHelper.deletePhotos(
@@ -106,8 +104,8 @@ export class MaintenanceService {
     this.maintenanceHelper.isValidMaintenance(maintenance);
     this.maintenanceHelper.checkMaintenanceAccess(
       maintenance,
-      userId,
       maintenance.carId,
+      userId,
     );
 
     return this.responseService.createSuccessResponse(
@@ -149,13 +147,38 @@ export class MaintenanceService {
     this.maintenanceHelper.isValidMaintenance(maintenance);
     this.maintenanceHelper.checkMaintenanceAccess(
       maintenance,
-      userId,
       maintenance.carId,
+      userId,
     );
 
     const updatedMaintenance =
       await this.maintenanceRepository.updateMaintenance(maintenanceId, {
         contactId,
+      });
+
+    return this.responseService.createSuccessResponse(
+      HttpStatus.OK,
+      updatedMaintenance,
+    );
+  }
+
+  async clearContact(
+    maintenanceId: Types.ObjectId,
+    userId: Types.ObjectId,
+  ): Promise<ApiResponse<MaintenanceDocument>> {
+    const maintenance =
+      await this.maintenanceRepository.findMaintenanceById(maintenanceId);
+
+    this.maintenanceHelper.isValidMaintenance(maintenance);
+    this.maintenanceHelper.checkMaintenanceAccess(
+      maintenance,
+      maintenance.carId,
+      userId,
+    );
+
+    const updatedMaintenance =
+      await this.maintenanceRepository.updateMaintenance(maintenanceId, {
+        contactId: null,
       });
 
     return this.responseService.createSuccessResponse(
